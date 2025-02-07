@@ -1,3 +1,23 @@
+"""
+/*--------------------------------*- C++ -*----------------------------------*\
+-------------------------------------------------------------------------------
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
+-------------------------------------------------------------------------------
+ * SplashCaseCreator is part of Splash CFD automation tool.
+ * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
+ * All rights reserved.
+ *
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
+ */
+"""
 # Importing system-related libs  
 import sys
 import os
@@ -625,14 +645,14 @@ class mainWindow(QMainWindow):
     
     def importSTL(self):
         try:
-            print("Importing STL...")
+            #print("Importing STL...")
             stl_status = self.project.add_stl_file()
-            print(f"STL Status: {stl_status}")
+            #print(f"STL Status: {stl_status}")
             if stl_status == -1:
                 self.updateStatusBar("Failed to load STL file.")
                 return
             self.project.add_stl_to_project()
-            print(f"Project STL Files: {self.project.stl_files}")
+            #print(f"Project STL Files: {self.project.stl_files}")
             self.vtk_manager.render_stl(self.project.current_stl_file)
             self.update_list()
             self.updateStatusBar("STL imported successfully.")
@@ -733,29 +753,26 @@ class mainWindow(QMainWindow):
             self.project.transient = True
             # this is to ensure that the ddtSchemes is set to Euler if the current value is steadyState
             if self.project.numericalSettings['ddtSchemes']['default'] == "steadyState":
-                self.project.numericalSettings['ddtSchemes'] = "Euler"
+                self.project.numericalSettings['ddtSchemes']['default'] = "Euler"
         else:
             self.window.pushButtonSteadyTransient.setText("Steady-State")
             SplashCaseCreatorIO.printMessage("Steady-State Flow Selected",GUIMode=True,window=self)
             self.project.transient = False
             # this is to ensure that the ddtSchemes is set to steadyState if the current value is not steadyState
             if self.project.numericalSettings['ddtSchemes']['default'] != "steadyState":
-                self.project.numericalSettings['ddtSchemes'] = "steadyState"
+                self.project.numericalSettings['ddtSchemes']['default'] = "steadyState"
         self.project.set_transient_settings()
         self.readyStatusBar()
 
     def addExternalBoundaries(self):
         # add inlet, outlet, front, back, top, bottom to the list object
         items = ["inlet","outlet","front","back","top","bottom"]
+        currentItems = [self.window.listWidgetObjList.item(i).text() for i in range(self.window.listWidgetObjList.count())]
+        #print("Current Items: ",currentItems)
         for item in items:
-            if item not in self.window.listWidgetObjList.findItems(item,Qt.MatchExactly):
+            if item not in currentItems:
                 self.window.listWidgetObjList.addItem(item)
-        #self.window.listWidgetObjList.addItem("inlet")
-        #self.window.listWidgetObjList.addItem("outlet")
-        #self.window.listWidgetObjList.addItem("front")
-        #self.window.listWidgetObjList.addItem("back")
-        #self.window.listWidgetObjList.addItem("top")
-        #self.window.listWidgetObjList.addItem("bottom")
+        
 
     def removeExternalBoundaries(self):
         # remove inlet, outlet, front, back, top, bottom from the list object
@@ -822,6 +839,7 @@ class mainWindow(QMainWindow):
 
     def resetGUI(self):
         self.window.listWidgetObjList.clear()
+        self.window.tableViewProperties.clearContents()
         self.window.lineEditMinX.clear()
         self.window.lineEditMinY.clear()
         self.window.lineEditMinZ.clear()
@@ -848,7 +866,8 @@ class mainWindow(QMainWindow):
             yNC = yesNoCancelDialogDriver("Save changes to current case files before creating a New Case","Save Changes")
             if yNC==1: # if yes
                 # save the project
-                self.project.add_stl_to_project()
+                #self.project.add_stl_to_project()
+                SplashCaseCreatorIO.printMessage("Saving the current case...", GUIMode=True, window=self)
                 self.project.write_settings()
                 self.disableButtons()
                 self.ren.RemoveAllViewProps()
@@ -866,8 +885,9 @@ class mainWindow(QMainWindow):
         self.window.plainTextTerminal.clear()
         # clear vtk renderer
         self.ren.RemoveAllViewProps()
-        # clear the list widget
-        self.window.listWidgetObjList.clear()
+        
+        # Also clear the object list and property table
+        self.resetGUI()
         self.project = None # clear the project
         self.project = SplashCaseCreatorProject(GUIMode=True,window=self)
         
@@ -892,7 +912,7 @@ class mainWindow(QMainWindow):
         self.project.create_settings()
         
         self.project.set_global_refinement_level()
-        self.resetGUI()
+        
         # Now enable the buttons
         self.enableButtons()
         self.readyStatusBar()
@@ -935,7 +955,8 @@ class mainWindow(QMainWindow):
                 "Save changes to current case files before creating a New Case", "Save Changes"
             )
             if yNC == 1:  # Yes
-                self.project.add_stl_to_project()
+                SplashCaseCreatorIO.printMessage("Saving the current case...", GUIMode=True, window=self)
+                #self.project.add_stl_to_project()
                 self.project.write_settings()
                 self.disableButtons()
                 self.ren.RemoveAllViewProps()
@@ -952,8 +973,11 @@ class mainWindow(QMainWindow):
         # Clear terminal and VTK renderer
         self.window.plainTextTerminal.clear()
         self.ren.RemoveAllViewProps()
+        # Also clear the object list and property table
+        self.resetGUI()
 
         # Reset the project
+        self.project = None
         self.project = SplashCaseCreatorProject(GUIMode=True, window=self)
         self.window.listWidgetObjList.clear()  # Clear the object list
 
@@ -1046,6 +1070,8 @@ class mainWindow(QMainWindow):
     def autoDomainDriver(self):
         self.analyze = True
         self.autoDomain(self.analyze)
+        # if internal flow, remove external boundaries if any
+        self.addOrRemoveExternalBoundaries()
     
     def autoDomain(self,analyze=True):
        
@@ -1110,23 +1136,11 @@ class mainWindow(QMainWindow):
             SplashCaseCreatorIO.printError("Invalid Domain Size",GUIMode=True)
             self.readyStatusBar()
             return
+        domain_size = [minx,maxx,miny,maxy,minz,maxz]
+        self.project.set_max_domain_size(domain_size,nx,ny,nz)
         self.prepareDomainView()
         self.readyStatusBar()
-        #self.project.meshSettings['domain']['minx'] = minx
-        #self.project.meshSettings['domain']['miny'] = miny
-        #self.project.meshSettings['domain']['minz'] = minz
-        #self.project.meshSettings['domain']['maxx'] = maxx
-        #self.project.meshSettings['domain']['maxy'] = maxy
-        #self.project.meshSettings['domain']['maxz'] = maxz
-        #self.project.meshSettings['domain']['nx'] = nx
-        #self.project.meshSettings['domain']['ny'] = ny
-        #self.project.meshSettings['domain']['nz'] = nz
-        #self.updateStatusBar("Manual Domain Set")
-        #self.add_box_to_VTK(minX=minx,minY=miny,minZ=minz,maxX=maxx,maxY=maxy,maxZ=maxz,boxName="Domain")
-        #self.vtk_manager.add_box_to_VTK(minX=minx, minY=miny, minZ=minz, maxX=maxx, maxY=maxy, maxZ=maxz, boxName="Domain")
-        #self.addBoundaryGrids()
-        #self.vtkRefreshView()
-        #self.readyStatusBar()
+       
         
     def stlPropertiesDialog(self):
         stl = self.current_obj

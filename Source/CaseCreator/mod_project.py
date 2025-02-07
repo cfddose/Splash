@@ -1,19 +1,21 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * SplashCaseCreator is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
@@ -155,6 +157,33 @@ class mod_project:
     @staticmethod
     def change_stl_refinement_level(project,stl_file_number=0):
         project.change_stl_refinement_level(stl_file_number)
+
+    @staticmethod
+    def modify_project(project):
+        if project.current_modification=="Background Mesh":
+            mod_project.change_background_mesh(project)
+        elif project.current_modification=="Mesh Point":
+            mod_project.change_mesh_point(project)
+        elif project.current_modification=="Add Geometry":
+            mod_project.add_geometry(project)
+        elif project.current_modification=="Refinement Levels":
+            mod_project.change_refinement_levels(project)
+        elif project.current_modification=="Boundary Conditions":
+            mod_project.change_boundary_conditions(project)
+        elif project.current_modification=="Fluid Properties":
+            mod_project.change_fluid_properties(project)
+        elif project.current_modification=="Numerical Settings":
+            mod_project.change_numerical_settings(project)
+        elif project.current_modification=="Simulation Control Settings":
+            mod_project.change_simulation_settings(project)
+        elif project.current_modification=="Turbulence Model":
+            mod_project.change_turbulenc_model(project)
+        elif project.current_modification=="Post Processing Settings":
+            mod_project.change_post_process_settings(project)
+        else:
+            SplashCaseCreatorIO.printMessage("Invalid option. Aborting operation")
+            return -1
+        return 0
 
     
     #---------------------------------------------------------------------#
