@@ -127,6 +127,10 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         SplashCaseCreatorIO.printMessage(f"Transient: {trueFalse[self.transient]}",GUIMode=self.GUIMode,window=self.window)
         self.summarize_background_mesh()
         self.list_stl_files()
+        # if external flow, we may have inlet, outlet, front, back, etc.
+        # Need to show these boundary conditions, too
+        if self.internalFlow:
+            self.summarize_boundary_conditions()
         
 
     # this will show the details of the background mesh
@@ -521,12 +525,48 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
             
         print("Failed setting boundary condition. STL file not found")
         return -1
+    
+    def set_external_boundary_condition(self,patch_name,boundary_condition):
+        pass
 
     def add_stl_to_project(self):
         for stl_file in self.stl_files:
             #self.ask_stl_settings(stl_file)
             self.meshSettings['geometry'].append(stl_file)
         self.remove_duplicate_stl_files()
+
+    # This is the parent function to add a predefined VTK object to the project
+    # If there is already a VTK object with the same name, it will not be added
+    def add_geometry_to_project(self,geometry):
+        #print("Adding geometry to project")
+        geometry_name = geometry['name']
+        if geometry_name in self.stl_names:
+            SplashCaseCreatorIO.printMessage(f"Geometry {geometry_name} already exists in the project")
+            return -1
+        else:
+            self.meshSettings['geometry'].append(geometry)
+            #self.stl_names.append(geometry_name)
+        self.remove_duplicate_stl_files()
+        #print("Geometry added to project")
+
+    # To add predefined VTK objects to the project such as spheres or boxes
+    # This object will be used for meshing and possibly for boundary conditions
+    def add_vtk_object_to_project(self,obj_name="sphere1",obj_properties={},obj_type="sphere"):
+        if obj_type == "sphere":
+            x, y, z, radius = obj_properties['x'], obj_properties['y'], obj_properties['z'], obj_properties['radius']
+            geometry = {'name': obj_name, 'type':'searchableSphere','center':[x,y,z],'radius':radius,'purpose':'refinementRegion','featureEdges':False}
+            self.add_geometry_to_project(geometry)
+        elif obj_type == "box":
+            minx, maxx, miny, maxy, minz, maxz = obj_properties['minx'], obj_properties['maxx'], obj_properties['miny'], obj_properties['maxy'], obj_properties['minz'], obj_properties['maxz']
+            geometry = {'name': obj_name, 'type':'searchableBox','min':[minx,miny,minz],'max':[maxx,maxy,maxz],'purpose':'refinementRegion','featureEdges':False}
+            self.add_geometry_to_project(geometry)
+        elif obj_type == "cylinder":
+            x, y, z, radius, height = obj_properties['x'], obj_properties['y'], obj_properties['z'], obj_properties['radius'], obj_properties['height']
+            geometry = {'name': obj_name, 'type':'searchableCylinder','center':[x,y,z],'radius':radius,'height':height,'purpose':'refinementRegion','featureEdges':False}
+            self.add_geometry_to_project(geometry)
+        else:
+            SplashCaseCreatorIO.printMessage("Invalid object type")
+            return -1
 
     def add_stl_file(self): # to only copy the STL file to the project directory and add it to the STL list
         stl_file = SplashCaseCreatorPrimitives.ask_for_file([("STL Geometry", "*.stl"), ("OBJ Geometry", "*.obj")],self.GUIMode)

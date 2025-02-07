@@ -43,7 +43,8 @@ from PySide6.QtCore import QTimer, QTime # for Timer
 from PySide6.QtCore import Qt
 from PySide6 import QtWidgets
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from dialogBoxes import sphereDialogDriver, yesNoDialogDriver, yesNoCancelDialogDriver
+from dialogBoxes import yesNoDialogDriver, yesNoCancelDialogDriver
+from dialogBoxes import sphereDialogDriver, boxDialogDriver, cylinderDialogDriver
 from dialogBoxes import vectorInputDialogDriver, STLDialogDriver, physicalModelsDialogDriver
 from dialogBoxes import boundaryConditionDialogDriver, numericsDialogDriver, controlsDialogDriver
 from dialogBoxes import set_src, meshPointDialogDriver,postProcessDialogDriver
@@ -494,6 +495,8 @@ class mainWindow(QMainWindow):
         # Additional button connections
         self.window.pushButtonSTLImport.clicked.connect(self.importSTL)
         self.window.pushButtonSphere.clicked.connect(self.createSphere)
+        self.window.pushButtonBox.clicked.connect(self.createBox)
+        self.window.pushButtonCylinder.clicked.connect(self.createCyliner)
         self.window.pushButtonCreate.clicked.connect(self.createCase)
         self.window.pushButtonOpen.clicked.connect(self.openCase)
         self.window.pushButtonGenerate.clicked.connect(self.generateCase)
@@ -695,12 +698,61 @@ class mainWindow(QMainWindow):
         # create a sphere dialog
         sphereData = sphereDialogDriver()
         if sphereData == None:
-            SplashCaseCreatorIO.printError("Sphere Dialog Box Closed",GUIMode=True)
+            pass # Do nothing
+            #SplashCaseCreatorIO.printError("Sphere Dialog Box Closed",GUIMode=True)
         else:
-            x,y,z,r = sphereData
+            name,x,y,z,r = sphereData
+            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r}
+            
+            # First, add to the project 
+            self.project.add_vtk_object_to_project(obj_name=name,obj_type="sphere",obj_properties=obj_properties)
+            # Then, add to the VTK viewer
+            self.vtk_manager.add_sphere_to_VTK(center=(x,y,z),radius=r,objectName=name)
+            # Add to the list
+            self.window.listWidgetObjList.addItem(name)
             print("Center: ",x,y,z)
             print("Radius: ",r)
-        self.readyStatusBar()   
+        self.readyStatusBar()
+
+    def createCyliner(self):
+        SplashCaseCreatorIO.printMessage("Creating Cylinder",GUIMode=True,window=self)
+        # create a cylinder dialog
+        cylinderData = cylinderDialogDriver()
+        if cylinderData == None:
+            pass # Do nothing
+            #SplashCaseCreatorIO.printError("Cylinder Dialog Box Closed",GUIMode=True)
+        else:
+            name,x,y,z,r,h = cylinderData
+            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r,"height":h}
+            # First, add to the project
+            self.project.add_vtk_object_to_project(obj_name=name,obj_type="cylinder",obj_properties=obj_properties)
+            # Then, add to the VTK viewer
+            self.vtk_manager.add_cylinder_to_VTK(center=(x,y,z),radius=r,height=h,objectName=name)
+            # Add to the list
+            self.window.listWidgetObjList.addItem(name)
+            print("Center: ",x,y,z)
+            print("Radius: ",r)
+            print("Height: ",h)
+
+    def createBox(self):
+        SplashCaseCreatorIO.printMessage("Creating Box",GUIMode=True,window=self)
+        # create a box dialog
+        boxData = boxDialogDriver()
+        if boxData == None:
+            pass   
+        else:
+            name,minx,miny,minz,maxx,maxy,maxz = boxData
+            obj_properties = {"name":name,"minx":minx,"miny":miny,"minz":minz,"maxx":maxx,"maxy":maxy,"maxz":maxz}
+            # First, add to the project
+            self.project.add_vtk_object_to_project(obj_name=name,obj_type="box",obj_properties=obj_properties)
+            # Then, add to the VTK viewer
+            self.vtk_manager.add_box_to_VTK(minx,miny,minz,maxx,maxy,maxz,objectName=name)
+            # Add to the list
+            self.window.listWidgetObjList.addItem(name)
+            print("Min: ",minx,miny,minz)
+            print("Max: ",maxx,maxy,maxz)
+
+        self.readyStatusBar()
 
     def resizeEvent(self, event):
         """
@@ -1112,8 +1164,8 @@ class mainWindow(QMainWindow):
         self.window.lineEdit_nX.setText(str(nx))
         self.window.lineEdit_nY.setText(str(ny))
         self.window.lineEdit_nZ.setText(str(nz))
-        #self.add_box_to_VTK(minX=minx,minY=miny,minZ=minz,maxX=maxx,maxY=maxy,maxZ=maxz,boxName="Domain")
-        self.vtk_manager.add_box_to_VTK(minX=minx, minY=miny, minZ=minz, maxX=maxx, maxY=maxy, maxZ=maxz, boxName="Domain")
+        #self.add_box_to_VTK(minX=minx,minY=miny,minZ=minz,maxX=maxx,maxY=maxy,maxZ=maxz)
+        self.vtk_manager.add_box_to_VTK(minX=minx, minY=miny, minZ=minz, maxX=maxx, maxY=maxy, maxZ=maxz, objectName="Domain")
         self.addBoundaryGrids()
         self.vtkDrawMeshPoint()
         self.vtkRefreshView()
@@ -1189,8 +1241,16 @@ class mainWindow(QMainWindow):
     def boundaryConditionDialog(self):
         stl = self.project.get_stl(self.current_obj)
         if stl==None:
-            SplashCaseCreatorIO.printError("STL not found",GUIMode=True)
-            return
+            # May be this is a predefined external boundary
+            if self.current_obj in ["inlet","outlet","front","back","top","bottom"]:
+                boundary = self.project.meshSettings['bcPatches'][self.current_obj]
+                boundary['name'] = self.current_obj
+                boundaryConditions = boundaryConditionDialogDriver(boundary,external_boundary=True)
+                self.project.set_boundary_condition(self.current_obj,boundaryConditions)
+                return
+            else:
+                SplashCaseCreatorIO.printError("Patch not found",GUIMode=True)
+                return
         
         boundaryConditions = boundaryConditionDialogDriver(stl)
         if boundaryConditions==None:

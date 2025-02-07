@@ -100,13 +100,123 @@ class sphereDialog(QDialog):
         self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
     
     def on_pushButtonOK_clicked(self):
-        
+        self.name = self.window.lineEditSphereName.text()
         self.centerX = float(self.window.lineEditSphereX.text())
         self.centerY = float(self.window.lineEditSphereY.text())
         self.centerZ = float(self.window.lineEditSphereZ.text())
         self.radius = float(self.window.lineEditSphereRadius.text())
         self.created = True
         
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        
+        self.window.close()
+        
+    def __del__(self):
+        pass
+
+class cylinderDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.load_ui()
+        apply_theme_dialog_boxes(self.window, global_darkmode)
+        self.centerX = 0.0
+        self.centerY = 0.0
+        self.centerZ = 0.0
+        self.radius = 0.0
+        self.cyl_height = 0.0
+        self.created = False
+    
+    def load_ui(self):
+        #ui_path = r"C:\Users\Ridwa\Desktop\CFD\01_CFD_Software_Development\SplashCaseCreatorCFD\src\createCylinderDialog.ui"
+        ui_path = os.path.join(src, "createCylinderDialog.ui")
+        ui_file = QFile(ui_path)
+        ui_file.open(QFile.ReadOnly)
+        self.window = loader.load(ui_file, None)
+        ui_file.close()
+        #self.window.setWindowTitle("Cylinder Dialog")
+        self.prepare_events()
+        # make text box for number only with floating points OK
+        self.window.lineEditCylinderX.setValidator(QDoubleValidator())
+        self.window.lineEditCylinderY.setValidator(QDoubleValidator())
+        self.window.lineEditCylinderZ.setValidator(QDoubleValidator())
+        self.window.lineEditCylinderRadius.setValidator(QDoubleValidator())
+        self.window.lineEditCylinderHeight.setValidator(QDoubleValidator())
+        
+    
+    def prepare_events(self):
+        self.window.pushButtonOK.clicked.connect(self.on_pushButtonOK_clicked)
+        self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
+    
+    def on_pushButtonOK_clicked(self):
+        self.name = self.window.lineEditCylinderName.text()
+        self.centerX = float(self.window.lineEditCylinderX.text())
+        self.centerY = float(self.window.lineEditCylinderY.text())
+        self.centerZ = float(self.window.lineEditCylinderZ.text())
+        self.radius = float(self.window.lineEditCylinderRadius.text())
+        self.cyl_height = float(self.window.lineEditCylinderHeight.text())
+        self.created = True
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        
+        self.window.close()
+        
+    def __del__(self):
+        pass
+
+class boxDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.load_ui()
+        apply_theme_dialog_boxes(self.window, global_darkmode)
+        self.minX = 0.0
+        self.maxX = 0.0
+        self.minY = 0.0
+        self.maxY = 0.0
+        self.minZ = 0.0
+        self.maxZ = 0.0
+        self.created = False
+    
+    def load_ui(self):
+        ui_path = os.path.join(src, "createBoxDialog.ui")
+        ui_file = QFile(ui_path)
+        ui_file.open(QFile.ReadOnly)
+        self.window = loader.load(ui_file, None)
+        ui_file.close()
+        #self.window.setWindowTitle("Box Dialog")
+        self.prepare_events()
+        # make text box for number only with floating points OK
+        self.window.lineEditBoxMinX.setValidator(QDoubleValidator())
+        self.window.lineEditBoxMaxX.setValidator(QDoubleValidator())
+        self.window.lineEditBoxMinY.setValidator(QDoubleValidator())
+        self.window.lineEditBoxMaxY.setValidator(QDoubleValidator())
+        self.window.lineEditBoxMinZ.setValidator(QDoubleValidator())
+        self.window.lineEditBoxMaxZ.setValidator(QDoubleValidator())
+        
+    
+    def prepare_events(self):
+        self.window.pushButtonOK.clicked.connect(self.on_pushButtonOK_clicked)
+        self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
+    
+    def on_pushButtonOK_clicked(self):
+        self.name = self.window.lineEditBoxName.text()
+        self.minX = float(self.window.lineEditBoxMinX.text())
+        self.maxX = float(self.window.lineEditBoxMaxX.text())
+        self.minY = float(self.window.lineEditBoxMinY.text())
+        self.maxY = float(self.window.lineEditBoxMaxY.text())
+        self.minZ = float(self.window.lineEditBoxMinZ.text())
+        self.maxZ = float(self.window.lineEditBoxMaxZ.text())
+        lx, ly, lz = self.maxX-self.minX, self.maxY-self.minY, self.maxZ-self.minZ
+        # check if the box dimensions are positive
+        if lx<=0 or ly<=0 or lz<=0:
+            msg = QMessageBox()
+            msg.setWindowTitle("Invalid Box Dimensions")
+            msg.setText("Box dimensions must be positive")
+            msg.exec()
+            return
+        self.created = True
         self.window.close()
 
     def on_pushButtonCancel_clicked(self):
@@ -508,9 +618,13 @@ class physicalModelsDialog(QDialog):
         pass
 
 class boundaryConditionDialog(QDialog):
-    def __init__(self,boundary=None):
+    def __init__(self,boundary=None,external_boundary=False,bc_name=None):
         super().__init__()
         self.boundary = boundary
+        self.external_boundary = external_boundary # to check if the boundary is external
+        # since external boundaries do not have names when parsed, we need to set the name
+        if external_boundary:
+            self.boundary['name'] = bc_name
         self.purpose = boundary["purpose"]
         self.pressureType = "Gauge"
         self.velocityBC = None
@@ -1293,10 +1407,34 @@ def sphereDialogDriver():
     dialog.window.show()
     x,y,z = dialog.centerX,dialog.centerY,dialog.centerZ
     r = dialog.radius
+    name = dialog.name
     if(dialog.created==False):
         #print("Sphere Dialog Box Closed")
         return None
-    return (x,y,z,r)
+    return (name,x,y,z,r)
+
+def cylinderDialogDriver():
+    dialog = cylinderDialog()
+    dialog.window.exec()
+    dialog.window.show()
+    x,y,z = dialog.centerX,dialog.centerY,dialog.centerZ
+    r = dialog.radius
+    h = dialog.cyl_height
+    name = dialog.name
+    if(dialog.created==False):
+        return None
+    return (name,x,y,z,r,h)
+
+def boxDialogDriver():
+    dialog = boxDialog()
+    dialog.window.exec()
+    dialog.window.show()
+    minx,miny,minz = dialog.minX,dialog.minY,dialog.minZ
+    maxx,maxy,maxz = dialog.maxX,dialog.maxY,dialog.maxZ
+    name = dialog.name
+    if(dialog.created==False):
+        return None
+    return (name,minx,miny,minz,maxx,maxy,maxz)
 
 def inputDialogDriver(prompt="Enter Input",input_type="string"):
     dialog = inputDialog(prompt=prompt,input_type=input_type)
@@ -1354,9 +1492,9 @@ def physicalModelsDialogDriver(initialProperties=None):
     
     return (fluid,rho,nu,cp,)
 
-def boundaryConditionDialogDriver(boundary=None):
+def boundaryConditionDialogDriver(boundary=None,external_boundary=False):
     #print(boundary)
-    dialog = boundaryConditionDialog(boundary)
+    dialog = boundaryConditionDialog(boundary,external_boundary)
     dialog.window.exec()
     dialog.window.show()
     OK_clicked = dialog.OK_clicked
