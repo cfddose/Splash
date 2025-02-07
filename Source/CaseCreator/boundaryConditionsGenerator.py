@@ -51,7 +51,7 @@ def create_u_file(meshSettings,boundaryConditions):
                 U_file += f"""
     {{
         type {boundaryConditions['velocityInlet']['u_type']};
-        value uniform {tuple_to_string(boundaryConditions['velocityInlet']['u_value'])};
+        value uniform {tuple_to_string(patch['property'])};
     }}
     """
             if(patch['type'] == 'patch' and patch['name'] == 'outlet'):

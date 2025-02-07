@@ -618,13 +618,13 @@ class physicalModelsDialog(QDialog):
         pass
 
 class boundaryConditionDialog(QDialog):
-    def __init__(self,boundary=None,external_boundary=False,bc_name=None):
+    def __init__(self,boundary=None,external_boundary=False):
         super().__init__()
         self.boundary = boundary
         self.external_boundary = external_boundary # to check if the boundary is external
         # since external boundaries do not have names when parsed, we need to set the name
-        if external_boundary:
-            self.boundary['name'] = bc_name
+        # if external_boundary:
+        #     self.boundary['name'] = bc_name
         self.purpose = boundary["purpose"]
         self.pressureType = "Gauge"
         self.velocityBC = None

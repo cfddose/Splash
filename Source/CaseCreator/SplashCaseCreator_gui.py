@@ -336,112 +336,109 @@ class mainWindow(QMainWindow):
         Handles the event when an item is clicked in the listWidgetObjList.
         Highlights the selected STL in the VTK viewer and updates the property box.
         """
-        try:
-            # Find the selected item in the list
-            item = self.window.listWidgetObjList.currentItem()
-            if not item:
-                print("No item selected.")
-                return
-            
-            idx = self.window.listWidgetObjList.row(item)
-            self.current_obj = item.text()
+        #try:
+        # Find the selected item in the list
+        item = self.window.listWidgetObjList.currentItem()
+        if not item:
+            print("No item selected.")
+            return
+        
+        idx = self.window.listWidgetObjList.row(item)
+        self.current_obj = item.text()
 
-            # Check if the selected object is a boundary or an STL file
-            is_STL = False
-            is_STL = self.project.check_stl_file(self.current_obj)
-            #print(f"Current Object: {self.current_obj}")
-            #print(f"STL Files: {self.project.stl_files}")
-            #print(f"Selected Item: {self.current_obj}, at Index: {idx}")
-            #print(f"Is STL: {is_STL}")
-            
-            # Highlight the STL file in the VTK viewer
-            self.vtk_manager.highlight_actor(
+        # Check if the selected object is a boundary or an STL file
+        is_STL = False
+        is_STL = self.project.check_stl_file(self.current_obj)
+        
+        
+        # Highlight the STL file in the VTK viewer
+        self.vtk_manager.highlight_actor(
+            self.current_obj,
+            [s['name'] for s in self.project.stl_files],
+            vtkNamedColors()
+        )
+
+        # Retrieve STL properties
+        stl_properties = self.project.get_stl_properties(self.current_obj)
+        
+        # For external flows, the selected object is probably a boundary.
+        # In this case, we need to retrieve the boundary properties instead.
+        if self.project.internalFlow==False:
+            #patch_names = [s['name'] for s in self.project.meshSettings['patches']]
+            self.vtk_manager.highlight_boundary(
                 self.current_obj,
-                [s['name'] for s in self.project.stl_files],
-                vtkNamedColors()
-            )
+                [s['name'] for s in self.project.meshSettings['patches']],
+                vtkNamedColors())
+            boundary_properties = self.project.get_boundary(self.current_obj)
+            #print(f"Boundary Properties: {boundary_properties}")
+            #return
+        
+        if stl_properties==None and boundary_properties==None:
+            print(f"No properties found for {self.current_obj}")
+            return
 
-            # Retrieve STL properties
-            stl_properties = self.project.get_stl_properties(self.current_obj)
+        if is_STL:
+            # Unpack STL properties
+            purpose, refMin, refMax, featureEdges, featureLevel, nLayers, property, bounds = stl_properties
             
-            # For external flows, the selected object is probably a boundary.
-            # In this case, we need to retrieve the boundary properties instead.
-            if self.project.internalFlow==False:
-                #print(self.project.meshSettings['bcPatches'].keys())
-                self.vtk_manager.highlight_boundary(
-                    self.current_obj,
-                    [s for s in self.project.meshSettings['bcPatches'].keys()],
-                    vtkNamedColors())
-                boundary_properties = self.project.get_boundary(self.current_obj)
-                #print(f"Boundary Properties: {boundary_properties}")
-                #return
+            self.window.tableViewProperties.clearContents()
+            self.window.tableViewProperties.setRowCount(4)
+            self.window.tableViewProperties.setColumnCount(2)
+
+            # Setting headers (if not already set elsewhere)
+            self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
             
-            if stl_properties==None and boundary_properties==None:
-                print(f"No properties found for {self.current_obj}")
-                return
+            self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Refinement Min"))
+            self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(str(refMin)))
+            self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Refinement Max"))
+            self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(refMax)))
+            self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Feature Edges"))
+            self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(featureEdges)))
+            self.window.tableViewProperties.setItem(3, 0, QtWidgets.QTableWidgetItem("Feature Level"))
+            self.window.tableViewProperties.setItem(3, 1, QtWidgets.QTableWidgetItem(str(featureLevel)))
+            
+            # Additional rows for other properties
+            additional_row = 4
+            self.window.tableViewProperties.setRowCount(additional_row + 8)
+            self.window.tableViewProperties.setItem(additional_row, 0, QtWidgets.QTableWidgetItem("nLayers"))
+            self.window.tableViewProperties.setItem(additional_row, 1, QtWidgets.QTableWidgetItem(str(nLayers)))
+            self.window.tableViewProperties.setItem(additional_row + 1, 0, QtWidgets.QTableWidgetItem("Min X"))
+            self.window.tableViewProperties.setItem(additional_row + 1, 1, QtWidgets.QTableWidgetItem(f"{bounds[0]:.2f}"))
+            self.window.tableViewProperties.setItem(additional_row + 2, 0, QtWidgets.QTableWidgetItem("Max X"))
+            self.window.tableViewProperties.setItem(additional_row + 2, 1, QtWidgets.QTableWidgetItem(f"{bounds[1]:.2f}"))
+            self.window.tableViewProperties.setItem(additional_row + 3, 0, QtWidgets.QTableWidgetItem("Min Y")) 
+            self.window.tableViewProperties.setItem(additional_row + 3, 1, QtWidgets.QTableWidgetItem(f"{bounds[2]:.2f}")) 
+            self.window.tableViewProperties.setItem(additional_row + 4, 0, QtWidgets.QTableWidgetItem("Max Y")) 
+            self.window.tableViewProperties.setItem(additional_row + 4, 1, QtWidgets.QTableWidgetItem(f"{bounds[3]:.2f}")) 
+            self.window.tableViewProperties.setItem(additional_row + 5, 0, QtWidgets.QTableWidgetItem("Min Z")) 
+            self.window.tableViewProperties.setItem(additional_row + 5, 1, QtWidgets.QTableWidgetItem(f"{bounds[4]:.2f}"))
+            self.window.tableViewProperties.setItem(additional_row + 6, 0, QtWidgets.QTableWidgetItem("Max Z")) 
+            self.window.tableViewProperties.setItem(additional_row + 6, 1, QtWidgets.QTableWidgetItem(f"{bounds[5]:.2f}"))
+        else:
+            # Unpack boundary properties
+            #print(f"Boundary Properties: {boundary_properties}")
+            patchType = boundary_properties['type']
+            patchProperty = boundary_properties['property']
+            patchPurpose = boundary_properties['purpose']
 
-            if is_STL:
-                # Unpack STL properties
-                purpose, refMin, refMax, featureEdges, featureLevel, nLayers, property, bounds = stl_properties
-                
-                self.window.tableViewProperties.clearContents()
-                self.window.tableViewProperties.setRowCount(4)
-                self.window.tableViewProperties.setColumnCount(2)
+            self.window.tableViewProperties.clearContents()
+            self.window.tableViewProperties.setRowCount(3)
+            self.window.tableViewProperties.setColumnCount(2)
 
-                # Setting headers (if not already set elsewhere)
-                self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
-                
-                self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Refinement Min"))
-                self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(str(refMin)))
-                self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Refinement Max"))
-                self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(refMax)))
-                self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Feature Edges"))
-                self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(featureEdges)))
-                self.window.tableViewProperties.setItem(3, 0, QtWidgets.QTableWidgetItem("Feature Level"))
-                self.window.tableViewProperties.setItem(3, 1, QtWidgets.QTableWidgetItem(str(featureLevel)))
-                
-                # Additional rows for other properties
-                additional_row = 4
-                self.window.tableViewProperties.setRowCount(additional_row + 8)
-                self.window.tableViewProperties.setItem(additional_row, 0, QtWidgets.QTableWidgetItem("Number of Layers"))
-                self.window.tableViewProperties.setItem(additional_row, 1, QtWidgets.QTableWidgetItem(str(nLayers)))
-                self.window.tableViewProperties.setItem(additional_row + 1, 0, QtWidgets.QTableWidgetItem("Min X"))
-                self.window.tableViewProperties.setItem(additional_row + 1, 1, QtWidgets.QTableWidgetItem(f"{bounds[0]:.2f}"))
-                self.window.tableViewProperties.setItem(additional_row + 2, 0, QtWidgets.QTableWidgetItem("Max X"))
-                self.window.tableViewProperties.setItem(additional_row + 2, 1, QtWidgets.QTableWidgetItem(f"{bounds[1]:.2f}"))
-                self.window.tableViewProperties.setItem(additional_row + 3, 0, QtWidgets.QTableWidgetItem("Min Y")) 
-                self.window.tableViewProperties.setItem(additional_row + 3, 1, QtWidgets.QTableWidgetItem(f"{bounds[2]:.2f}")) 
-                self.window.tableViewProperties.setItem(additional_row + 4, 0, QtWidgets.QTableWidgetItem("Max Y")) 
-                self.window.tableViewProperties.setItem(additional_row + 4, 1, QtWidgets.QTableWidgetItem(f"{bounds[3]:.2f}")) 
-                self.window.tableViewProperties.setItem(additional_row + 5, 0, QtWidgets.QTableWidgetItem("Min Z")) 
-                self.window.tableViewProperties.setItem(additional_row + 5, 1, QtWidgets.QTableWidgetItem(f"{bounds[4]:.2f}"))
-                self.window.tableViewProperties.setItem(additional_row + 6, 0, QtWidgets.QTableWidgetItem("Max Z")) 
-                self.window.tableViewProperties.setItem(additional_row + 6, 1, QtWidgets.QTableWidgetItem(f"{bounds[5]:.2f}"))
-            else:
-                # Unpack boundary properties
-               
-                patchType = boundary_properties['type']
-                patchProperty = boundary_properties['property']
-                patchPurpose = boundary_properties['purpose']
+            # Setting headers (if not already set elsewhere)
+            self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
+            
+            self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Type"))
+            self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(patchType))
+            self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Property"))
+            self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(patchProperty)))
+            self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Purpose"))
+            self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(patchPurpose)))
+            
+            
 
-                self.window.tableViewProperties.clearContents()
-                self.window.tableViewProperties.setRowCount(3)
-                self.window.tableViewProperties.setColumnCount(2)
-
-                # Setting headers (if not already set elsewhere)
-                self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
-                
-                self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Type"))
-                self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(patchType))
-                self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Property"))
-                self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(patchProperty)))
-                self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Purpose"))
-                self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(patchPurpose)))
-                
-                
-
-        except Exception as e:
-            print(f"Error in listClicked: {e}")
+        #except Exception as e:
+        #    print(f"Error in listClicked: {e}")
     # ------------------------------------------------------
     #  End of: Highlighing the clicked STL file in the list
     # ------------------------------------------------------        
@@ -1133,6 +1130,11 @@ class mainWindow(QMainWindow):
             onGround = self.window.checkBoxOnGround.isChecked()
         self.project.meshSettings['onGround'] = onGround
         self.project.onGround = onGround
+
+        # If object is on the ground, the bottom boundary condition is wall
+        if onGround:
+            self.project.set_external_boundary_condition(patch_name="bottom",boundary_condition="wall")
+            self.project.set_boundary_type(patch_name="bottom",boundary_type="wall")
         if len(self.project.stl_files)==0:
             self.updateTerminal("No STL files loaded")
             self.readyStatusBar()
@@ -1240,13 +1242,18 @@ class mainWindow(QMainWindow):
 
     def boundaryConditionDialog(self):
         stl = self.project.get_stl(self.current_obj)
+        patch_names = [patch['name'] for patch in self.project.meshSettings['patches']]
         if stl==None:
             # May be this is a predefined external boundary
-            if self.current_obj in ["inlet","outlet","front","back","top","bottom"]:
-                boundary = self.project.meshSettings['bcPatches'][self.current_obj]
-                boundary['name'] = self.current_obj
+            if self.current_obj in patch_names:
+                boundary = None 
+                for patch in self.project.meshSettings['patches']:
+                    if patch['name']==self.current_obj:
+                        boundary = patch
+                        break
+                #boundary['name'] = self.current_obj
                 boundaryConditions = boundaryConditionDialogDriver(boundary,external_boundary=True)
-                self.project.set_boundary_condition(self.current_obj,boundaryConditions)
+                self.project.set_external_boundary_condition(self.current_obj,boundaryConditions)
                 return
             else:
                 SplashCaseCreatorIO.printError("Patch not found",GUIMode=True)

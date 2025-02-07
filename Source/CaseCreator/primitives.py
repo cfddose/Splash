@@ -84,8 +84,9 @@ class SplashCaseCreatorPrimitives:
         SplashCaseCreatorIO.printMessage(f"{'No.':<5}{'Name':<20}{'Purpose':<20}{'Value':<15}")
         # for external flows, show the boundary conditions for domain first
         if meshSettings['internalFlow'] == False:
-            for patchName in meshSettings['bcPatches'].keys():
-                patch = meshSettings['bcPatches'][patchName]
+            for patch in meshSettings['patches']:
+                patchName = patch['name']
+                
                 if patch['property'] == None:
                     property = "None"
                 elif isinstance(patch['property'], list):

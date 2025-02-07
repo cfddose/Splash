@@ -67,29 +67,28 @@ def write_vector_boundary_condition(patch="inlet1", purpose="inlet", property=No
     }}\n"""
     return bc
 
-def create_scalar_file(meshSettings,boundaryConditions,objName="k",dimensions=(0,2,-2)):
-    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName=objName)
+def create_scalar_file(meshSettings,boundaryConditions,scalarName="k",dimensions=(0,2,-2)):
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName=scalarName)
     dims = SplashCaseCreatorPrimitives.createDimensions(M=dimensions[0],L=dimensions[1],T=dimensions[2])
     internalField = SplashCaseCreatorPrimitives.createInternalFieldScalar(type="uniform", value=0.0)
     s_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {"""
 
     if(meshSettings['internalFlow'] == False):
-        keys = meshSettings['bcPatches'].keys()
-        for aKey in keys:
-            anItem = meshSettings['bcPatches'][aKey]
-            if(objName == "k" or objName == "epsilon" or objName == "omega"):
-                s_file += write_turbulence_boundary_condition(patch=aKey, purpose=anItem['purpose'], property=anItem['property'])
-            elif(objName == "p"):
-                s_file += write_pressure_boundary_condition(patch=aKey, purpose=anItem['purpose'], property=anItem['property'])
-            
+        for boundary_patch in meshSettings['patches']:
+            if(scalarName == "k" or scalarName == "epsilon" or scalarName == "omega" or scalarName == "nuTilda"):
+                s_file += write_turbulence_boundary_condition(patch=boundary_patch['name'], purpose=boundary_patch['purpose'], property=boundary_patch['property'])
+            elif(scalarName == "p"):
+                s_file += write_pressure_boundary_condition(patch=boundary_patch['name'], purpose=boundary_patch['purpose'], property=boundary_patch['property'])
+            else:
+                raise ValueError("Invalid scalar field type")
     # If internal flow, set the boundary conditions for STL patches
     for patch in meshSettings['geometry']:
         
         if(patch['type'] == 'triSurfaceMesh'):
-            if(objName == "k" or objName == "epsilon" or objName == "omega"):
+            if(scalarName == "k" or scalarName == "epsilon" or scalarName == "omega" or scalarName == "nuTilda"):
                 s_file += write_turbulence_boundary_condition(patch=patch["name"], purpose=patch['purpose'], property=patch['property'])
-            elif(objName == "p"):
+            elif(scalarName == "p"):
                 s_file += write_pressure_boundary_condition(patch=patch["name"], purpose=patch['purpose'], property=patch['property'])
             else:
                 raise ValueError("Invalid scalar field type")        
@@ -177,11 +176,9 @@ def create_u_file(meshSettings,boundaryConditions):
 {"""
 
     if(meshSettings['internalFlow'] == False):
-        keys = meshSettings['bcPatches'].keys()
-        for aKey in keys:
-            anItem = meshSettings['bcPatches'][aKey]
-            U_file += write_vector_boundary_condition(patch=aKey, purpose=anItem['purpose'], property=anItem['property'])
-    
+        for boundary_patch in meshSettings['patches']:
+            U_file += write_vector_boundary_condition(patch=boundary_patch['name'], purpose=boundary_patch['purpose'], property=boundary_patch['property'])
+       
     # If internal flow, set the boundary conditions for STL patches
     for patch in meshSettings['geometry']:
         if(patch['type'] == 'triSurfaceMesh'):
@@ -192,19 +189,19 @@ def create_u_file(meshSettings,boundaryConditions):
 
 
 def create_p_file(meshSettings,boundaryConditions):
-    p_file = create_scalar_file(meshSettings,boundaryConditions,objName="p",dimensions=(0,2,-2))
+    p_file = create_scalar_file(meshSettings,boundaryConditions,scalarName="p",dimensions=(0,2,-2))
     return p_file
 
 def create_k_file(meshSettings,boundaryConditions):
-    k_file = create_scalar_file(meshSettings,boundaryConditions,objName="k",dimensions=(0,2,-2))
+    k_file = create_scalar_file(meshSettings,boundaryConditions,scalarName="k",dimensions=(0,2,-2))
     return k_file
 
 def create_epsilon_file(meshSettings,boundaryConditions):
-    epsilon_file = create_scalar_file(meshSettings,boundaryConditions,objName="epsilon",dimensions=(0,2,-2))
+    epsilon_file = create_scalar_file(meshSettings,boundaryConditions,scalarName="epsilon",dimensions=(0,2,-2))
     return epsilon_file
 
 def create_omega_file(meshSettings,boundaryConditions):
-    omega_file = create_scalar_file(meshSettings,boundaryConditions,objName="omega",dimensions=(0,2,-2))
+    omega_file = create_scalar_file(meshSettings,boundaryConditions,scalarName="omega",dimensions=(0,2,-2))
     return omega_file
 
 def create_nut_file(meshSettings,boundaryConditions=None):
@@ -215,11 +212,12 @@ def create_nut_file(meshSettings,boundaryConditions=None):
 {"""
 
     if(meshSettings['internalFlow'] == False):
-        keys = meshSettings['bcPatches'].keys()
-        for aKey in keys:
-            anItem = meshSettings['bcPatches'][aKey]
-            nut_file += write_turbulence_boundary_condition(patch=aKey, purpose=anItem['purpose'], property=anItem['property'], wallFunction="nutkWallFunction")
-    
+        for boundary_patch in meshSettings['patches']:
+            if(boundary_patch['purpose'] == 'wall'):
+                nut_file += write_turbulence_boundary_condition(patch=boundary_patch['name'], purpose=boundary_patch['purpose'], property=boundary_patch['property'], wallFunction="nutkWallFunction")
+            else:
+                # Need more detailed check
+                nut_file += write_turbulence_boundary_condition(patch=boundary_patch['name'], purpose=boundary_patch['purpose'], property=boundary_patch['property'])
     # If internal flow, set the boundary conditions for STL patches
     for patch in meshSettings['geometry']:
         if(patch['type'] == 'triSurfaceMesh'):

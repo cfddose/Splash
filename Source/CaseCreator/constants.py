@@ -40,23 +40,24 @@ meshSettings = {
     'halfModel': False,
     # patches are for the construction of the blockMeshDict
     'patches': [
-        {'name': 'inlet', 'type': 'patch','faces': [0, 4, 7, 3]},
-        {'name': 'outlet', 'type': 'patch','faces': [1, 5, 6, 2]},
-        {'name': 'front', 'type': 'symmetry','faces': [0, 1, 5, 4]},
-        {'name': 'back', 'type': 'symmetry','faces': [2, 3, 7, 6]},
-        {'name': 'bottom', 'type': 'symmetry','faces': [0, 1, 2, 3]},
-        {'name': 'top', 'type': 'symmetry','faces': [4, 5, 6, 7]},
+        {'name': 'inlet', 'type': 'patch','faces': [0, 4, 7, 3],'purpose': 'inlet','property': (1,0,0)},
+        {'name': 'outlet', 'type': 'patch','faces': [1, 5, 6, 2],'purpose': 'outlet','property': None},
+        {'name': 'front', 'type': 'symmetry','faces': [0, 1, 5, 4],'purpose': 'symmetry','property': None},
+        {'name': 'back', 'type': 'symmetry','faces': [2, 3, 7, 6],'purpose': 'symmetry','property': None},
+        {'name': 'bottom', 'type': 'symmetry','faces': [0, 1, 2, 3],'purpose': 'symmetry','property': None},
+        {'name': 'top', 'type': 'symmetry','faces': [4, 5, 6, 7],'purpose': 'symmetry','property': None},
     ],
     # bcPatches are for the boundary conditions and may be changed based on the case
     # 2025/1/23: added faces to the bcPatches 
-    'bcPatches': {
-        'inlet':    {'type': 'patch','purpose': 'inlet','property': (1,0,0),'faces': [0, 4, 7, 3]},
-        'outlet':   {'type': 'patch','purpose': 'outlet','property': None,'faces': [1, 5, 6, 2]},
-        'front':    {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 5, 4]},
-        'back':     {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [2, 3, 7, 6]},
-        'bottom':   {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 2, 3]},
-        'top':      {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [4, 5, 6, 7]},
-},
+    # 2025/2/7: bcPatches are completely removed from the meshSettings. Now everything uses patches instead.
+#     'bcPatches': {
+#         'inlet':    {'type': 'patch','purpose': 'inlet','property': (1,0,0),'faces': [0, 4, 7, 3]},
+#         'outlet':   {'type': 'patch','purpose': 'outlet','property': None,'faces': [1, 5, 6, 2]},
+#         'front':    {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 5, 4]},
+#         'back':     {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [2, 3, 7, 6]},
+#         'bottom':   {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 2, 3]},
+#         'top':      {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [4, 5, 6, 7]},
+# },
     'snappyHexSteps': {'castellatedMesh': 'true',
                        'snap': 'true',
                         'addLayers': 'true'},

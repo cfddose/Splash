@@ -332,32 +332,35 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
     #--------------------------------------------------------------------
     # Methods to STLs and geometry and boundary conditions
     #-------------------------------------------------------------------- 
-    def change_boundary_condition(self,bcName,newBC):
-        if not self.internalFlow: # if it is external flow
-            bcPatches = self.meshSettings['patches']
-            for aPatch in self.meshSettings['patches']:
-                if bcName == aPatch['name']:
-                    aPatch['type'] = newBC
-                    SplashCaseCreatorIO.printMessage(f"Boundary condition {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
-                    return 0
-            if bcName in bcPatches:
-                self.meshSettings['patches'][bcName]['type'] = newBC
-                self.meshSettings['bcPatches'][bcName]['purpose'] = newBC
-                newProperty = self.set_property(newBC)
-                self.meshSettings['bcPatches'][bcName]['property'] = newProperty
-                SplashCaseCreatorIO.printMessage(f"Boundary condition {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
-                return 0
-            else:
-                SplashCaseCreatorIO.printMessage("Boundary condition not found in the list")
-        geometry = self.meshSettings['geometry']
-        for stl in geometry:
-            if stl['name'] == bcName:
-                stl['purpose'] = newBC
-                newProperty = self.set_property(newBC)
-                self.meshSettings['bcPatches'][bcName]['property'] = newProperty
-                SplashCaseCreatorIO.printMessage(f"Boundary condition of {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
-                return 0
-        return -1
+    # def change_boundary_condition(self,bcName,newBC):
+    #     if not self.internalFlow: # if it is external flow
+    #         isBcPatch = False # flag to check if the patch is a boundary patch
+    #         bcPatches = self.meshSettings['patches']
+    #         for aPatch in self.meshSettings['patches']:
+    #             if bcName == aPatch['name']:
+    #                 aPatch['type'] = newBC
+    #                 aPatch['purpose'] = newBC
+    #                 SplashCaseCreatorIO.printMessage(f"Boundary condition {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
+    #                 return 0
+    #         if bcName in bcPatches:
+    #             self.meshSettings['patches'][bcName]['type'] = newBC
+    #             self.meshSettings['patches'][bcName]['purpose'] = newBC
+    #             newProperty = self.set_property(newBC)
+    #             self.meshSettings['bcPatches'][bcName]['property'] = newProperty
+    #             SplashCaseCreatorIO.printMessage(f"Boundary condition {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
+    #             return 0
+    #         else:
+    #             SplashCaseCreatorIO.printMessage("Boundary condition not found in the list")
+    #     geometry = self.meshSettings['geometry']
+    #     for obj in geometry:
+    #         if obj['name'] == bcName:
+    #             obj['purpose'] = newBC
+    #             newProperty = self.set_property(newBC)
+    #             # The previous code was just wrong! I mistaken between geometry and bcPatches
+    #             self.meshSettings['geometry'][bcName]['property'] = newProperty
+    #             SplashCaseCreatorIO.printMessage(f"Boundary condition of {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
+    #             return 0
+    #     return -1
 
     def change_stl_refinement_level(self,stl_file_number=0):
         SplashCaseCreatorIO.printMessage("Changing refinement level")
@@ -439,9 +442,11 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         return None
     
     def get_boundary(self,boundary_name):
-        boundary_names = self.meshSettings['bcPatches'].keys()
+        boundary_names = [boundary['name'] for boundary in self.meshSettings['patches']]
         if boundary_name in boundary_names:
-            return self.meshSettings['bcPatches'][boundary_name]
+            for boundary in self.meshSettings['patches']:
+                if boundary['name'] == boundary_name:
+                    return boundary
         return None
 
     def add_stl_to_mesh_settings(self, stl_name,refMin=0, refMax=0, featureEdges=True, 
@@ -526,8 +531,20 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         print("Failed setting boundary condition. STL file not found")
         return -1
     
+    def set_boundary_type(self,patch_name,boundary_type):
+        for patch in self.meshSettings['patches']:
+            if patch['name'] == patch_name:
+                patch['type'] = boundary_type
+                return 0
+        return -1
+    
     def set_external_boundary_condition(self,patch_name,boundary_condition):
-        pass
+        for patch in self.meshSettings['patches']:
+            if patch['name'] == patch_name:
+                if patch['purpose'] == 'inlet':
+                    # set the inlet values
+                    patch['property'] = list(boundary_condition[0])
+                return 0
 
     def add_stl_to_project(self):
         for stl_file in self.stl_files:
