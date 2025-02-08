@@ -1,3 +1,24 @@
+"""
+/*--------------------------------*- C++ -*----------------------------------*\
+-------------------------------------------------------------------------------
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
+-------------------------------------------------------------------------------
+ * SplashCaseCreator is part of Splash CFD automation tool.
+ * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
+ * All rights reserved.
+ *
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
+ */
+"""
+
 #------------------------------ Back up 25.12.2024 -------------------------------
 ##import vtk
 ##from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
@@ -817,7 +838,7 @@ class VTKManager:
         sphere.SetRadius(radius)
         self.add_object_to_VTK(sphere, objectName=objectName, removePrevious=removePrevious)
 
-    def add_box_to_VTK(self, minX=0.0, minY=0.0, minZ=0.0, maxX=1.0, maxY=1.0, maxZ=1.0, boxName="Box"):
+    def add_box_to_VTK(self, minX=0.0, minY=0.0, minZ=0.0, maxX=1.0, maxY=1.0, maxZ=1.0, objectName="Box"):
         """
         Adds a bounding box to the renderer.
         :param minX: Minimum x-coordinate of the box.
@@ -833,7 +854,23 @@ class VTKManager:
         cube.SetYLength(maxY - minY)
         cube.SetZLength(maxZ - minZ)
         cube.SetCenter((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2)
-        self.add_object_to_VTK(cube, objectName=boxName, removePrevious=True)
+        self.add_object_to_VTK(cube, objectName=objectName, removePrevious=True)
+
+    def add_cylinder_to_VTK(self, center=(0.0, 0.0, 0.0), radius=1.0, height=1.0, objectName="Cylinder", removePrevious=True):
+        """
+        Adds a cylinder to the renderer.
+        :param center: Tuple (x, y, z) specifying the cylinder's center.
+        :param radius: Radius of the cylinder.
+        :param height: Height of the cylinder.
+        :param objectName: Name of the cylinder object.
+        :param removePrevious: If True, removes any existing cylinder with the same name.
+        """
+        cylinder = vtk.vtkCylinderSource()
+        cylinder.SetCenter(center)
+        cylinder.SetRadius(radius)
+        cylinder.SetHeight(height)
+        cylinder.SetResolution(64)  # Increase resolution for a smoother cylinder
+        self.add_object_to_VTK(cylinder, objectName=objectName, removePrevious=removePrevious)
 
     def add_object_to_VTK(self, obj, objectName, removePrevious=False, color=(0.5, 0.5, 0.5), opacity=0.5):
         """

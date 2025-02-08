@@ -1,3 +1,23 @@
+"""
+/*--------------------------------*- C++ -*----------------------------------*\
+-------------------------------------------------------------------------------
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
+-------------------------------------------------------------------------------
+ * SplashCaseCreator is part of Splash CFD automation tool.
+ * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
+ * All rights reserved.
+ *
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
+ */
+"""
 # Importing system-related libs  
 import sys
 import os
@@ -23,7 +43,8 @@ from PySide6.QtCore import QTimer, QTime # for Timer
 from PySide6.QtCore import Qt
 from PySide6 import QtWidgets
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from dialogBoxes import sphereDialogDriver, yesNoDialogDriver, yesNoCancelDialogDriver
+from dialogBoxes import yesNoDialogDriver, yesNoCancelDialogDriver
+from dialogBoxes import sphereDialogDriver, boxDialogDriver, cylinderDialogDriver
 from dialogBoxes import vectorInputDialogDriver, STLDialogDriver, physicalModelsDialogDriver
 from dialogBoxes import boundaryConditionDialogDriver, numericsDialogDriver, controlsDialogDriver
 from dialogBoxes import set_src, meshPointDialogDriver,postProcessDialogDriver
@@ -315,112 +336,109 @@ class mainWindow(QMainWindow):
         Handles the event when an item is clicked in the listWidgetObjList.
         Highlights the selected STL in the VTK viewer and updates the property box.
         """
-        try:
-            # Find the selected item in the list
-            item = self.window.listWidgetObjList.currentItem()
-            if not item:
-                print("No item selected.")
-                return
-            
-            idx = self.window.listWidgetObjList.row(item)
-            self.current_obj = item.text()
+        #try:
+        # Find the selected item in the list
+        item = self.window.listWidgetObjList.currentItem()
+        if not item:
+            print("No item selected.")
+            return
+        
+        idx = self.window.listWidgetObjList.row(item)
+        self.current_obj = item.text()
 
-            # Check if the selected object is a boundary or an STL file
-            is_STL = False
-            is_STL = self.project.check_stl_file(self.current_obj)
-            #print(f"Current Object: {self.current_obj}")
-            #print(f"STL Files: {self.project.stl_files}")
-            #print(f"Selected Item: {self.current_obj}, at Index: {idx}")
-            #print(f"Is STL: {is_STL}")
-            
-            # Highlight the STL file in the VTK viewer
-            self.vtk_manager.highlight_actor(
+        # Check if the selected object is a boundary or an STL file
+        is_STL = False
+        is_STL = self.project.check_stl_file(self.current_obj)
+        
+        
+        # Highlight the STL file in the VTK viewer
+        self.vtk_manager.highlight_actor(
+            self.current_obj,
+            [s['name'] for s in self.project.stl_files],
+            vtkNamedColors()
+        )
+
+        # Retrieve STL properties
+        stl_properties = self.project.get_stl_properties(self.current_obj)
+        
+        # For external flows, the selected object is probably a boundary.
+        # In this case, we need to retrieve the boundary properties instead.
+        if self.project.internalFlow==False:
+            #patch_names = [s['name'] for s in self.project.meshSettings['patches']]
+            self.vtk_manager.highlight_boundary(
                 self.current_obj,
-                [s['name'] for s in self.project.stl_files],
-                vtkNamedColors()
-            )
+                [s['name'] for s in self.project.meshSettings['patches']],
+                vtkNamedColors())
+            boundary_properties = self.project.get_boundary(self.current_obj)
+            #print(f"Boundary Properties: {boundary_properties}")
+            #return
+        
+        if stl_properties==None and boundary_properties==None:
+            print(f"No properties found for {self.current_obj}")
+            return
 
-            # Retrieve STL properties
-            stl_properties = self.project.get_stl_properties(self.current_obj)
+        if is_STL:
+            # Unpack STL properties
+            purpose, refMin, refMax, featureEdges, featureLevel, nLayers, property, bounds = stl_properties
             
-            # For external flows, the selected object is probably a boundary.
-            # In this case, we need to retrieve the boundary properties instead.
-            if self.project.internalFlow==False:
-                #print(self.project.meshSettings['bcPatches'].keys())
-                self.vtk_manager.highlight_boundary(
-                    self.current_obj,
-                    [s for s in self.project.meshSettings['bcPatches'].keys()],
-                    vtkNamedColors())
-                boundary_properties = self.project.get_boundary(self.current_obj)
-                #print(f"Boundary Properties: {boundary_properties}")
-                #return
+            self.window.tableViewProperties.clearContents()
+            self.window.tableViewProperties.setRowCount(4)
+            self.window.tableViewProperties.setColumnCount(2)
+
+            # Setting headers (if not already set elsewhere)
+            self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
             
-            if stl_properties==None and boundary_properties==None:
-                print(f"No properties found for {self.current_obj}")
-                return
+            self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Refinement Min"))
+            self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(str(refMin)))
+            self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Refinement Max"))
+            self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(refMax)))
+            self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Feature Edges"))
+            self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(featureEdges)))
+            self.window.tableViewProperties.setItem(3, 0, QtWidgets.QTableWidgetItem("Feature Level"))
+            self.window.tableViewProperties.setItem(3, 1, QtWidgets.QTableWidgetItem(str(featureLevel)))
+            
+            # Additional rows for other properties
+            additional_row = 4
+            self.window.tableViewProperties.setRowCount(additional_row + 8)
+            self.window.tableViewProperties.setItem(additional_row, 0, QtWidgets.QTableWidgetItem("nLayers"))
+            self.window.tableViewProperties.setItem(additional_row, 1, QtWidgets.QTableWidgetItem(str(nLayers)))
+            self.window.tableViewProperties.setItem(additional_row + 1, 0, QtWidgets.QTableWidgetItem("Min X"))
+            self.window.tableViewProperties.setItem(additional_row + 1, 1, QtWidgets.QTableWidgetItem(f"{bounds[0]:.2f}"))
+            self.window.tableViewProperties.setItem(additional_row + 2, 0, QtWidgets.QTableWidgetItem("Max X"))
+            self.window.tableViewProperties.setItem(additional_row + 2, 1, QtWidgets.QTableWidgetItem(f"{bounds[1]:.2f}"))
+            self.window.tableViewProperties.setItem(additional_row + 3, 0, QtWidgets.QTableWidgetItem("Min Y")) 
+            self.window.tableViewProperties.setItem(additional_row + 3, 1, QtWidgets.QTableWidgetItem(f"{bounds[2]:.2f}")) 
+            self.window.tableViewProperties.setItem(additional_row + 4, 0, QtWidgets.QTableWidgetItem("Max Y")) 
+            self.window.tableViewProperties.setItem(additional_row + 4, 1, QtWidgets.QTableWidgetItem(f"{bounds[3]:.2f}")) 
+            self.window.tableViewProperties.setItem(additional_row + 5, 0, QtWidgets.QTableWidgetItem("Min Z")) 
+            self.window.tableViewProperties.setItem(additional_row + 5, 1, QtWidgets.QTableWidgetItem(f"{bounds[4]:.2f}"))
+            self.window.tableViewProperties.setItem(additional_row + 6, 0, QtWidgets.QTableWidgetItem("Max Z")) 
+            self.window.tableViewProperties.setItem(additional_row + 6, 1, QtWidgets.QTableWidgetItem(f"{bounds[5]:.2f}"))
+        else:
+            # Unpack boundary properties
+            #print(f"Boundary Properties: {boundary_properties}")
+            patchType = boundary_properties['type']
+            patchProperty = boundary_properties['property']
+            patchPurpose = boundary_properties['purpose']
 
-            if is_STL:
-                # Unpack STL properties
-                purpose, refMin, refMax, featureEdges, featureLevel, nLayers, property, bounds = stl_properties
-                
-                self.window.tableViewProperties.clearContents()
-                self.window.tableViewProperties.setRowCount(4)
-                self.window.tableViewProperties.setColumnCount(2)
+            self.window.tableViewProperties.clearContents()
+            self.window.tableViewProperties.setRowCount(3)
+            self.window.tableViewProperties.setColumnCount(2)
 
-                # Setting headers (if not already set elsewhere)
-                self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
-                
-                self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Refinement Min"))
-                self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(str(refMin)))
-                self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Refinement Max"))
-                self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(refMax)))
-                self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Feature Edges"))
-                self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(featureEdges)))
-                self.window.tableViewProperties.setItem(3, 0, QtWidgets.QTableWidgetItem("Feature Level"))
-                self.window.tableViewProperties.setItem(3, 1, QtWidgets.QTableWidgetItem(str(featureLevel)))
-                
-                # Additional rows for other properties
-                additional_row = 4
-                self.window.tableViewProperties.setRowCount(additional_row + 8)
-                self.window.tableViewProperties.setItem(additional_row, 0, QtWidgets.QTableWidgetItem("Number of Layers"))
-                self.window.tableViewProperties.setItem(additional_row, 1, QtWidgets.QTableWidgetItem(str(nLayers)))
-                self.window.tableViewProperties.setItem(additional_row + 1, 0, QtWidgets.QTableWidgetItem("Min X"))
-                self.window.tableViewProperties.setItem(additional_row + 1, 1, QtWidgets.QTableWidgetItem(f"{bounds[0]:.2f}"))
-                self.window.tableViewProperties.setItem(additional_row + 2, 0, QtWidgets.QTableWidgetItem("Max X"))
-                self.window.tableViewProperties.setItem(additional_row + 2, 1, QtWidgets.QTableWidgetItem(f"{bounds[1]:.2f}"))
-                self.window.tableViewProperties.setItem(additional_row + 3, 0, QtWidgets.QTableWidgetItem("Min Y")) 
-                self.window.tableViewProperties.setItem(additional_row + 3, 1, QtWidgets.QTableWidgetItem(f"{bounds[2]:.2f}")) 
-                self.window.tableViewProperties.setItem(additional_row + 4, 0, QtWidgets.QTableWidgetItem("Max Y")) 
-                self.window.tableViewProperties.setItem(additional_row + 4, 1, QtWidgets.QTableWidgetItem(f"{bounds[3]:.2f}")) 
-                self.window.tableViewProperties.setItem(additional_row + 5, 0, QtWidgets.QTableWidgetItem("Min Z")) 
-                self.window.tableViewProperties.setItem(additional_row + 5, 1, QtWidgets.QTableWidgetItem(f"{bounds[4]:.2f}"))
-                self.window.tableViewProperties.setItem(additional_row + 6, 0, QtWidgets.QTableWidgetItem("Max Z")) 
-                self.window.tableViewProperties.setItem(additional_row + 6, 1, QtWidgets.QTableWidgetItem(f"{bounds[5]:.2f}"))
-            else:
-                # Unpack boundary properties
-               
-                patchType = boundary_properties['type']
-                patchProperty = boundary_properties['property']
-                patchPurpose = boundary_properties['purpose']
+            # Setting headers (if not already set elsewhere)
+            self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
+            
+            self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Type"))
+            self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(patchType))
+            self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Property"))
+            self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(patchProperty)))
+            self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Purpose"))
+            self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(patchPurpose)))
+            
+            
 
-                self.window.tableViewProperties.clearContents()
-                self.window.tableViewProperties.setRowCount(3)
-                self.window.tableViewProperties.setColumnCount(2)
-
-                # Setting headers (if not already set elsewhere)
-                self.window.tableViewProperties.setHorizontalHeaderLabels(["Property", "Value"])
-                
-                self.window.tableViewProperties.setItem(0, 0, QtWidgets.QTableWidgetItem("Type"))
-                self.window.tableViewProperties.setItem(0, 1, QtWidgets.QTableWidgetItem(patchType))
-                self.window.tableViewProperties.setItem(1, 0, QtWidgets.QTableWidgetItem("Property"))
-                self.window.tableViewProperties.setItem(1, 1, QtWidgets.QTableWidgetItem(str(patchProperty)))
-                self.window.tableViewProperties.setItem(2, 0, QtWidgets.QTableWidgetItem("Purpose"))
-                self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(patchPurpose)))
-                
-                
-
-        except Exception as e:
-            print(f"Error in listClicked: {e}")
+        #except Exception as e:
+        #    print(f"Error in listClicked: {e}")
     # ------------------------------------------------------
     #  End of: Highlighing the clicked STL file in the list
     # ------------------------------------------------------        
@@ -474,6 +492,8 @@ class mainWindow(QMainWindow):
         # Additional button connections
         self.window.pushButtonSTLImport.clicked.connect(self.importSTL)
         self.window.pushButtonSphere.clicked.connect(self.createSphere)
+        self.window.pushButtonBox.clicked.connect(self.createBox)
+        self.window.pushButtonCylinder.clicked.connect(self.createCyliner)
         self.window.pushButtonCreate.clicked.connect(self.createCase)
         self.window.pushButtonOpen.clicked.connect(self.openCase)
         self.window.pushButtonGenerate.clicked.connect(self.generateCase)
@@ -625,14 +645,14 @@ class mainWindow(QMainWindow):
     
     def importSTL(self):
         try:
-            print("Importing STL...")
+            #print("Importing STL...")
             stl_status = self.project.add_stl_file()
-            print(f"STL Status: {stl_status}")
+            #print(f"STL Status: {stl_status}")
             if stl_status == -1:
                 self.updateStatusBar("Failed to load STL file.")
                 return
             self.project.add_stl_to_project()
-            print(f"Project STL Files: {self.project.stl_files}")
+            #print(f"Project STL Files: {self.project.stl_files}")
             self.vtk_manager.render_stl(self.project.current_stl_file)
             self.update_list()
             self.updateStatusBar("STL imported successfully.")
@@ -675,12 +695,61 @@ class mainWindow(QMainWindow):
         # create a sphere dialog
         sphereData = sphereDialogDriver()
         if sphereData == None:
-            SplashCaseCreatorIO.printError("Sphere Dialog Box Closed",GUIMode=True)
+            pass # Do nothing
+            #SplashCaseCreatorIO.printError("Sphere Dialog Box Closed",GUIMode=True)
         else:
-            x,y,z,r = sphereData
+            name,x,y,z,r = sphereData
+            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r}
+            
+            # First, add to the project 
+            self.project.add_vtk_object_to_project(obj_name=name,obj_type="sphere",obj_properties=obj_properties)
+            # Then, add to the VTK viewer
+            self.vtk_manager.add_sphere_to_VTK(center=(x,y,z),radius=r,objectName=name)
+            # Add to the list
+            self.window.listWidgetObjList.addItem(name)
             print("Center: ",x,y,z)
             print("Radius: ",r)
-        self.readyStatusBar()   
+        self.readyStatusBar()
+
+    def createCyliner(self):
+        SplashCaseCreatorIO.printMessage("Creating Cylinder",GUIMode=True,window=self)
+        # create a cylinder dialog
+        cylinderData = cylinderDialogDriver()
+        if cylinderData == None:
+            pass # Do nothing
+            #SplashCaseCreatorIO.printError("Cylinder Dialog Box Closed",GUIMode=True)
+        else:
+            name,x,y,z,r,h = cylinderData
+            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r,"height":h}
+            # First, add to the project
+            self.project.add_vtk_object_to_project(obj_name=name,obj_type="cylinder",obj_properties=obj_properties)
+            # Then, add to the VTK viewer
+            self.vtk_manager.add_cylinder_to_VTK(center=(x,y,z),radius=r,height=h,objectName=name)
+            # Add to the list
+            self.window.listWidgetObjList.addItem(name)
+            print("Center: ",x,y,z)
+            print("Radius: ",r)
+            print("Height: ",h)
+
+    def createBox(self):
+        SplashCaseCreatorIO.printMessage("Creating Box",GUIMode=True,window=self)
+        # create a box dialog
+        boxData = boxDialogDriver()
+        if boxData == None:
+            pass   
+        else:
+            name,minx,miny,minz,maxx,maxy,maxz = boxData
+            obj_properties = {"name":name,"minx":minx,"miny":miny,"minz":minz,"maxx":maxx,"maxy":maxy,"maxz":maxz}
+            # First, add to the project
+            self.project.add_vtk_object_to_project(obj_name=name,obj_type="box",obj_properties=obj_properties)
+            # Then, add to the VTK viewer
+            self.vtk_manager.add_box_to_VTK(minx,miny,minz,maxx,maxy,maxz,objectName=name)
+            # Add to the list
+            self.window.listWidgetObjList.addItem(name)
+            print("Min: ",minx,miny,minz)
+            print("Max: ",maxx,maxy,maxz)
+
+        self.readyStatusBar()
 
     def resizeEvent(self, event):
         """
@@ -733,29 +802,26 @@ class mainWindow(QMainWindow):
             self.project.transient = True
             # this is to ensure that the ddtSchemes is set to Euler if the current value is steadyState
             if self.project.numericalSettings['ddtSchemes']['default'] == "steadyState":
-                self.project.numericalSettings['ddtSchemes'] = "Euler"
+                self.project.numericalSettings['ddtSchemes']['default'] = "Euler"
         else:
             self.window.pushButtonSteadyTransient.setText("Steady-State")
             SplashCaseCreatorIO.printMessage("Steady-State Flow Selected",GUIMode=True,window=self)
             self.project.transient = False
             # this is to ensure that the ddtSchemes is set to steadyState if the current value is not steadyState
             if self.project.numericalSettings['ddtSchemes']['default'] != "steadyState":
-                self.project.numericalSettings['ddtSchemes'] = "steadyState"
+                self.project.numericalSettings['ddtSchemes']['default'] = "steadyState"
         self.project.set_transient_settings()
         self.readyStatusBar()
 
     def addExternalBoundaries(self):
         # add inlet, outlet, front, back, top, bottom to the list object
         items = ["inlet","outlet","front","back","top","bottom"]
+        currentItems = [self.window.listWidgetObjList.item(i).text() for i in range(self.window.listWidgetObjList.count())]
+        #print("Current Items: ",currentItems)
         for item in items:
-            if item not in self.window.listWidgetObjList.findItems(item,Qt.MatchExactly):
+            if item not in currentItems:
                 self.window.listWidgetObjList.addItem(item)
-        #self.window.listWidgetObjList.addItem("inlet")
-        #self.window.listWidgetObjList.addItem("outlet")
-        #self.window.listWidgetObjList.addItem("front")
-        #self.window.listWidgetObjList.addItem("back")
-        #self.window.listWidgetObjList.addItem("top")
-        #self.window.listWidgetObjList.addItem("bottom")
+        
 
     def removeExternalBoundaries(self):
         # remove inlet, outlet, front, back, top, bottom from the list object
@@ -822,6 +888,7 @@ class mainWindow(QMainWindow):
 
     def resetGUI(self):
         self.window.listWidgetObjList.clear()
+        self.window.tableViewProperties.clearContents()
         self.window.lineEditMinX.clear()
         self.window.lineEditMinY.clear()
         self.window.lineEditMinZ.clear()
@@ -848,7 +915,8 @@ class mainWindow(QMainWindow):
             yNC = yesNoCancelDialogDriver("Save changes to current case files before creating a New Case","Save Changes")
             if yNC==1: # if yes
                 # save the project
-                self.project.add_stl_to_project()
+                #self.project.add_stl_to_project()
+                SplashCaseCreatorIO.printMessage("Saving the current case...", GUIMode=True, window=self)
                 self.project.write_settings()
                 self.disableButtons()
                 self.ren.RemoveAllViewProps()
@@ -866,8 +934,9 @@ class mainWindow(QMainWindow):
         self.window.plainTextTerminal.clear()
         # clear vtk renderer
         self.ren.RemoveAllViewProps()
-        # clear the list widget
-        self.window.listWidgetObjList.clear()
+        
+        # Also clear the object list and property table
+        self.resetGUI()
         self.project = None # clear the project
         self.project = SplashCaseCreatorProject(GUIMode=True,window=self)
         
@@ -892,7 +961,7 @@ class mainWindow(QMainWindow):
         self.project.create_settings()
         
         self.project.set_global_refinement_level()
-        self.resetGUI()
+        
         # Now enable the buttons
         self.enableButtons()
         self.readyStatusBar()
@@ -935,7 +1004,8 @@ class mainWindow(QMainWindow):
                 "Save changes to current case files before creating a New Case", "Save Changes"
             )
             if yNC == 1:  # Yes
-                self.project.add_stl_to_project()
+                SplashCaseCreatorIO.printMessage("Saving the current case...", GUIMode=True, window=self)
+                #self.project.add_stl_to_project()
                 self.project.write_settings()
                 self.disableButtons()
                 self.ren.RemoveAllViewProps()
@@ -952,8 +1022,11 @@ class mainWindow(QMainWindow):
         # Clear terminal and VTK renderer
         self.window.plainTextTerminal.clear()
         self.ren.RemoveAllViewProps()
+        # Also clear the object list and property table
+        self.resetGUI()
 
         # Reset the project
+        self.project = None
         self.project = SplashCaseCreatorProject(GUIMode=True, window=self)
         self.window.listWidgetObjList.clear()  # Clear the object list
 
@@ -1046,6 +1119,8 @@ class mainWindow(QMainWindow):
     def autoDomainDriver(self):
         self.analyze = True
         self.autoDomain(self.analyze)
+        # if internal flow, remove external boundaries if any
+        self.addOrRemoveExternalBoundaries()
     
     def autoDomain(self,analyze=True):
        
@@ -1055,6 +1130,11 @@ class mainWindow(QMainWindow):
             onGround = self.window.checkBoxOnGround.isChecked()
         self.project.meshSettings['onGround'] = onGround
         self.project.onGround = onGround
+
+        # If object is on the ground, the bottom boundary condition is wall
+        if onGround:
+            self.project.set_external_boundary_condition(patch_name="bottom",boundary_condition="wall")
+            self.project.set_boundary_type(patch_name="bottom",boundary_type="wall")
         if len(self.project.stl_files)==0:
             self.updateTerminal("No STL files loaded")
             self.readyStatusBar()
@@ -1086,8 +1166,8 @@ class mainWindow(QMainWindow):
         self.window.lineEdit_nX.setText(str(nx))
         self.window.lineEdit_nY.setText(str(ny))
         self.window.lineEdit_nZ.setText(str(nz))
-        #self.add_box_to_VTK(minX=minx,minY=miny,minZ=minz,maxX=maxx,maxY=maxy,maxZ=maxz,boxName="Domain")
-        self.vtk_manager.add_box_to_VTK(minX=minx, minY=miny, minZ=minz, maxX=maxx, maxY=maxy, maxZ=maxz, boxName="Domain")
+        #self.add_box_to_VTK(minX=minx,minY=miny,minZ=minz,maxX=maxx,maxY=maxy,maxZ=maxz)
+        self.vtk_manager.add_box_to_VTK(minX=minx, minY=miny, minZ=minz, maxX=maxx, maxY=maxy, maxZ=maxz, objectName="Domain")
         self.addBoundaryGrids()
         self.vtkDrawMeshPoint()
         self.vtkRefreshView()
@@ -1110,23 +1190,11 @@ class mainWindow(QMainWindow):
             SplashCaseCreatorIO.printError("Invalid Domain Size",GUIMode=True)
             self.readyStatusBar()
             return
+        domain_size = [minx,maxx,miny,maxy,minz,maxz]
+        self.project.set_max_domain_size(domain_size,nx,ny,nz)
         self.prepareDomainView()
         self.readyStatusBar()
-        #self.project.meshSettings['domain']['minx'] = minx
-        #self.project.meshSettings['domain']['miny'] = miny
-        #self.project.meshSettings['domain']['minz'] = minz
-        #self.project.meshSettings['domain']['maxx'] = maxx
-        #self.project.meshSettings['domain']['maxy'] = maxy
-        #self.project.meshSettings['domain']['maxz'] = maxz
-        #self.project.meshSettings['domain']['nx'] = nx
-        #self.project.meshSettings['domain']['ny'] = ny
-        #self.project.meshSettings['domain']['nz'] = nz
-        #self.updateStatusBar("Manual Domain Set")
-        #self.add_box_to_VTK(minX=minx,minY=miny,minZ=minz,maxX=maxx,maxY=maxy,maxZ=maxz,boxName="Domain")
-        #self.vtk_manager.add_box_to_VTK(minX=minx, minY=miny, minZ=minz, maxX=maxx, maxY=maxy, maxZ=maxz, boxName="Domain")
-        #self.addBoundaryGrids()
-        #self.vtkRefreshView()
-        #self.readyStatusBar()
+       
         
     def stlPropertiesDialog(self):
         stl = self.current_obj
@@ -1174,9 +1242,22 @@ class mainWindow(QMainWindow):
 
     def boundaryConditionDialog(self):
         stl = self.project.get_stl(self.current_obj)
+        patch_names = [patch['name'] for patch in self.project.meshSettings['patches']]
         if stl==None:
-            SplashCaseCreatorIO.printError("STL not found",GUIMode=True)
-            return
+            # May be this is a predefined external boundary
+            if self.current_obj in patch_names:
+                boundary = None 
+                for patch in self.project.meshSettings['patches']:
+                    if patch['name']==self.current_obj:
+                        boundary = patch
+                        break
+                #boundary['name'] = self.current_obj
+                boundaryConditions = boundaryConditionDialogDriver(boundary,external_boundary=True)
+                self.project.set_external_boundary_condition(self.current_obj,boundaryConditions)
+                return
+            else:
+                SplashCaseCreatorIO.printError("Patch not found",GUIMode=True)
+                return
         
         boundaryConditions = boundaryConditionDialogDriver(stl)
         if boundaryConditions==None:
