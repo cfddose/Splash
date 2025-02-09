@@ -1951,7 +1951,6 @@ _____________________________________________________
 
         if errors:
             error_message = errors.decode()
-            #messagebox.showerror("Error Sourcing OpenFOAM", f"Failed to source OpenFOAM version {version}:\n{error_message}")
             messagebox.showerror("Error Sourcing OpenFOAM", f"Failed to source OpenFOAM version {version}. Please make sure the chosen version is pre-installed on your system!")
             self.openfoam_sourced = False
             popup.destroy()
@@ -2130,7 +2129,6 @@ _____________________________________________________
 # https://www.buymeacoffee.com/simulitica # poor simulitica :( 
 # https://www.udemy.com/course/t-flows-crash-course-cfd/ -> T-Flows on Udemy
 # ---------------------------------------------------------------------------<
-
     def load_last_recorded_time(self):
         if os.path.exists(self.elapsed_time_file):
             with open(self.elapsed_time_file, "r") as file:

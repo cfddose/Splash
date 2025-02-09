@@ -1,23 +1,33 @@
-"""
-/*--------------------------------*- C++ -*----------------------------------*\
--------------------------------------------------------------------------------
- *****   ******   *          ***     *****   *     *  
-*     *  *     *  *         *   *   *     *  *     *  
-*        *     *  *        *     *  *        *     *  
- *****   ******   *        *******   *****   *******  
-      *  *        *        *     *        *  *     *  
-*     *  *        *        *     *  *     *  *     *  
- *****   *        *******  *     *   *****   *     *  
--------------------------------------------------------------------------------
- * SplashCaseCreator is part of Splash CFD automation tool.
- * Copyright (c) 2024 THAW TAR
- * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
- * All rights reserved.
- *
- * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
- */
-"""
+#  *-----------------------------------------------------------------------------*
+#  *      SplashCaseCreator - A Module of the Splash CFD Automation Suite
+#  * ----------------------------------------------------------------------------*
+#  *
+#  * Copyright (c) 2024 THAW TAR
+#  * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
+#  * All rights reserved.
+#  *
+#  * Licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0).
+#  * You may obtain a copy of the license at:
+#  *     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#  *
+#  DISCLAIMER:
+#  This software is provided "AS IS", without any express or implied warranties,
+#  including, but not limited to, the implied warranties of merchantability,
+#  fitness for a particular purpose, and noninfringement. Under no circumstances
+#  shall the authors, of the contributors be liable for any direct, indirect 
+#  incidental, special, or consequential damages, or any other damages whatsoever
+#  arising out of or in connection with the use or performance of this software,
+#  including any engineering design or implementation decisions.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+# 
+# * ----------------------------------------------------------------------------*
+# *  SplashCaseCreator is an application of the Splash CFD automation program.
+# * ----------------------------------------------------------------------------*
+
 # Importing system-related libs  
 import sys
 import os
@@ -32,10 +42,14 @@ from primitives import SplashCaseCreatorPrimitives, SplashCaseCreatorIO
 from vtk_manager import VTKManager, vtkMode
 from theme_switcher import apply_theme
 
+# Keyboard shortcuts
+from PySide6.QtGui import QShortcut, QKeySequence
+
 # Importing PySide components 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication
 from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import QFileDialog
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtCore import QFile
 from PySide6.QtWidgets import QMainWindow
@@ -53,6 +67,7 @@ from dialogBoxes import global_darkmode, set_global_darkmode
 # VTK Libraries
 import vtk
 import vtkmodules.vtkInteractionStyle
+
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkRenderingOpenGL2
 from vtkmodules.vtkCommonColor import vtkNamedColors
@@ -98,6 +113,11 @@ class mainWindow(QMainWindow):
 
         # to store VTK mode
         self.vtk_mode = vtkMode.VTK_SURFACE # initial mode is surface
+        
+        # Create a QShortcut for Ctrl+S
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.setContext(Qt.WindowShortcut)  # optional: sets the scope
+        self.shortcut_save.activated.connect(self.saveCase)
                 
     def setup_timer(self):
         """
@@ -150,8 +170,6 @@ class mainWindow(QMainWindow):
         self.window.pushButtonRemoveSTL.setEnabled(False)
         self.window.pushButtonMeshPoint.setEnabled(False)
 
-        #self.window.pushButtonCreate.setEnabled(False)
-        #self.window.pushButtonOpen.setEnabled(False)
         self.window.pushButtonGenerate.setEnabled(False)
         self.window.pushButtonPostProc.setEnabled(False)
         self.window.lineEditMinX.setEnabled(False)
@@ -267,14 +285,6 @@ class mainWindow(QMainWindow):
         
         # Connect theme toggle
         self.window.themeToggle.stateChanged.connect(self.toggle_theme)
-    
-#    def toggle_theme(self):
-#        """
-#        Toggles between light and dark themes, applying the appropriate stylesheet
-#        and updating the VTK background via VTKManager.
-#        """
-#        dark_mode = self.window.themeToggle.isChecked()
-#        apply_theme(self.window, self.vtk_manager, dark_mode)
 
     def apply_default_theme(self):
         """
@@ -483,7 +493,7 @@ class mainWindow(QMainWindow):
         # Add the "Save Screenshot" action before the "Exit" action
         self.window.menuFile.insertAction(self.window.actionExit, save_screenshot_action)  # Insert above "Exit"
 
-        # Connect other menu actions
+        # Connect other menubar actions
         self.window.actionNew_Case.triggered.connect(self.createCase)
         self.window.actionOpen_Case.triggered.connect(self.openCase)
         self.window.actionSave_Case.triggered.connect(self.saveCase)
@@ -513,7 +523,29 @@ class mainWindow(QMainWindow):
         self.window.pushButtonAddSTL.clicked.connect(self.importSTL)
         self.window.pushButtonRemoveSTL.clicked.connect(self.removeSTL)
         self.window.pushButtonMeshPoint.clicked.connect(self.setMeshPoint)
+
+        # Toggle axes on the main render window
+        self.window.axesCheckBox.stateChanged.connect(self.toggle_axes_with_vtk_manager) 
+
         
+
+        ## (Beta) STEP import button connection --->
+        ##self.window.pushButtonSTEPImport.clicked.connect(self.importSTEP)
+        ## Create the STEP import action if not already defined
+        #try:
+        #    # Try to access the action (if created in the UI)
+        #    action_step_import = self.window.actionSTEPImport
+        #except AttributeError:
+        #    # Otherwise, create it programmatically
+        #    action_step_import = QAction("Import STEP", self)
+        #    # Insert it into the File menu before the "Exit" action
+        #    self.window.menuFile.insertAction(self.window.actionExit, action_step_import)
+        #    # Optionally, you can assign it to the window for later use:
+        #    self.window.actionSTEPImport = action_step_import
+    
+        ## Connect the STEP import action to the handler
+        #action_step_import.triggered.connect(self.importSTEP)
+    
         # Manual generation event
         download_manual_action = QAction("Download Manual", self)
         download_manual_action.triggered.connect(self.download_manual)
@@ -1101,7 +1133,7 @@ class mainWindow(QMainWindow):
         self.updateTerminal("   Case generated!  ")
         self.updateTerminal("--------------------")
         self.readyStatusBar()
-
+    
     def saveCase(self):
         self.updateStatusBar("Analyzing case before saving")
         #if(len(self.project.stl_files)>0):
@@ -1388,6 +1420,27 @@ class mainWindow(QMainWindow):
             self.vtkShowEdges()
         else:
             self.vtkShowSurface()
+
+    def toggle_axes_with_vtk_manager(self, state):
+        """
+        Calls the toggle_axes_with_checkbox function inside VTKManager
+        when the checkbox is checked/unchecked.
+        """
+        if hasattr(self, "vtk_manager"):
+            self.vtk_manager.toggle_axes_with_checkbox(state)
+            
+    #def importSTEP(self):
+    #    # Open a file dialog to select a STEP file
+    #    step_file, _ = QFileDialog.getOpenFileName(self, "Import STEP File", "", "STEP Files (*.step *.stp)")
+    #    if step_file:
+    #        try:
+    #            self.updateTerminal("Importing STEP file: " + step_file)
+    #            # Assuming your VTKManager instance is stored in self.vtk_manager:
+    #            self.vtk_manager.render_step(step_file)
+    #            self.updateTerminal("STEP file imported successfully.")
+    #        except Exception as e:
+    #            self.updateTerminal("Error importing STEP file: " + str(e))
+            
 
 #----------------- End of VTK Event Handlers -----------------#
 
