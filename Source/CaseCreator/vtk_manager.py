@@ -316,21 +316,28 @@ class VTKManager:
         if remove_previous:
             self.remove_actor_by_name("MeshPoint")  # Remove existing mesh point actor
 
-        if size_factor is None:
-            # Calculate a dynamic radius based on domain bounds or fallback to a default
+        # Ensure size_factor is a float
+        if size_factor is None or not isinstance(size_factor, (float, int)):
+            print("Warning: size_factor is None or invalid, using default.")
             if domain_bounds and len(domain_bounds) == 6:
                 minX, minY, minZ, maxX, maxY, maxZ = domain_bounds
                 max_extent = max(maxX - minX, maxY - minY, maxZ - minZ)
-                size_factor = max_extent * 0.01  # Sphere is 1% of the largest extent
+                size_factor = max_extent * 0.0025  # Default auto-scale
             else:
-                size_factor = 0.01  # Default size if bounds are unavailable
+                size_factor = 0.0025  # Default radius if bounds are unavailable
 
+        # Convert to float to prevent integer-only values
+        size_factor = float(size_factor)
+        
         # Ensure the radius is not below a minimum threshold
         size_factor = max(size_factor, 1e-3)  # Minimum radius of 1e-3
 
+        # ✅ Debug print
+        print(f"🔵 Drawing sphere at {location} with radius {size_factor}")
+
         sphere = vtkSphereSource()
         sphere.SetCenter(location)
-        sphere.SetRadius(size_factor)
+        sphere.SetRadius(size_factor)  # Ensure radius updates correctly
 
         # Increase resolution for a smoother sphere
         sphere.SetThetaResolution(32)  # Number of subdivisions around the sphere
@@ -344,8 +351,9 @@ class VTKManager:
         actor.GetProperty().SetOpacity(0.25)
         actor.SetObjectName("MeshPoint")  # Name the actor
 
-        print(f"Adding sphere actor at location: {location} with radius: {size_factor}")
+        print(f"✅ Added sphere actor at location: {location} with radius: {size_factor}")
         self.add_actor(actor)
+
 
     def set_background(self, background, gradient_background=False, background2=None):
         """

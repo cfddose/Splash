@@ -658,7 +658,7 @@ background-color: rgb(170, 255, 255);</string>
       <rect>
        <x>20</x>
        <y>40</y>
-       <width>201</width>
+       <width>191</width>
        <height>221</height>
       </rect>
      </property>
@@ -694,8 +694,8 @@ background-color: rgb(170, 255, 255);</string>
       <rect>
        <x>20</x>
        <y>340</y>
-       <width>201</width>
-       <height>411</height>
+       <width>191</width>
+       <height>431</height>
       </rect>
      </property>
      <attribute name="verticalHeaderVisible">
@@ -980,7 +980,7 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="timerLabel">
     <property name="geometry">
      <rect>
-      <x>620</x>
+      <x>630</x>
       <y>10</y>
       <width>81</width>
       <height>31</height>
@@ -1000,7 +1000,7 @@ color: rgb(0, 0, 0);</string>
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600; color:#00e9f8;&quot;&gt;Elapsed |  &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600; color:#00e9f8;&quot;&gt;Elapsed  &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="axesCheckBox">

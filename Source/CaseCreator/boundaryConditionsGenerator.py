@@ -47,13 +47,27 @@ def create_u_file(meshSettings,boundaryConditions):
         for patch in meshSettings['patches']:
             U_file += f"""
     {patch['name']}"""
-            if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
-                U_file += f"""
-    {{
-        type {boundaryConditions['velocityInlet']['u_type']};
-        value uniform {tuple_to_string(patch['property'])};
-    }}
-    """
+
+        if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
+            u_value = patch.get('property', None)  # Check if 'property' exists
+            if u_value is None:
+                print(f"Warning: Patch '{patch['name']}' does not have a 'property' field! Using default value (0,0,0).")
+                u_value = (0.0, 0.0, 0.0)  # Default fallback
+            
+            U_file += f"""
+            {{
+                type {boundaryConditions['velocityInlet']['u_type']};
+                value uniform {tuple_to_string(u_value)};
+            }}
+            """
+
+    #         if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
+    #             U_file += f"""
+    # {{
+    #     type {boundaryConditions['velocityInlet']['u_type']};
+    #     value uniform {tuple_to_string(patch['property'])};
+    # }}
+    # """
             if(patch['type'] == 'patch' and patch['name'] == 'outlet'):
                 U_file += f"""
     {{
