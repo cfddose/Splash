@@ -428,7 +428,15 @@ class mainWindow(QMainWindow):
             # Unpack boundary properties
             #print(f"Boundary Properties: {boundary_properties}")
             patchType = boundary_properties['type']
-            patchProperty = boundary_properties['property']
+
+            #->>>
+            patchProperty = boundary_properties.get('property', None)
+            if patchProperty is None:
+                print(f"Warning: 'property' key not found in boundary_properties. Using default value (0,0,0).")
+                patchProperty = (0.0, 0.0, 0.0)  # Default fallback
+
+            #<<<- patchProperty = boundary_properties['property']
+
             patchPurpose = boundary_properties['purpose']
 
             self.window.tableViewProperties.clearContents()
@@ -1314,16 +1322,45 @@ class mainWindow(QMainWindow):
         self.project.summarize_project()
         self.readyStatusBar()
 
-    # FLAG! why is this not merged with draw_mesh_point? is it redundant?
+    # Defining a point inside the domain 
     def setMeshPoint(self):
-        # open the mesh point dialog
+        """
+        Opens the mesh point dialog, updates the VTK sphere visualization, and saves the new location.
+        """
+        # Open the mesh point dialog
         meshPoint = meshPointDialogDriver(self.project.get_location_in_mesh())
-        SplashCaseCreatorIO.printMessage("Mesh Point: ",meshPoint,GUIMode=True,window=self)
-        if meshPoint==None:
+
+        if meshPoint is None:
             return
-        
+
+        # Find the QSpinBox widget safely | FLAG BUG here! the value is not read here 
+        sphere_radius_widget = self.findChild(QtWidgets.QDoubleSpinBox, "sphereRadiusLocationInMesh")  # Changed to QDoubleSpinBox
+
+        if sphere_radius_widget is None:
+            print("Error: sphereRadiusLocationInMesh not found. Using default radius.")
+            sphere_radius_value = 0.25  # Default radius
+        else:
+            # Get the user-defined radius (keeps user input)
+            sphere_radius_value = sphere_radius_widget.value()
+
+            # Only set default value if the user hasn't changed it
+            if sphere_radius_value == sphere_radius_widget.minimum():  
+                minX, minY, minZ, maxX, maxY, maxZ = (
+                    self.project.meshSettings['domain']['minx'],
+                    self.project.meshSettings['domain']['miny'],
+                    self.project.meshSettings['domain']['minz'],
+                    self.project.meshSettings['domain']['maxx'],
+                    self.project.meshSettings['domain']['maxy'],
+                    self.project.meshSettings['domain']['maxz']
+                )
+                auto_radius = max(maxX - minX, maxY - minY, maxZ - minZ) * 0.0025  # Auto-calculated size
+                sphere_radius_widget.setValue(auto_radius)  # Set only if user input was not changed
+
+        # Save only the mesh point coordinates
         self.project.set_location_in_mesh(meshPoint)
-        self.vtkDrawMeshPoint()
+
+        # Pass the user-defined radius to VTK
+        self.vtkDrawMeshPoint(sphere_radius_value)
 
 #----------------- VTK Event Handlers -----------------#
     def vtkFitAll(self):
@@ -1389,12 +1426,46 @@ class mainWindow(QMainWindow):
         print(char_len)
         self.vtk_manager.draw_axes(char_len)
 
-    def vtkDrawMeshPoint(self):
+    # def vtkDrawMeshPoint(self, sphere_radius=None):
+    #     """
+    #     Draw the mesh point using the VTKManager.
+    #     """
+    #     # Read the latest saved mesh point from project file
+    #     location = self.project.get_location_in_mesh()
+
+    #     if not location:
+    #         print("No location found for the mesh point.")
+    #         return
+
+    #     domain_bounds = (
+    #         self.project.meshSettings['domain']['minx'],
+    #         self.project.meshSettings['domain']['miny'],
+    #         self.project.meshSettings['domain']['minz'],
+    #         self.project.meshSettings['domain']['maxx'],
+    #         self.project.meshSettings['domain']['maxy'],
+    #         self.project.meshSettings['domain']['maxz']
+    #     )
+
+    #     # If no sphere_radius provided, use an auto-scaled value
+    #     if sphere_radius is None:
+    #         minX, minY, minZ, maxX, maxY, maxZ = domain_bounds
+    #         max_extent = max(maxX - minX, maxY - minY, maxZ - minZ)
+    #         sphere_radius = max_extent * 0.0025  # Default scaling
+    #         print(f"Auto-calculated radius: {sphere_radius}")
+
+    #     # Ensure a minimum sphere size for visibility
+    #     sphere_radius = max(sphere_radius, 1e-3)
+
+    #     # Ensure the correct location is passed to the visualization function
+    #     self.vtk_manager.draw_mesh_point(location, domain_bounds=domain_bounds, size_factor=sphere_radius, remove_previous=True)
+    
+    def vtkDrawMeshPoint(self, sphere_radius=None):
         """
-        Draw the mesh point using the VTKManager.
+        Draw the mesh point in the VTK renderer with a specified radius.
         """
         location = self.project.get_location_in_mesh()
-        if not location:
+
+        if not location:    
             print("No location found for the mesh point.")
             return
 
@@ -1407,8 +1478,19 @@ class mainWindow(QMainWindow):
             self.project.meshSettings['domain']['maxz']
         )
 
-        self.vtk_manager.draw_mesh_point(location, domain_bounds=domain_bounds, remove_previous=True)
-        
+        # If no sphere_radius provided, use an auto-scaled value
+        if sphere_radius is None:
+            minX, minY, minZ, maxX, maxY, maxZ = domain_bounds
+            max_extent = max(maxX - minX, maxY - minY, maxZ - minZ)
+            sphere_radius = max_extent * 0.0025  # Default scaling
+            print(f"Auto-calculated radius: {sphere_radius}")
+
+        # Ensure a minimum sphere size for visibility
+        sphere_radius = max(sphere_radius, 1e-3)
+
+        # Now, explicitly set the sphere radius for VTK
+        self.vtk_manager.draw_mesh_point(location, domain_bounds=domain_bounds, size_factor=sphere_radius, remove_previous=True)
+
     # After every operation, VTK view will be refreshed to show the changes
     def vtkRefreshView(self):
         """Refresh the VTK view."""
