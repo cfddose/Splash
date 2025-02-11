@@ -1,23 +1,33 @@
-"""
-/*--------------------------------*- C++ -*----------------------------------*\
--------------------------------------------------------------------------------
- *****   ******   *          ***     *****   *     *  
-*     *  *     *  *         *   *   *     *  *     *  
-*        *     *  *        *     *  *        *     *  
- *****   ******   *        *******   *****   *******  
-      *  *        *        *     *        *  *     *  
-*     *  *        *        *     *  *     *  *     *  
- *****   *        *******  *     *   *****   *     *  
--------------------------------------------------------------------------------
- * SplashCaseCreator is part of Splash CFD automation tool.
- * Copyright (c) 2024 THAW TAR
- * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
- * All rights reserved.
- *
- * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
- */
-"""
+#  *-----------------------------------------------------------------------------*
+#  *      SplashCaseCreator - A Module of the Splash CFD Automation Suite
+#  * ----------------------------------------------------------------------------*
+#  *
+#  * Copyright (c) 2024 THAW TAR
+#  * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
+#  * All rights reserved.
+#  *
+#  * Licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0).
+#  * You may obtain a copy of the license at:
+#  *     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#  *
+#  DISCLAIMER:
+#  This software is provided "AS IS", without any express or implied warranties,
+#  including, but not limited to, the implied warranties of merchantability,
+#  fitness for a particular purpose, and noninfringement. Under no circumstances
+#  shall the authors, of the contributors be liable for any direct, indirect 
+#  incidental, special, or consequential damages, or any other damages whatsoever
+#  arising out of or in connection with the use or performance of this software,
+#  including any engineering design or implementation decisions.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+# 
+# * ----------------------------------------------------------------------------*
+# *  SplashCaseCreator is an application of the Splash CFD automation program.
+# * ----------------------------------------------------------------------------*
+
 # Importing system-related libs  
 import sys
 import os
@@ -32,10 +42,14 @@ from primitives import SplashCaseCreatorPrimitives, SplashCaseCreatorIO
 from vtk_manager import VTKManager, vtkMode
 from theme_switcher import apply_theme
 
+# Keyboard shortcuts
+from PySide6.QtGui import QShortcut, QKeySequence
+
 # Importing PySide components 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication
 from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import QFileDialog
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtCore import QFile
 from PySide6.QtWidgets import QMainWindow
@@ -53,6 +67,7 @@ from dialogBoxes import global_darkmode, set_global_darkmode
 # VTK Libraries
 import vtk
 import vtkmodules.vtkInteractionStyle
+
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkRenderingOpenGL2
 from vtkmodules.vtkCommonColor import vtkNamedColors
@@ -98,6 +113,11 @@ class mainWindow(QMainWindow):
 
         # to store VTK mode
         self.vtk_mode = vtkMode.VTK_SURFACE # initial mode is surface
+        
+        # Create a QShortcut for Ctrl+S
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut_save.setContext(Qt.WindowShortcut)  # optional: sets the scope
+        self.shortcut_save.activated.connect(self.saveCase)
                 
     def setup_timer(self):
         """
@@ -150,8 +170,6 @@ class mainWindow(QMainWindow):
         self.window.pushButtonRemoveSTL.setEnabled(False)
         self.window.pushButtonMeshPoint.setEnabled(False)
 
-        #self.window.pushButtonCreate.setEnabled(False)
-        #self.window.pushButtonOpen.setEnabled(False)
         self.window.pushButtonGenerate.setEnabled(False)
         self.window.pushButtonPostProc.setEnabled(False)
         self.window.lineEditMinX.setEnabled(False)
@@ -267,14 +285,6 @@ class mainWindow(QMainWindow):
         
         # Connect theme toggle
         self.window.themeToggle.stateChanged.connect(self.toggle_theme)
-    
-#    def toggle_theme(self):
-#        """
-#        Toggles between light and dark themes, applying the appropriate stylesheet
-#        and updating the VTK background via VTKManager.
-#        """
-#        dark_mode = self.window.themeToggle.isChecked()
-#        apply_theme(self.window, self.vtk_manager, dark_mode)
 
     def apply_default_theme(self):
         """
@@ -418,7 +428,15 @@ class mainWindow(QMainWindow):
             # Unpack boundary properties
             #print(f"Boundary Properties: {boundary_properties}")
             patchType = boundary_properties['type']
-            patchProperty = boundary_properties['property']
+
+            #->>>
+            patchProperty = boundary_properties.get('property', None)
+            if patchProperty is None:
+                print(f"Warning: 'property' key not found in boundary_properties. Using default value (0,0,0).")
+                patchProperty = (0.0, 0.0, 0.0)  # Default fallback
+
+            #<<<- patchProperty = boundary_properties['property']
+
             patchPurpose = boundary_properties['purpose']
 
             self.window.tableViewProperties.clearContents()
@@ -483,7 +501,7 @@ class mainWindow(QMainWindow):
         # Add the "Save Screenshot" action before the "Exit" action
         self.window.menuFile.insertAction(self.window.actionExit, save_screenshot_action)  # Insert above "Exit"
 
-        # Connect other menu actions
+        # Connect other menubar actions
         self.window.actionNew_Case.triggered.connect(self.createCase)
         self.window.actionOpen_Case.triggered.connect(self.openCase)
         self.window.actionSave_Case.triggered.connect(self.saveCase)
@@ -513,7 +531,29 @@ class mainWindow(QMainWindow):
         self.window.pushButtonAddSTL.clicked.connect(self.importSTL)
         self.window.pushButtonRemoveSTL.clicked.connect(self.removeSTL)
         self.window.pushButtonMeshPoint.clicked.connect(self.setMeshPoint)
+
+        # Toggle axes on the main render window
+        self.window.axesCheckBox.stateChanged.connect(self.toggle_axes_with_vtk_manager) 
+
         
+
+        ## (Beta) STEP import button connection --->
+        ##self.window.pushButtonSTEPImport.clicked.connect(self.importSTEP)
+        ## Create the STEP import action if not already defined
+        #try:
+        #    # Try to access the action (if created in the UI)
+        #    action_step_import = self.window.actionSTEPImport
+        #except AttributeError:
+        #    # Otherwise, create it programmatically
+        #    action_step_import = QAction("Import STEP", self)
+        #    # Insert it into the File menu before the "Exit" action
+        #    self.window.menuFile.insertAction(self.window.actionExit, action_step_import)
+        #    # Optionally, you can assign it to the window for later use:
+        #    self.window.actionSTEPImport = action_step_import
+    
+        ## Connect the STEP import action to the handler
+        #action_step_import.triggered.connect(self.importSTEP)
+    
         # Manual generation event
         download_manual_action = QAction("Download Manual", self)
         download_manual_action.triggered.connect(self.download_manual)
@@ -1101,7 +1141,7 @@ class mainWindow(QMainWindow):
         self.updateTerminal("   Case generated!  ")
         self.updateTerminal("--------------------")
         self.readyStatusBar()
-
+    
     def saveCase(self):
         self.updateStatusBar("Analyzing case before saving")
         #if(len(self.project.stl_files)>0):
@@ -1282,16 +1322,45 @@ class mainWindow(QMainWindow):
         self.project.summarize_project()
         self.readyStatusBar()
 
-    # FLAG! why is this not merged with draw_mesh_point? is it redundant?
+    # Defining a point inside the domain 
     def setMeshPoint(self):
-        # open the mesh point dialog
+        """
+        Opens the mesh point dialog, updates the VTK sphere visualization, and saves the new location.
+        """
+        # Open the mesh point dialog
         meshPoint = meshPointDialogDriver(self.project.get_location_in_mesh())
-        SplashCaseCreatorIO.printMessage("Mesh Point: ",meshPoint,GUIMode=True,window=self)
-        if meshPoint==None:
+
+        if meshPoint is None:
             return
-        
+
+        # Find the QSpinBox widget safely | FLAG BUG here! the value is not read here 
+        sphere_radius_widget = self.findChild(QtWidgets.QDoubleSpinBox, "sphereRadiusLocationInMesh")  # Changed to QDoubleSpinBox
+
+        if sphere_radius_widget is None:
+            print("Error: sphereRadiusLocationInMesh not found. Using default radius.")
+            sphere_radius_value = 0.25  # Default radius
+        else:
+            # Get the user-defined radius (keeps user input)
+            sphere_radius_value = sphere_radius_widget.value()
+
+            # Only set default value if the user hasn't changed it
+            if sphere_radius_value == sphere_radius_widget.minimum():  
+                minX, minY, minZ, maxX, maxY, maxZ = (
+                    self.project.meshSettings['domain']['minx'],
+                    self.project.meshSettings['domain']['miny'],
+                    self.project.meshSettings['domain']['minz'],
+                    self.project.meshSettings['domain']['maxx'],
+                    self.project.meshSettings['domain']['maxy'],
+                    self.project.meshSettings['domain']['maxz']
+                )
+                auto_radius = max(maxX - minX, maxY - minY, maxZ - minZ) * 0.0025  # Auto-calculated size
+                sphere_radius_widget.setValue(auto_radius)  # Set only if user input was not changed
+
+        # Save only the mesh point coordinates
         self.project.set_location_in_mesh(meshPoint)
-        self.vtkDrawMeshPoint()
+
+        # Pass the user-defined radius to VTK
+        self.vtkDrawMeshPoint(sphere_radius_value)
 
 #----------------- VTK Event Handlers -----------------#
     def vtkFitAll(self):
@@ -1357,12 +1426,46 @@ class mainWindow(QMainWindow):
         print(char_len)
         self.vtk_manager.draw_axes(char_len)
 
-    def vtkDrawMeshPoint(self):
+    # def vtkDrawMeshPoint(self, sphere_radius=None):
+    #     """
+    #     Draw the mesh point using the VTKManager.
+    #     """
+    #     # Read the latest saved mesh point from project file
+    #     location = self.project.get_location_in_mesh()
+
+    #     if not location:
+    #         print("No location found for the mesh point.")
+    #         return
+
+    #     domain_bounds = (
+    #         self.project.meshSettings['domain']['minx'],
+    #         self.project.meshSettings['domain']['miny'],
+    #         self.project.meshSettings['domain']['minz'],
+    #         self.project.meshSettings['domain']['maxx'],
+    #         self.project.meshSettings['domain']['maxy'],
+    #         self.project.meshSettings['domain']['maxz']
+    #     )
+
+    #     # If no sphere_radius provided, use an auto-scaled value
+    #     if sphere_radius is None:
+    #         minX, minY, minZ, maxX, maxY, maxZ = domain_bounds
+    #         max_extent = max(maxX - minX, maxY - minY, maxZ - minZ)
+    #         sphere_radius = max_extent * 0.0025  # Default scaling
+    #         print(f"Auto-calculated radius: {sphere_radius}")
+
+    #     # Ensure a minimum sphere size for visibility
+    #     sphere_radius = max(sphere_radius, 1e-3)
+
+    #     # Ensure the correct location is passed to the visualization function
+    #     self.vtk_manager.draw_mesh_point(location, domain_bounds=domain_bounds, size_factor=sphere_radius, remove_previous=True)
+    
+    def vtkDrawMeshPoint(self, sphere_radius=None):
         """
-        Draw the mesh point using the VTKManager.
+        Draw the mesh point in the VTK renderer with a specified radius.
         """
         location = self.project.get_location_in_mesh()
-        if not location:
+
+        if not location:    
             print("No location found for the mesh point.")
             return
 
@@ -1375,8 +1478,19 @@ class mainWindow(QMainWindow):
             self.project.meshSettings['domain']['maxz']
         )
 
-        self.vtk_manager.draw_mesh_point(location, domain_bounds=domain_bounds, remove_previous=True)
-        
+        # If no sphere_radius provided, use an auto-scaled value
+        if sphere_radius is None:
+            minX, minY, minZ, maxX, maxY, maxZ = domain_bounds
+            max_extent = max(maxX - minX, maxY - minY, maxZ - minZ)
+            sphere_radius = max_extent * 0.0025  # Default scaling
+            print(f"Auto-calculated radius: {sphere_radius}")
+
+        # Ensure a minimum sphere size for visibility
+        sphere_radius = max(sphere_radius, 1e-3)
+
+        # Now, explicitly set the sphere radius for VTK
+        self.vtk_manager.draw_mesh_point(location, domain_bounds=domain_bounds, size_factor=sphere_radius, remove_previous=True)
+
     # After every operation, VTK view will be refreshed to show the changes
     def vtkRefreshView(self):
         """Refresh the VTK view."""
@@ -1388,6 +1502,27 @@ class mainWindow(QMainWindow):
             self.vtkShowEdges()
         else:
             self.vtkShowSurface()
+
+    def toggle_axes_with_vtk_manager(self, state):
+        """
+        Calls the toggle_axes_with_checkbox function inside VTKManager
+        when the checkbox is checked/unchecked.
+        """
+        if hasattr(self, "vtk_manager"):
+            self.vtk_manager.toggle_axes_with_checkbox(state)
+            
+    #def importSTEP(self):
+    #    # Open a file dialog to select a STEP file
+    #    step_file, _ = QFileDialog.getOpenFileName(self, "Import STEP File", "", "STEP Files (*.step *.stp)")
+    #    if step_file:
+    #        try:
+    #            self.updateTerminal("Importing STEP file: " + step_file)
+    #            # Assuming your VTKManager instance is stored in self.vtk_manager:
+    #            self.vtk_manager.render_step(step_file)
+    #            self.updateTerminal("STEP file imported successfully.")
+    #        except Exception as e:
+    #            self.updateTerminal("Error importing STEP file: " + str(e))
+            
 
 #----------------- End of VTK Event Handlers -----------------#
 

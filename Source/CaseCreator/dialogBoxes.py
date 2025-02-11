@@ -1522,7 +1522,7 @@ def controlsDialogDriver(simulationSettings=None,parallelSettings=None,transient
     return dialog.simulationSettings,dialog.parallelSettings
 
 def meshPointDialogDriver(locationInMesh=None):
-    meshPoint = vectorInputDialogDriver(prompt="Enter mesh point",input_type="float",initial_values=locationInMesh)
+    meshPoint = vectorInputDialogDriver(prompt="Enter locationInMesh point",input_type="float",initial_values=locationInMesh)
     if(meshPoint==None):
         return None
     x,y,z = meshPoint

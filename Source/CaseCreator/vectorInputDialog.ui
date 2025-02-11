@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>312</width>
-    <height>130</height>
+    <width>314</width>
+    <height>145</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -128,6 +128,31 @@
    </property>
    <property name="text">
     <string>Cancel</string>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="sphereRadiusLocationInMesh">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>100</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <double>0.01</double>  <!-- Prevent 0 radius -->
+   </property>
+   <property name="maximum">
+    <double>10.0</double>  <!-- Allow bigger values -->
+   </property>
+   <property name="singleStep">
+    <double>0.01</double>  <!-- Step size -->
+   </property>
+   <property name="decimals">
+    <number>3</number>  <!-- Display up to 3 decimal places -->
+   </property>
+   <property name="value">
+    <double>0.05</double>  <!-- Default initial value -->
    </property>
   </widget>
  </widget>

@@ -658,7 +658,7 @@ background-color: rgb(170, 255, 255);</string>
       <rect>
        <x>20</x>
        <y>40</y>
-       <width>201</width>
+       <width>191</width>
        <height>221</height>
       </rect>
      </property>
@@ -694,8 +694,8 @@ background-color: rgb(170, 255, 255);</string>
       <rect>
        <x>20</x>
        <y>340</y>
-       <width>201</width>
-       <height>411</height>
+       <width>191</width>
+       <height>431</height>
       </rect>
      </property>
      <attribute name="verticalHeaderVisible">
@@ -980,7 +980,7 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="timerLabel">
     <property name="geometry">
      <rect>
-      <x>680</x>
+      <x>630</x>
       <y>10</y>
       <width>81</width>
       <height>31</height>
@@ -995,12 +995,25 @@ color: rgb(0, 0, 0);</string>
      <rect>
       <x>550</x>
       <y>10</y>
-      <width>121</width>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600; color:#00e9f8;&quot;&gt;Elapsed Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600; color:#00e9f8;&quot;&gt;Elapsed  &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="axesCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>10</y>
+      <width>51</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Axes</string>
     </property>
    </widget>
   </widget>
@@ -1010,7 +1023,7 @@ color: rgb(0, 0, 0);</string>
      <x>0</x>
      <y>0</y>
      <width>1402</width>
-     <height>19</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
