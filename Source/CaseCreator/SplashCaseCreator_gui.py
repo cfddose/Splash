@@ -169,6 +169,7 @@ class mainWindow(QMainWindow):
         self.window.pushButtonAddSTL.setEnabled(False)
         self.window.pushButtonRemoveSTL.setEnabled(False)
         self.window.pushButtonMeshPoint.setEnabled(False)
+        self.window.pushButtonMeshSettings.setEnabled(False)
 
         self.window.pushButtonGenerate.setEnabled(False)
         self.window.pushButtonPostProc.setEnabled(False)
@@ -202,7 +203,8 @@ class mainWindow(QMainWindow):
         self.window.pushButtonCreate.setEnabled(True)
         self.window.pushButtonOpen.setEnabled(True)
         self.window.pushButtonGenerate.setEnabled(True)
-        self.window.pushButtonPostProc.setEnabled(True)
+        # Post-processing capabilities are disabled in this version
+        #self.window.pushButtonPostProc.setEnabled(True)
         self.window.pushButtonDomainAuto.setEnabled(True)
         self.window.pushButtonDomainManual.setEnabled(True)
         self.window.pushButtonSteadyTransient.setEnabled(True)
@@ -220,6 +222,7 @@ class mainWindow(QMainWindow):
         self.window.pushButtonAddSTL.setEnabled(True)
         self.window.pushButtonRemoveSTL.setEnabled(True)
         self.window.pushButtonMeshPoint.setEnabled(True)
+        self.window.pushButtonMeshSettings.setEnabled(True)
 
         self.window.lineEditMinX.setEnabled(True)
         self.window.lineEditMinY.setEnabled(True)
@@ -337,6 +340,9 @@ class mainWindow(QMainWindow):
         for idx, stl in enumerate(self.project.stl_files):
             print(f"Adding to list: {stl['name']}")
             self.window.listWidgetObjList.addItem(stl['name'])
+        for idx, geometry in enumerate(self.project.geometries):
+            print(f"Adding to list: {geometry['name']}")
+            self.window.listWidgetObjList.addItem(geometry['name'])
 
     # ----------------------------------------------
     #  Highlighing the clicked STL file in the list
@@ -432,7 +438,7 @@ class mainWindow(QMainWindow):
             #->>>
             patchProperty = boundary_properties.get('property', None)
             if patchProperty is None:
-                print(f"Warning: 'property' key not found in boundary_properties. Using default value (0,0,0).")
+                #print(f"Warning: 'property' key not found in boundary_properties. Using default value (0,0,0).")
                 patchProperty = (0.0, 0.0, 0.0)  # Default fallback
 
             #<<<- patchProperty = boundary_properties['property']
@@ -684,14 +690,30 @@ class mainWindow(QMainWindow):
         #-------------------------- 
     
     def importSTL(self):
+        #print("Importing STL...")
+        stl_path = SplashCaseCreatorPrimitives.ask_for_file([("STL Geometry", "*.stl"), ("OBJ Geometry", "*.obj")],qt=True)
+        stl_status = self.project.add_stl_file(stl_path)
+        #print(f"STL files:",self.project.stl_files)
+        #print(f"STL Status: {stl_status}")
+        if stl_status == -1:
+            self.updateStatusBar("Failed to load STL file.")
+            return
+        #self.project.add_stl_to_project()
+        #print(f"Project STL Files: {self.project.stl_files}")
+        self.vtk_manager.render_stl(self.project.current_stl_file)
+        self.update_list()
+        self.updateStatusBar("STL imported successfully.")
+        return 
         try:
             #print("Importing STL...")
-            stl_status = self.project.add_stl_file()
+            stl_path = SplashCaseCreatorPrimitives.ask_for_file([("STL Geometry", "*.stl"), ("OBJ Geometry", "*.obj")],qt=True)
+            stl_status = self.project.add_stl_file(stl_path)
+            #print(f"STL files:",self.project.stl_files)
             #print(f"STL Status: {stl_status}")
             if stl_status == -1:
                 self.updateStatusBar("Failed to load STL file.")
                 return
-            self.project.add_stl_to_project()
+            #self.project.add_stl_to_project()
             #print(f"Project STL Files: {self.project.stl_files}")
             self.vtk_manager.render_stl(self.project.current_stl_file)
             self.update_list()
@@ -730,6 +752,12 @@ class mainWindow(QMainWindow):
         self.update_list()
         self.readyStatusBar()
 
+    def check_list_for_duplicates(self, obj_name):
+        objNames = [self.window.listWidgetObjList.item(i).text() for i in range(self.window.listWidgetObjList.count())]
+        if obj_name in objNames:
+            return True
+        return False
+
     def createSphere(self):
         SplashCaseCreatorIO.printMessage("Creating Sphere",GUIMode=True,window=self)
         # create a sphere dialog
@@ -739,8 +767,11 @@ class mainWindow(QMainWindow):
             #SplashCaseCreatorIO.printError("Sphere Dialog Box Closed",GUIMode=True)
         else:
             name,x,y,z,r = sphereData
-            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r}
-            
+            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r,"refineMin":0,"refineMax":0,'property':None}
+            # Check if there is already a cylinder with the same name
+            if self.check_list_for_duplicates(name):
+                SplashCaseCreatorIO.printError("Object with the same name already exists. Please choose a different name.",GUIMode=True)
+                return
             # First, add to the project 
             self.project.add_vtk_object_to_project(obj_name=name,obj_type="sphere",obj_properties=obj_properties)
             # Then, add to the VTK viewer
@@ -760,7 +791,11 @@ class mainWindow(QMainWindow):
             #SplashCaseCreatorIO.printError("Cylinder Dialog Box Closed",GUIMode=True)
         else:
             name,x,y,z,r,h = cylinderData
-            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r,"height":h}
+            obj_properties = {"name":name,"x":x,"y":y,"z":z,"radius":r,"height":h,"refineMin":0,"refineMax":0,'property':None}
+            # Check if there is already a cylinder with the same name
+            if self.check_list_for_duplicates(name):
+                SplashCaseCreatorIO.printError("Object with the same name already exists. Please choose a different name.",GUIMode=True)
+                return
             # First, add to the project
             self.project.add_vtk_object_to_project(obj_name=name,obj_type="cylinder",obj_properties=obj_properties)
             # Then, add to the VTK viewer
@@ -779,7 +814,11 @@ class mainWindow(QMainWindow):
             pass   
         else:
             name,minx,miny,minz,maxx,maxy,maxz = boxData
-            obj_properties = {"name":name,"minx":minx,"miny":miny,"minz":minz,"maxx":maxx,"maxy":maxy,"maxz":maxz}
+            obj_properties = {"name":name,"minx":minx,"miny":miny,"minz":minz,"maxx":maxx,"maxy":maxy,"maxz":maxz,"refineMin":0,"refineMax":0,'property':None}
+            # Check if there is already a cylinder with the same name
+            if self.check_list_for_duplicates(name):
+                SplashCaseCreatorIO.printError("Object with the same name already exists. Please choose a different name.",GUIMode=True)
+                return
             # First, add to the project
             self.project.add_vtk_object_to_project(obj_name=name,obj_type="box",obj_properties=obj_properties)
             # Then, add to the VTK viewer
@@ -903,12 +942,12 @@ class mainWindow(QMainWindow):
             self.addBoundaryGrids()
             #self.readyStatusBar()
         
-    
     def chooseInternalFlow(self):
         self.project.internalFlow = True
         self.project.meshSettings['internalFlow'] = True
         self.project.onGround = False
         self.window.checkBoxOnGround.setEnabled(False)
+        self.window.radioButtonInternal.setChecked(True)
         self.addOrRemoveExternalBoundaries()
         self.updateStatusBar("Choosing Internal Flow")
         #sleep(0.001)
@@ -1105,10 +1144,11 @@ class mainWindow(QMainWindow):
 
         # Update GUI elements based on project settings
         self.enableButtons()
+        
         # This autoDomain caused a lot of problems. So, replaced with prepareDomainView
         #self.autoDomain(analyze=False)
         self.prepareDomainView()
-        print(f"On Ground: {self.project.onGround}")
+        #print(f"On Ground: {self.project.onGround}")
         if self.project.internalFlow:
             self.chooseInternalFlow()
             #self.window.radioButtonInternal.setChecked(True)

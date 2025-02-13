@@ -104,6 +104,7 @@ meshSettings = {
                             'minMedianAxisAngle': 90,
                             'nBufferCellsNoExtrude': 0,
                             'nLayerIter': 50,
+                            'nOuterIter': 1,
                             },
 
     'meshQualityControls': {'maxNonOrtho': 70,

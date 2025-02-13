@@ -290,6 +290,7 @@ addLayers       {meshSettings['snappyHexSteps']['addLayers']};"""
     minMedialAxisAngle {meshSettings['addLayersControls']['minMedianAxisAngle']};
     nBufferCellsNoExtrude {meshSettings['addLayersControls']['nBufferCellsNoExtrude']};
     nLayerIter {meshSettings['addLayersControls']['nLayerIter']};
+    nOuterIter {meshSettings['addLayersControls']['nOuterIter']};
 }}"""
     meshQualityControls = f"""\nmeshQualityControls
 {{

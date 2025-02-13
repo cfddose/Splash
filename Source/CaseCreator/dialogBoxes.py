@@ -36,6 +36,9 @@ import os
 from gui_text_to_foam_dict import grad_schemes,div_schemes,temporal_schemes,laplacian_schemes
 from gui_text_to_foam_dict import value_to_key
 
+# For resetting to default settings 
+from constants import meshSettings
+
 # to keep theme consistent
 from theme_switcher import apply_theme_dialog_boxes
 global_darkmode = True
@@ -1379,6 +1382,83 @@ class postProcessDialog(QDialog):
         self.window.comboBoxFOType.addItem("Mass Flow")
         self.window.comboBoxFOType.addItem("Probes")
 
+class advancedMeshDialog(QDialog):
+    def __init__(self,meshSettings=None):
+        super().__init__()
+        self.OK_clicked = False
+        self.meshSettings = meshSettings
+        self.load_ui()
+        global global_darkmode
+        apply_theme_dialog_boxes(self.window, global_darkmode)
+        self.prepare_events()
+
+
+    def load_ui(self):
+        ui_path = os.path.join(src, "advancedMeshSettingsDialog.ui")
+        ui_file = QFile(ui_path)
+        #ui_file = QFile("inputDialog.ui")
+        ui_file.open(QFile.ReadOnly)
+        self.window = loader.load(ui_file, None)
+        ui_file.close()
+
+    def set_input_types(self):
+        # castellated mesh controls
+        self.window.lineEditMaxLocalCells.setValidator(QIntValidator())
+        self.window.lineEditMaxGlobalCells.setValidator(QIntValidator())
+        self.window.lineEditCellsBetweenLevels.setValidator(QIntValidator())
+        self.window.lineEditResolveFeatureAngle.setValidator(QDoubleValidator())
+        # snapping controls
+        self.window.lineEditTolerance.setValidator(QDoubleValidator())
+        self.window.lineEditSolverIter.setValidator(QIntValidator())
+        self.window.lineEditRelaxIter.setValidator(QIntValidator())
+        self.window.lineEditFeatureIter.setValidator(QIntValidator())
+        # layer controls
+        self.window.lineEditExpansionRatio.setValidator(QDoubleValidator())
+        self.window.lineEditFirstLayer.setValidator(QDoubleValidator())
+        self.window.lineEditLayerFeatureAngle.setValidator(QDoubleValidator())
+        self.window.lineEditLayerIter.setValidator(QIntValidator())
+        self.window.lineEditLayerOuterIter.setValidator(QIntValidator())
+
+
+    def prepare_events(self):
+        self.window.pushButtonOK.clicked.connect(self.on_pushButtonOK_clicked)
+        self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
+        self.window.pushButtonDefault.clicked.connect(self.on_pushButtonDefault_clicked)
+        self.window.pushButtonApply.clicked.connect(self.on_pushButtonApply_clicked)
+
+    def on_pushButtonOK_clicked(self):
+        self.on_pushButtonApply_clicked()
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        self.window.close()
+
+    def on_pushButtonDefault_clicked(self):
+        self.OK_clicked = False
+        self.window.close()
+
+    def on_pushButtonApply_clicked(self):   
+        self.OK_clicked = True
+    
+    def initialize_values(self):
+        self.window.lineEditMaxLocalCells.setText(str(self.meshSettings['castellatedMeshControls']["maxLocalCells"]))
+        self.window.lineEditMaxGlobalCells.setText(str(self.meshSettings['castellatedMeshControls']["maxGlobalCells"]))
+        self.window.lineEditCellsBetweenLevels.setText(str(self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"]))
+        self.window.lineEditResolveFeatureAngle.setText(str(self.meshSettings['castellatedMeshControls']["resolveFeatureAngle"]))
+
+        self.window.lineEditTolerance.setText(str(self.meshSettings['snapControls']["tolerance"]))
+        self.window.lineEditSolverIter.setText(str(self.meshSettings['snapControls']["nSolveIter"]))
+        self.window.lineEditRelaxIter.setText(str(self.meshSettings['snapControls']["nRelaxIter"]))
+        self.window.lineEditFeatureIter.setText(str(self.meshSettings['snapControls']["nFeatureSnapIter"]))
+
+        self.window.lineEditExpansionRatio.setText(str(self.meshSettings['addLayersControls']["expansionRatio"]))
+        self.window.lineEditFirstLayer.setText(str(self.meshSettings['addLayersControls']["firstLayerThickness"]))
+        self.window.lineEditLayerFeatureAngle.setText(str(self.meshSettings['addLayersControls']["featureAngle"]))
+        self.window.lineEditLayerIter.setText(str(self.meshSettings['addLayersControls']["nLayerIter"]))
+        self.window.lineEditLayerOuterIter.setText(str(self.meshSettings['addLayersControls']["nOuterIter"]))
+
+    def __del__(self):
+        pass
 #---------------------------------------------------------
 # Driver function for different dialog boxes
 #---------------------------------------------------------
@@ -1532,6 +1612,12 @@ def postProcessDialogDriver():
     dialog = postProcessDialog()
     dialog.window.exec()
     dialog.window.show()
+
+def advancedMeshDialogDriver(meshSettings=None):
+    dialog = advancedMeshDialog(meshSettings=meshSettings)
+    dialog.window.exec()
+    dialog.window.show()
+    return dialog.OK_clicked
 
 def main():
     pass

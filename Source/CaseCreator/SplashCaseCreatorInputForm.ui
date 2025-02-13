@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1402</width>
-    <height>889</height>
+    <width>1409</width>
+    <height>928</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,17 +20,17 @@
       <x>10</x>
       <y>10</y>
       <width>301</width>
-      <height>821</height>
+      <height>861</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true"/>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QPushButton" name="pushButtonSTLImport">
      <property name="geometry">
@@ -319,7 +319,7 @@ background-color: rgb(170, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>530</y>
+       <y>570</y>
        <width>211</width>
        <height>31</height>
       </rect>
@@ -332,7 +332,7 @@ background-color: rgb(170, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>610</y>
+       <y>650</y>
        <width>211</width>
        <height>31</height>
       </rect>
@@ -345,7 +345,7 @@ background-color: rgb(170, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>570</y>
+       <y>610</y>
        <width>211</width>
        <height>31</height>
       </rect>
@@ -377,14 +377,14 @@ background-color: rgb(170, 255, 255);</string>
       </rect>
      </property>
      <property name="text">
-      <string>Mesh Refinements</string>
+      <string>Patch Properties</string>
      </property>
     </widget>
     <widget class="QPushButton" name="pushButtonPhysicalProperties">
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>490</y>
+       <y>530</y>
        <width>211</width>
        <height>31</height>
       </rect>
@@ -462,7 +462,7 @@ background-color: rgb(170, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>730</y>
+       <y>770</y>
        <width>211</width>
        <height>41</height>
       </rect>
@@ -505,7 +505,7 @@ background-color: rgb(170, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>690</y>
+       <y>730</y>
        <width>211</width>
        <height>31</height>
       </rect>
@@ -553,7 +553,7 @@ background-color: rgb(170, 255, 255);</string>
       <string notr="true"/>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="Line" name="line_2">
@@ -566,14 +566,14 @@ background-color: rgb(170, 255, 255);</string>
       </rect>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QCheckBox" name="themeToggle">
      <property name="geometry">
       <rect>
        <x>130</x>
-       <y>780</y>
+       <y>820</y>
        <width>31</width>
        <height>31</height>
       </rect>
@@ -628,13 +628,26 @@ background-color: rgb(170, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>650</y>
+       <y>690</y>
        <width>211</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
       <string>Post Processing</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButtonMeshSettings">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>490</y>
+       <width>211</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Mesh Settings</string>
      </property>
     </widget>
    </widget>
@@ -644,14 +657,14 @@ background-color: rgb(170, 255, 255);</string>
       <x>310</x>
       <y>10</y>
       <width>231</width>
-      <height>821</height>
+      <height>861</height>
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QListWidget" name="listWidgetObjList">
      <property name="geometry">
@@ -776,7 +789,7 @@ background-color: rgb(170, 255, 255);</string>
      <string notr="true">font: italic 12pt &quot;Ubuntu&quot;;</string>
     </property>
     <property name="sizeAdjustPolicy">
-     <enum>QAbstractScrollArea::AdjustToContents</enum>
+     <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
     </property>
     <property name="readOnly">
      <bool>true</bool>
@@ -1022,8 +1035,8 @@ color: rgb(0, 0, 0);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1402</width>
-     <height>22</height>
+     <width>1409</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
