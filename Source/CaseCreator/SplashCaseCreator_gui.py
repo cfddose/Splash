@@ -57,12 +57,15 @@ from PySide6.QtCore import QTimer, QTime # for Timer
 from PySide6.QtCore import Qt
 from PySide6 import QtWidgets
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
+# Importing Dialog Boxes
 from dialogBoxes import yesNoDialogDriver, yesNoCancelDialogDriver
 from dialogBoxes import sphereDialogDriver, boxDialogDriver, cylinderDialogDriver
 from dialogBoxes import vectorInputDialogDriver, STLDialogDriver, physicalModelsDialogDriver
 from dialogBoxes import boundaryConditionDialogDriver, numericsDialogDriver, controlsDialogDriver
 from dialogBoxes import set_src, meshPointDialogDriver,postProcessDialogDriver
 from dialogBoxes import global_darkmode, set_global_darkmode
+from dialogBoxes import advancedMeshDialogDriver
 
 # VTK Libraries
 import vtk
@@ -528,6 +531,7 @@ class mainWindow(QMainWindow):
         self.window.pushButtonDomainAuto.clicked.connect(self.autoDomainDriver)
         self.window.pushButtonDomainManual.clicked.connect(self.manualDomain)
         self.window.pushButtonSTLProperties.clicked.connect(self.stlPropertiesDialog)
+        self.window.pushButtonMeshSettings.clicked.connect(self.advancedMeshDialog)
         self.window.pushButtonPhysicalProperties.clicked.connect(self.physicalPropertiesDialog)
         self.window.pushButtonBoundaryCondition.clicked.connect(self.boundaryConditionDialog)
         self.window.pushButtonNumerics.clicked.connect(self.numericsDialog)
@@ -1354,6 +1358,9 @@ class mainWindow(QMainWindow):
     def controlsDialog(self):
         self.project.simulationSettings,self.project.parallelSettings = controlsDialogDriver(self.project.simulationSettings,self.project.parallelSettings,self.project.transient)
 
+    def advancedMeshDialog(self):
+        self.project.meshSettings = advancedMeshDialogDriver(self.project.meshSettings)
+        
     
     def postProcessDialog(self):
         postProcessDialogDriver()

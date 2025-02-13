@@ -288,7 +288,7 @@
     <attribute name="title">
      <string>Layers</string>
     </attribute>
-    <widget class="QCheckBox" name="checkBox">
+    <widget class="QCheckBox" name="checkBoxRelativeSizes">
      <property name="geometry">
       <rect>
        <x>30</x>
@@ -473,14 +473,14 @@
       </rect>
      </property>
      <property name="text">
-      <string>maxSkewness</string>
+      <string>maxBoundarySkewness</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_17">
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>80</y>
+       <y>110</y>
        <width>101</width>
        <height>16</height>
       </rect>
@@ -493,7 +493,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>110</y>
+       <y>140</y>
        <width>101</width>
        <height>16</height>
       </rect>
@@ -502,7 +502,7 @@
       <string>minDeterminant</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEditMaxOrtho">
+    <widget class="QLineEdit" name="lineEditMaxNonOrtho">
      <property name="geometry">
       <rect>
        <x>172</x>
@@ -512,7 +512,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEditSkewness">
+    <widget class="QLineEdit" name="lineEditBoundarySkewness">
      <property name="geometry">
       <rect>
        <x>170</x>
@@ -526,17 +526,17 @@
      <property name="geometry">
       <rect>
        <x>170</x>
-       <y>80</y>
+       <y>110</y>
        <width>171</width>
        <height>21</height>
       </rect>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEditDeterminent">
+    <widget class="QLineEdit" name="lineEditDeterminant">
      <property name="geometry">
       <rect>
        <x>170</x>
-       <y>110</y>
+       <y>140</y>
        <width>171</width>
        <height>21</height>
       </rect>
@@ -546,13 +546,36 @@
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>150</y>
+       <y>180</y>
        <width>301</width>
        <height>20</height>
       </rect>
      </property>
      <property name="text">
       <string>Disable Mesh Quality Metrics</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEditInternalSkewness">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>80</y>
+       <width>171</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_19">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>80</y>
+       <width>101</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>maxInternalSkewness</string>
      </property>
     </widget>
    </widget>

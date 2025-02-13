@@ -234,13 +234,13 @@ addLayers       {meshSettings['snappyHexSteps']['addLayers']};"""
     nSolveIter {meshSettings['snapControls']['nSolveIter']};
     nRelaxIter {meshSettings['snapControls']['nRelaxIter']};
     nFeatureSnapIter {meshSettings['snapControls']['nFeatureSnapIter']};
-    implicitFeatureSnap {meshSettings['snapControls']['implicitFeatureSnap']};
-    explicitFeatureSnap {meshSettings['snapControls']['explicitFeatureSnap']};
-    multiRegionFeatureSnap {meshSettings['snapControls']['multiRegionFeatureSnap']};
+    implicitFeatureSnap {trueFalse[meshSettings['snapControls']['implicitFeatureSnap']]};
+    explicitFeatureSnap {trueFalse[meshSettings['snapControls']['explicitFeatureSnap']]};
+    multiRegionFeatureSnap {trueFalse[meshSettings['snapControls']['multiRegionFeatureSnap']]};
 }}"""
     layerControls = f"""\naddLayersControls
 {{
-    relativeSizes {meshSettings['addLayersControls']['relativeSizes']};
+    relativeSizes {trueFalse[meshSettings['addLayersControls']['relativeSizes']]};
     layers
     {{"""
     for an_entry in meshSettings['geometry']:
