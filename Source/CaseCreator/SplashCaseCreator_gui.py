@@ -340,7 +340,7 @@ class mainWindow(QMainWindow):
     def update_list(self):
         self.window.listWidgetObjList.clear()
         for idx, stl in enumerate(self.project.stl_files):
-            print(f"Adding to list: {stl['name']}")
+            #print(f"Adding to list: {stl['name']}")
             self.window.listWidgetObjList.addItem(stl['name'])
         for idx, geometry in enumerate(self.project.geometries):
             print(f"Adding to list: {geometry['name']}")

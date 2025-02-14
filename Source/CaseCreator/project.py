@@ -47,6 +47,8 @@ from scriptGenerator import ScriptGenerator
 from postProcess import postProcess
 from mod_project import mod_project
 
+import copy
+
 
 #from ../constants/constants import meshSettings
 
@@ -209,12 +211,14 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         #print(self.inletValues)
         #print(self.boundaryConditions)
         SplashCaseCreatorIO.printMessage("Writing settings to project_settings.yaml",GUIMode=self.GUIMode,window=self.window)
-        SplashCaseCreatorPrimitives.dict_to_yaml(settings, 'project_settings.yaml')
+        settings_file_path = os.path.join(self.project_path, 'project_settings.yaml')
+        SplashCaseCreatorPrimitives.dict_to_yaml(settings, settings_file_path)
 
     # If the project is already existing, load the settings from the project_settings.yaml file
     def load_settings(self):
         SplashCaseCreatorIO.printMessage("Loading project settings",GUIMode=self.GUIMode,window=self.window)
-        settings = SplashCaseCreatorPrimitives.yaml_to_dict('project_settings.yaml')
+        settings_file_path = os.path.join(self.project_path, 'project_settings.yaml')
+        settings = SplashCaseCreatorPrimitives.yaml_to_dict(settings_file_path)
         self.meshSettings = settings['meshSettings']
         
         self.physicalProperties = settings['physicalProperties']
@@ -278,16 +282,23 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
 
     # If the project is not existing, load the default settings
     def load_default_settings(self):
-        self.meshSettings = meshSettings
-        self.physicalProperties = physicalProperties
-        self.numericalSettings = numericalSettings
-        self.inletValues = inletValues
-        self.boundaryConditions = boundaryConditions
-        self.simulationSettings = simulationSettings
-        self.solverSettings = solverSettings
-        self.parallelSettings = parallelSettings
-        self.simulationFlowSettings = simulationFlowSettings
-        self.postProcessSettings = postProcessSettings
+        # It is necessary to reload these default settings for a new project
+        from constants import meshSettings, physicalProperties, numericalSettings, inletValues
+        from constants import solverSettings, boundaryConditions, simulationSettings
+        from constants import simulationFlowSettings, parallelSettings, postProcessSettings
+
+        
+        self.meshSettings = copy.deepcopy(meshSettings)
+        print(self.meshSettings['geometry'])
+        self.physicalProperties = copy.deepcopy(physicalProperties)
+        self.numericalSettings = copy.deepcopy(numericalSettings)
+        self.inletValues = copy.deepcopy(inletValues)
+        self.boundaryConditions = copy.deepcopy(boundaryConditions)
+        self.simulationSettings = copy.deepcopy(simulationSettings)
+        self.solverSettings = copy.deepcopy(solverSettings)
+        self.parallelSettings = copy.deepcopy(parallelSettings)
+        self.simulationFlowSettings = copy.deepcopy(simulationFlowSettings)
+        self.postProcessSettings = copy.deepcopy(postProcessSettings)
         #self.settings = (self.meshSettings, self.physicalProperties, 
         #                 self.numericalSettings, self.inletValues, self.boundaryConditions, self.simulationSettings, self.solverSettings)
 
@@ -664,9 +675,9 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 #except OSError as error:
                 #    SplashCaseCreatorIO.printError(error)
                 #    return -1
-                print(f"STL file {stl_name} removed from the project")
-                self.list_stl_files()
-                print(self.stl_files)
+                #print(f"STL file {stl_name} removed from the project")
+                #self.list_stl_files()
+                #print(self.stl_files)
                 return 0
         self.list_stl_files()
         return -1
