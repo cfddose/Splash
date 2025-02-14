@@ -341,6 +341,7 @@ class vectorInputDialog(QDialog):
 class STLDialog(QDialog):
     def __init__(self, stl_name="stl_file.stl",stlProperties=None):
         super().__init__()
+        
         self.load_ui()
         global global_darkmode
         apply_theme_dialog_boxes(self.window, global_darkmode)
@@ -400,7 +401,7 @@ class STLDialog(QDialog):
 
     def set_initial_values(self):
         # change window title
-        self.window.setWindowTitle(f"Mesh Refimenent: {self.stl_name}")
+        self.window.setWindowTitle(f"Patch Properties: {self.stl_name}")
         self.window.comboBoxUsage.addItem("Wall")
         self.window.comboBoxUsage.addItem("Inlet")
         self.window.comboBoxUsage.addItem("Outlet")
@@ -439,7 +440,6 @@ class STLDialog(QDialog):
         #self.window.closeEvent = self.show_closed
 
     def show_closed(self):
-        
         pass
 
     def on_pushButtonOK_clicked(self):
@@ -490,7 +490,7 @@ class STLDialog(QDialog):
             self.window.lineEditRefMin.setEnabled(False)
             self.window.lineEditRefMax.setEnabled(False)
             self.window.lineEditNLayers.setEnabled(False)
-            self.window.lineEditReflevel.setEnabled(False)
+            #self.window.lineEditReflevel.setEnabled(False)
         elif(self.window.comboBoxUsage.currentText()=="Refinement_Surface"):
             self.window.lineEditRefLevel.setEnabled(True)
             self.window.checkBoxAMI.setEnabled(False)

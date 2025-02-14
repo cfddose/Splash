@@ -48,19 +48,19 @@ def create_u_file(meshSettings,boundaryConditions):
             U_file += f"""
     {patch['name']}"""
 
-        if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
-            u_value = patch.get('property', None)  # Check if 'property' exists
-            if u_value is None:
-                print(f"Warning: Patch '{patch['name']}' does not have a 'property' field! Using default value (0,0,0).")
-                u_value = (0.0, 0.0, 0.0)  # Default fallback
-            
-            U_file += f"""
-            {{
-                type {boundaryConditions['velocityInlet']['u_type']};
-                value uniform {tuple_to_string(u_value)};
-            }}
-            """
-
+            if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
+                u_value = patch.get('property', None)  # Check if 'property' exists
+                if u_value is None:
+                    print(f"Warning: Patch '{patch['name']}' does not have a 'property' field! Using default value (0,0,0).")
+                    u_value = (0.0, 0.0, 0.0)  # Default fallback
+                
+                U_file += f"""
+    {{
+        type {boundaryConditions['velocityInlet']['u_type']};
+        value uniform {tuple_to_string(u_value)};
+    }}
+    """
+    # This was intentional. If the location of if statements are changed, these would not work well.
     #         if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
     #             U_file += f"""
     # {{
@@ -585,21 +585,21 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
                 nutilda_file += f"""
     {{
         type {boundaryConditions['pressureOutlet']['nutilda_type']};
-        value uniform {boundaryConditions['pressureOutlet']['nutilda_value']};
+        value {boundaryConditions['pressureOutlet']['nutilda_value']};
     }}
     """
             if(patch['type'] == 'wall'):
                 nutilda_file += f"""
     {{
         type {boundaryConditions['wall']['nutilda_type']};
-        value uniform {boundaryConditions['wall']['nutilda_value']};
+        value  {boundaryConditions['wall']['nutilda_value']};
     }}
     """
             if(patch['type'] == 'movingWall'):
                 nutilda_file += f"""
     {{
         type {boundaryConditions['movingWall']['nutilda_type']};
-        value uniform {boundaryConditions['movingWall']['nutilda_value']};
+        value  {boundaryConditions['movingWall']['nutilda_value']};
     }}
     """
             if(patch['type'] == 'symmetry'):
@@ -653,7 +653,7 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
     "{patch['name'][:-4]}.*"
     {{
         type {boundaryConditions['pressureOutlet']['nutilda_type']};
-        value uniform {boundaryConditions['pressureOutlet']['nutilda_value']};
+        value {boundaryConditions['pressureOutlet']['nutilda_value']};
     }}
     """
             else:

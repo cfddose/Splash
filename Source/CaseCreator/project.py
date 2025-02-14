@@ -392,6 +392,20 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 bounds = stl['bounds']
                 return purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds
         return None
+
+    def get_boundary_properties(self,boundary_name):
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                purpose = boundary['purpose']
+                refMin = 0
+                refMax = 0
+                featureEdges = False
+                featureLevel = 0
+                nLayers = 0
+                property = boundary['property']
+                bounds = None
+                return purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds
+        return None
     
     def show_stl_properties(self,stl_file_name):
         purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds = self.get_stl_properties(stl_file_name)
@@ -470,6 +484,23 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         for patch in self.meshSettings['patches']:
             if patch['name'] == patch_name:
                 patch['type'] = boundary_type
+                return 0
+        return -1
+    
+    def set_boundary_properties(self,boundary_name,boundary_properties):
+        refMin,refMax,refLevel,nLayers,usage,edgeRefine,ami,property = boundary_properties
+        usageToPurpose = {'Wall':'wall', 'Inlet':'inlet','Outlet':'outlet','Refinement_Region':'refinementRegion',
+                          'Refinement_Surface':'refinementSurface','Cell_Zone':'cellZone','Baffles':'baffles',
+                          'Symmetry':'symmetry','Cyclic':'cyclic','Empty':'empty'}
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                boundary['purpose'] = usageToPurpose[usage]
+                boundary['property'] = property
+                if usageToPurpose[usage] in ['wall','symmetry','cyclic','empty']:
+                    boundary['type'] = usageToPurpose[usage]
+                    boundary['property'] = None
+
+                
                 return 0
         return -1
     
@@ -1088,12 +1119,18 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.lenZ = maxz - minz
 
     def set_max_domain_size(self,domain_size,nx,ny,nz):
-        self.minX = min(domain_size[0],self.minX)
-        self.maxX = max(domain_size[1],self.maxX)
-        self.minY = min(domain_size[2],self.minY)
-        self.maxY = max(domain_size[3],self.maxY)
-        self.minZ = min(domain_size[4],self.minZ)
-        self.maxZ = max(domain_size[5],self.maxZ)
+        # self.minX = min(domain_size[0],self.minX)
+        # self.maxX = max(domain_size[1],self.maxX)
+        # self.minY = min(domain_size[2],self.minY)
+        # self.maxY = max(domain_size[3],self.maxY)
+        # self.minZ = min(domain_size[4],self.minZ)
+        # self.maxZ = max(domain_size[5],self.maxZ)
+        self.meshSettings['domain']['minx'] = domain_size[0]
+        self.meshSettings['domain']['maxx'] = domain_size[1]
+        self.meshSettings['domain']['miny'] = domain_size[2]
+        self.meshSettings['domain']['maxy'] = domain_size[3]
+        self.meshSettings['domain']['minz'] = domain_size[4]
+        self.meshSettings['domain']['maxz'] = domain_size[5]
 
         self.meshSettings['domain']['nx'] = nx
         self.meshSettings['domain']['ny'] = ny

@@ -51,6 +51,8 @@ SIMPLE
 {{
     nNonOrthogonalCorrectors {numericalSettings['simpleDict']['nNonOrthogonalCorrectors']};
     consistent {numericalSettings['simpleDict']['consistent']};
+    pRefCell {numericalSettings['pimpleDict']['pRefCell']};
+    pRefValue {numericalSettings['pimpleDict']['pRefValue']};
     residualControl
     {{
         U {numericalSettings['simpleDict']['residualControl']['U']};

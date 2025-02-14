@@ -93,7 +93,7 @@ meshSettings = {
                             'firstLayerThickness': 0.001,
                             'minThickness': 1e-7,
                             'nGrow': 0,
-                            'featureAngle': 180,
+                            'featureAngle': 130,
                             'slipFeatureAngle': 30,
                             'nRelaxIter': 3,
                             'nSmoothSurfaceNormals': 1,
@@ -170,7 +170,8 @@ numericalSettings = {
                    },
 
     'relaxationFactors': {'U': 0.7, 'k': 0.7, 'omega': 0.7, 'epsilon': 0.7, 'nut': 0.7, 'nuTilda':0.7, 'p': 0.3}, 
-    'simpleDict':{'nNonOrthogonalCorrectors': 2, 'consistent': 'false', 'residualControl': {'U': 1e-4, 'p': 1e-3, 'k': 1e-4, 'omega': 1e-4, 'epsilon': 1e-4, 'nut': 1e-4, 'nuTilda': 1e-4}},
+    'simpleDict':{'nNonOrthogonalCorrectors': 2, 'consistent': 'false','pRefCell': 0, 'pRefValue': 0,
+                   'residualControl': {'U': 1e-4, 'p': 1e-3, 'k': 1e-4, 'omega': 1e-4, 'epsilon': 1e-4, 'nut': 1e-4, 'nuTilda': 1e-4}},
     'potentialFlowDict':{'nonOrthogonalCorrectors': 10},
 }
 

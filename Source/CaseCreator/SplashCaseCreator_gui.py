@@ -320,7 +320,6 @@ class mainWindow(QMainWindow):
             print("Light mode selected")
             self.window.tableViewProperties.horizontalHeader().setStyleSheet("color: black")
         
-
     # FLAG! For that purpose is this?    
     def __del__(self):
         pass
@@ -378,7 +377,10 @@ class mainWindow(QMainWindow):
         )
 
         # Retrieve STL properties
-        stl_properties = self.project.get_stl_properties(self.current_obj)
+        if is_STL:
+            stl_properties = self.project.get_stl_properties(self.current_obj)
+        else:
+            stl_properties = None
         
         # For external flows, the selected object is probably a boundary.
         # In this case, we need to retrieve the boundary properties instead.
@@ -501,7 +503,7 @@ class mainWindow(QMainWindow):
 # Thaw: This is the wrong way and already corrected.      
 #self.window.plainTextTerminal.verticalScrollBar().setValue(self.window.plainTextTerminal.verticalScrollBar().maximum())
         
-        #----------------- Event Handlers -----------------#    
+    #----------------- Event Handlers -----------------#    
     def prepare_events(self):
         # Saving screenshots and connecting relevant events
         save_screenshot_action = QAction("Save Screenshot", self)
@@ -708,23 +710,23 @@ class mainWindow(QMainWindow):
         self.update_list()
         self.updateStatusBar("STL imported successfully.")
         return 
-        try:
-            #print("Importing STL...")
-            stl_path = SplashCaseCreatorPrimitives.ask_for_file([("STL Geometry", "*.stl"), ("OBJ Geometry", "*.obj")],qt=True)
-            stl_status = self.project.add_stl_file(stl_path)
-            #print(f"STL files:",self.project.stl_files)
-            #print(f"STL Status: {stl_status}")
-            if stl_status == -1:
-                self.updateStatusBar("Failed to load STL file.")
-                return
-            #self.project.add_stl_to_project()
-            #print(f"Project STL Files: {self.project.stl_files}")
-            self.vtk_manager.render_stl(self.project.current_stl_file)
-            self.update_list()
-            self.updateStatusBar("STL imported successfully.")
-        except Exception as e:
-            self.updateStatusBar(f"Error importing STL: {e}")
-            print(f"Error: {e}")
+        # try:
+        #     #print("Importing STL...")
+        #     stl_path = SplashCaseCreatorPrimitives.ask_for_file([("STL Geometry", "*.stl"), ("OBJ Geometry", "*.obj")],qt=True)
+        #     stl_status = self.project.add_stl_file(stl_path)
+        #     #print(f"STL files:",self.project.stl_files)
+        #     #print(f"STL Status: {stl_status}")
+        #     if stl_status == -1:
+        #         self.updateStatusBar("Failed to load STL file.")
+        #         return
+        #     #self.project.add_stl_to_project()
+        #     #print(f"Project STL Files: {self.project.stl_files}")
+        #     self.vtk_manager.render_stl(self.project.current_stl_file)
+        #     self.update_list()
+        #     self.updateStatusBar("STL imported successfully.")
+        # except Exception as e:
+        #     self.updateStatusBar(f"Error importing STL: {e}")
+        #     print(f"Error: {e}")
 
     def importMultipleSTL(self):
         # show the file dialog
@@ -1266,6 +1268,8 @@ class mainWindow(QMainWindow):
         nx = int(self.window.lineEdit_nX.text())
         ny = int(self.window.lineEdit_nY.text())
         nz = int(self.window.lineEdit_nZ.text())
+        #print(f"minx: {minx}, miny: {miny}, minz: {minz}")
+        #print(f"maxx: {maxx}, maxy: {maxy}, maxz: {maxz}")
         if(nx<=0 or ny<=0 or nz<=0):
             SplashCaseCreatorIO.printError("Invalid Domain Size",GUIMode=True)
             self.readyStatusBar()
@@ -1279,28 +1283,39 @@ class mainWindow(QMainWindow):
         self.prepareDomainView()
         self.readyStatusBar()
        
-        
+    # Although the name is stlPropertiesDialog, this is applicable for all objects  
     def stlPropertiesDialog(self):
         stl = self.current_obj
+        stl_status = self.project.check_stl_file(stl)
         if stl==None:
             return
-        currentStlProperties = self.project.get_stl_properties(stl)
+        if stl_status==True:
+            currentProperties = self.project.get_stl_properties(stl)
+        else:
+            currentProperties = self.project.get_boundary_properties(stl)
+        if currentProperties==None:
+            return
         
         # open STL properties dialog
-        stlProperties = STLDialogDriver(stl,stlProperties=currentStlProperties)
+        stlProperties = STLDialogDriver(stl,stlProperties=currentProperties)
         
         # The properties are:
         if stlProperties==None:
             return
         
         # update the properties
-        status = self.project.set_stl_properties(stl,stlProperties)
+        if stl_status==True:
+            status = self.project.set_stl_properties(stl,stlProperties)
+        else:
+            status = self.project.set_boundary_properties(stl,stlProperties)
         if status==-1:
-            SplashCaseCreatorIO.printError("STL Properties not updated",GUIMode=True)   
+            SplashCaseCreatorIO.printError("Patch Properties not updated",GUIMode=True)   
         else:
             #self.updateStatusBar(f"{stl}: Properties Updated")
             self.updateTerminal(f"{stl} Properties Updated")
             self.readyStatusBar()
+        # To refresh the property table
+        self.listClicked()
 
     def physicalPropertiesDialog(self):
         # assign initial values from read data
@@ -1338,6 +1353,9 @@ class mainWindow(QMainWindow):
                 #boundary['name'] = self.current_obj
                 boundaryConditions = boundaryConditionDialogDriver(boundary,external_boundary=True)
                 self.project.set_external_boundary_condition(self.current_obj,boundaryConditions)
+                self.listClicked()
+                self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")
+                self.readyStatusBar()
                 return
             else:
                 SplashCaseCreatorIO.printError("Patch not found",GUIMode=True)
@@ -1348,6 +1366,10 @@ class mainWindow(QMainWindow):
             return
         # update the boundary conditions
         self.project.set_boundary_condition(self.current_obj,boundaryConditions)
+        self.listClicked()
+        self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")
+        self.readyStatusBar()
+
 
     def numericsDialog(self):
         self.current_mode,self.project.numericalSettings,turbulence_model = numericsDialogDriver(self.current_mode,self.project.numericalSettings,
@@ -1360,7 +1382,7 @@ class mainWindow(QMainWindow):
 
     def advancedMeshDialog(self):
         self.project.meshSettings = advancedMeshDialogDriver(self.project.meshSettings)
-        
+
     
     def postProcessDialog(self):
         postProcessDialogDriver()
