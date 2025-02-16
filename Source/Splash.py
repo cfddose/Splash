@@ -54,8 +54,24 @@ class Splash:
         self.root.config(background="white")
         self.root.title("Splash - v0.2")
         
+        # Get the absolute path of the script directory
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Convert relative path to absolute path
+        icon_path = os.path.join(base_path, "../Resources/Logos/simulitica_icon_logo.png")
+
+        # Ensure the path is absolute
+        icon_path = os.path.abspath(icon_path)
+
+        # Load the icon
+        if os.path.exists(icon_path):  # Check if the file exists before loading
+            icon_image = tk.PhotoImage(file=icon_path)
+            self.root.tk.call('wm', 'iconphoto', self.root._w, icon_image)
+        else:
+            print(f"Error: Icon file not found at {icon_path}")
+    
         # Set the window icon using a PhotoImage
-        icon_path = "../Resources/Logos/simulitica_icon_logo.png"  # Replace with the actual path to your icon file
+        #icon_path = "../Resources/Logos/simulitica_icon_logo.png"  # Replace with the actual path to your icon file
         icon_image = tk.PhotoImage(file=icon_path)
         self.root.tk.call('wm', 'iconphoto', self.root._w, icon_image)
         
@@ -443,8 +459,13 @@ class Splash:
     def add_logos(self):
     
         # Create PhotoImage objects directly from image files
-        self.logo_openfoam = tk.PhotoImage(file="../Resources/Logos/openfoam_logo.png")
-        self.logo_simulitica = tk.PhotoImage(file="../Resources/Logos/simulitica_logo.png")
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+        self.logo_openfoam = tk.PhotoImage(file=os.path.abspath(os.path.join(base_path, "../Resources/Logos/openfoam_logo.png")))
+        self.logo_simulitica = tk.PhotoImage(file=os.path.abspath(os.path.join(base_path, "../Resources/Logos/simulitica_logo.png")))
+
+        #self.logo_openfoam = tk.PhotoImage(file="../Resources/Logos/openfoam_logo.png")
+        #self.logo_simulitica = tk.PhotoImage(file="../Resources/Logos/simulitica_logo.png")
     
         # Resize images if needed
         self.logo_openfoam = self.logo_openfoam.subsample(3, 3)  # Adjust the subsample as needed
@@ -635,7 +656,9 @@ class Splash:
         welcome_label.grid(row=0, column=0, columnspan=5, rowspan=10, pady=1, padx=10, sticky="nsew")
 
         # Create a PhotoImage object and set it to the Label
-        welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        welcome_image = tk.PhotoImage(file=os.path.abspath(os.path.join(base_path, "../Resources/Images/racing-car.png")))
+        #welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")
         welcome_image = welcome_image.subsample(9, 9)
         welcome_label.config(image=welcome_image, compound="top")
 
@@ -669,7 +692,9 @@ class Splash:
         welcome_label.pack(padx=10, pady=10)
 
         # Create a PhotoImage object and set it to the Label
-        welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")  # Adjust the path as needed
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        welcome_image = tk.PhotoImage(file=os.path.join(base_path, "../Resources/Images/racing-car.png"))
+        #welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")  # Adjust the path as needed
         welcome_image = welcome_image.subsample(4, 4)  # Adjust subsampling as needed
         welcome_label.config(image=welcome_image, compound="top")
         welcome_label.image = welcome_image  # Keep a reference
@@ -731,7 +756,10 @@ class Splash:
 
     def add_bgImage(self):
         # Specify the image path
-        image_path = "../Resources/Images/racing-car.png"
+        
+        #image_path = "../Resources/Images/racing-car.png"
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.abspath(os.path.join(base_path, "../Resources/Images/racing-car.png"))
 
         # Create a tk.PhotoImage object directly from the file
         self.splash_bgImage = tk.PhotoImage(file=image_path)
@@ -2195,7 +2223,9 @@ _____________________________________________________
             license_message_label.pack(padx=10, pady=10)
 
             # Create a PhotoImage object and set it to the Label
-            welcome_image = tk.PhotoImage(file="../Resources/Logos/simulitica_icon_logo.png")  # Adjust the path as needed
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            welcome_image = tk.PhotoImage(file=os.path.join(base_path, "../Resources/Logos/simulitica_icon_logo.png"))
+            #welcome_image = tk.PhotoImage(file="../Resources/Logos/simulitica_icon_logo.png")  
             welcome_image = welcome_image.subsample(4, 4)  # Adjust subsampling as needed
             license_message_label.config(image=welcome_image, compound="top")
             license_message_label.image = welcome_image  # Keep a reference

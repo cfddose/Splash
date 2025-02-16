@@ -31,6 +31,7 @@
 # Importing system-related libs  
 import sys
 import os
+import subprocess
 from time import sleep # maybe this line can be deleted
 import time
 
@@ -44,6 +45,9 @@ from theme_switcher import apply_theme
 
 # Keyboard shortcuts
 from PySide6.QtGui import QShortcut, QKeySequence
+
+# Run on a separate thread
+from PySide6.QtCore import QThread, Signal
 
 # Importing PySide components 
 from PySide6.QtGui import QAction
@@ -91,6 +95,33 @@ src = os.path.dirname(os.path.abspath(__file__))
 # set the source directory for the dialog boxes
 set_src(src)
 
+
+class SplashLauncherThread(QThread):
+    error_signal = Signal(str)  # Signal to send messages to GUI
+
+    def run(self):
+        self.error_signal.emit("Launching Splash v0.2. Please hang on...")  # Send update to terminal
+        try:
+            # Change directory to one level up and launch Splash
+            process = subprocess.Popen(
+            ["python3", "../Splash.py"], 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.STDOUT,  # Merge stderr with stdout
+            text=True
+            )
+
+
+            # Read process output and forward it to terminal
+            for line in process.stdout:
+                self.error_signal.emit(line.strip())
+
+            process.wait()  # Ensure the process runs properly
+
+        except Exception as e:
+            self.error_signal.emit(f"Error launching Splash: {e}")
+
+
+    
 # This is the main window class
 class mainWindow(QMainWindow):
     def __init__(self):
@@ -117,10 +148,20 @@ class mainWindow(QMainWindow):
         # to store VTK mode
         self.vtk_mode = vtkMode.VTK_SURFACE # initial mode is surface
         
-        # Create a QShortcut for Ctrl+S
+        # Create a QShortcut for saving a case setup quickly 
         self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), self)
         self.shortcut_save.setContext(Qt.WindowShortcut)  # optional: sets the scope
         self.shortcut_save.activated.connect(self.saveCase)
+        
+        # A QShortcut for opening a case
+        self.shortcut_open = QShortcut(QKeySequence("Ctrl+O"), self)
+        self.shortcut_open.setContext(Qt.WindowShortcut)  
+        self.shortcut_open.activated.connect(self.openCase)
+        
+        # A QShortcut for generating a case
+        self.shortcut_generate = QShortcut(QKeySequence("Ctrl+G"), self)
+        self.shortcut_generate.setContext(Qt.WindowShortcut)  
+        self.shortcut_generate.activated.connect(self.generateCase)
                 
     def setup_timer(self):
         """
@@ -157,7 +198,7 @@ class mainWindow(QMainWindow):
         self.window.pushButtonControls.setEnabled(False)
         self.window.pushButtonDomainAuto.setEnabled(False)
         self.window.pushButtonDomainManual.setEnabled(False)
-        self.window.pushButtonSteadyTransient.setEnabled(False)
+        self.window.checkBoxSteadyTransient.setEnabled(False)
         self.window.pushButtonSummarize.setEnabled(False)
         self.window.pushButtonFitAll.setEnabled(False)
         self.window.pushButtonPlusX.setEnabled(False)
@@ -204,13 +245,13 @@ class mainWindow(QMainWindow):
         self.window.pushButtonNumerics.setEnabled(True)
         self.window.pushButtonControls.setEnabled(True)
         self.window.pushButtonCreate.setEnabled(True)
-        self.window.pushButtonOpen.setEnabled(True)
+        # Now in the menubar -> self.window.pushButtonOpen.setEnabled(True)
         self.window.pushButtonGenerate.setEnabled(True)
         # Post-processing capabilities are disabled in this version
         #self.window.pushButtonPostProc.setEnabled(True)
         self.window.pushButtonDomainAuto.setEnabled(True)
         self.window.pushButtonDomainManual.setEnabled(True)
-        self.window.pushButtonSteadyTransient.setEnabled(True)
+        self.window.checkBoxSteadyTransient.setEnabled(True)
         self.window.pushButtonSummarize.setEnabled(True)
         self.window.pushButtonFitAll.setEnabled(True)
         self.window.pushButtonPlusX.setEnabled(True)
@@ -265,7 +306,10 @@ class mainWindow(QMainWindow):
         self.vtk_manager = VTKManager(self.ren, self.vtkWidget)
 
         # Change Steady/Transient button into toggle button
-        self.window.pushButtonSteadyTransient.setCheckable(True)
+        self.window.checkBoxSteadyTransient.setCheckable(True)
+        
+        # Launch Splash v0.2 when prompted
+        self.window.launchSplash.clicked.connect(self.launch_splash)
         
         # Prepare sub-windows and event connections
         self.prepare_subWindows()
@@ -291,6 +335,13 @@ class mainWindow(QMainWindow):
         
         # Connect theme toggle
         self.window.themeToggle.stateChanged.connect(self.toggle_theme)
+        
+        
+    def launch_splash(self):
+        """Launch Splash.py in a separate thread."""
+        self.splash_thread = SplashLauncherThread()
+        self.splash_thread.error_signal.connect(lambda msg: SplashCaseCreatorIO.printMessage(msg, GUIMode=True, window=self))
+        self.splash_thread.start()    
 
     def apply_default_theme(self):
         """
@@ -524,7 +575,7 @@ class mainWindow(QMainWindow):
         self.window.pushButtonBox.clicked.connect(self.createBox)
         self.window.pushButtonCylinder.clicked.connect(self.createCyliner)
         self.window.pushButtonCreate.clicked.connect(self.createCase)
-        self.window.pushButtonOpen.clicked.connect(self.openCase)
+        # Now in the menubar -> self.window.pushButtonOpen.clicked.connect(self.openCase)
         self.window.pushButtonGenerate.clicked.connect(self.generateCase)
         self.window.pushButtonPostProc.clicked.connect(self.postProcessDialog)
         self.window.radioButtonInternal.clicked.connect(self.chooseInternalFlow)
@@ -538,7 +589,7 @@ class mainWindow(QMainWindow):
         self.window.pushButtonBoundaryCondition.clicked.connect(self.boundaryConditionDialog)
         self.window.pushButtonNumerics.clicked.connect(self.numericsDialog)
         self.window.pushButtonControls.clicked.connect(self.controlsDialog)
-        self.window.pushButtonSteadyTransient.clicked.connect(self.toggleSteadyTransient)
+        self.window.checkBoxSteadyTransient.clicked.connect(self.toggleSteadyTransient)
         self.window.pushButtonSummarize.clicked.connect(self.summarizeProject)
         self.window.pushButtonAddSTL.clicked.connect(self.importSTL)
         self.window.pushButtonRemoveSTL.clicked.connect(self.removeSTL)
@@ -546,8 +597,6 @@ class mainWindow(QMainWindow):
 
         # Toggle axes on the main render window
         self.window.axesCheckBox.stateChanged.connect(self.toggle_axes_with_vtk_manager) 
-
-        
 
         ## (Beta) STEP import button connection --->
         ##self.window.pushButtonSTEPImport.clicked.connect(self.importSTEP)
@@ -880,16 +929,16 @@ class mainWindow(QMainWindow):
         self.close()
 
     def toggleSteadyTransient(self):
-        buttonText = self.window.pushButtonSteadyTransient.text()
+        buttonText = self.window.checkBoxSteadyTransient.text()
         if buttonText=="Steady-State":
-            self.window.pushButtonSteadyTransient.setText("Transient")
+            self.window.checkBoxSteadyTransient.setText("Transient")
             SplashCaseCreatorIO.printMessage("Transient Flow Selected",GUIMode=True,window=self)
             self.project.transient = True
             # this is to ensure that the ddtSchemes is set to Euler if the current value is steadyState
             if self.project.numericalSettings['ddtSchemes']['default'] == "steadyState":
                 self.project.numericalSettings['ddtSchemes']['default'] = "Euler"
         else:
-            self.window.pushButtonSteadyTransient.setText("Steady-State")
+            self.window.checkBoxSteadyTransient.setText("Steady-State")
             SplashCaseCreatorIO.printMessage("Steady-State Flow Selected",GUIMode=True,window=self)
             self.project.transient = False
             # this is to ensure that the ddtSchemes is set to steadyState if the current value is not steadyState
@@ -986,7 +1035,7 @@ class mainWindow(QMainWindow):
         self.window.radioButtonInternal.setChecked(False)
         self.window.radioButtonExternal.setChecked(True)
         self.window.checkBoxOnGround.setChecked(False)
-        self.window.pushButtonSteadyTransient.setText("Steady-State")
+        self.window.checkBoxSteadyTransient.setText("Steady-State")
         #self.project = None
         #self.project_opened = False
         ##self.disableButtons()
