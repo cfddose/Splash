@@ -36,6 +36,9 @@ import os
 from gui_text_to_foam_dict import grad_schemes,div_schemes,temporal_schemes,laplacian_schemes
 from gui_text_to_foam_dict import value_to_key
 
+# For resetting to default settings 
+from constants import meshSettings
+
 # to keep theme consistent
 from theme_switcher import apply_theme_dialog_boxes
 global_darkmode = True
@@ -338,6 +341,7 @@ class vectorInputDialog(QDialog):
 class STLDialog(QDialog):
     def __init__(self, stl_name="stl_file.stl",stlProperties=None):
         super().__init__()
+        
         self.load_ui()
         global global_darkmode
         apply_theme_dialog_boxes(self.window, global_darkmode)
@@ -397,7 +401,7 @@ class STLDialog(QDialog):
 
     def set_initial_values(self):
         # change window title
-        self.window.setWindowTitle(f"Mesh Refimenent: {self.stl_name}")
+        self.window.setWindowTitle(f"Patch Properties: {self.stl_name}")
         self.window.comboBoxUsage.addItem("Wall")
         self.window.comboBoxUsage.addItem("Inlet")
         self.window.comboBoxUsage.addItem("Outlet")
@@ -436,7 +440,6 @@ class STLDialog(QDialog):
         #self.window.closeEvent = self.show_closed
 
     def show_closed(self):
-        
         pass
 
     def on_pushButtonOK_clicked(self):
@@ -487,7 +490,7 @@ class STLDialog(QDialog):
             self.window.lineEditRefMin.setEnabled(False)
             self.window.lineEditRefMax.setEnabled(False)
             self.window.lineEditNLayers.setEnabled(False)
-            self.window.lineEditReflevel.setEnabled(False)
+            #self.window.lineEditReflevel.setEnabled(False)
         elif(self.window.comboBoxUsage.currentText()=="Refinement_Surface"):
             self.window.lineEditRefLevel.setEnabled(True)
             self.window.checkBoxAMI.setEnabled(False)
@@ -1379,6 +1382,186 @@ class postProcessDialog(QDialog):
         self.window.comboBoxFOType.addItem("Mass Flow")
         self.window.comboBoxFOType.addItem("Probes")
 
+class advancedMeshDialog(QDialog):
+    def __init__(self,meshSettings=None):
+        super().__init__()
+        self.OK_clicked = False
+        self.meshSettings = meshSettings
+        self.load_ui()
+        global global_darkmode
+        apply_theme_dialog_boxes(self.window, global_darkmode)
+        self.prepare_events()
+        self.set_input_types()
+        self.initialize_values()
+
+
+    def load_ui(self):
+        ui_path = os.path.join(src, "advancedMeshSettingsDialog.ui")
+        ui_file = QFile(ui_path)
+        #ui_file = QFile("inputDialog.ui")
+        ui_file.open(QFile.ReadOnly)
+        self.window = loader.load(ui_file, None)
+        ui_file.close()
+
+    def set_input_types(self):
+        # castellated mesh controls
+        self.window.lineEditMaxLocalCells.setValidator(QIntValidator())
+        self.window.lineEditMaxGlobalCells.setValidator(QIntValidator())
+        self.window.lineEditCellsBetweenLevels.setValidator(QIntValidator())
+        self.window.lineEditResolveFeatureAngle.setValidator(QDoubleValidator())
+        # snapping controls
+        self.window.lineEditTolerance.setValidator(QDoubleValidator())
+        self.window.lineEditSolverIter.setValidator(QIntValidator())
+        self.window.lineEditRelaxIter.setValidator(QIntValidator())
+        self.window.lineEditFeatureIter.setValidator(QIntValidator())
+        # layer controls
+        self.window.lineEditExpansionRatio.setValidator(QDoubleValidator())
+        self.window.lineEditFirstLayer.setValidator(QDoubleValidator())
+        self.window.lineEditLayerFeatureAngle.setValidator(QDoubleValidator())
+        self.window.lineEditLayerIter.setValidator(QIntValidator())
+        self.window.lineEditLayerOuterIter.setValidator(QIntValidator())
+        # mesh quality metrics
+        self.window.lineEditMaxNonOrtho.setValidator(QDoubleValidator())
+        self.window.lineEditBoundarySkewness.setValidator(QDoubleValidator())
+        self.window.lineEditInternalSkewness.setValidator(QDoubleValidator())
+        self.window.lineEditConcave.setValidator(QDoubleValidator())
+        self.window.lineEditDeterminant.setValidator(QDoubleValidator())
+
+    def read_values(self):
+        self.meshSettings['castellatedMeshControls']["maxLocalCells"] = int(self.window.lineEditMaxLocalCells.text())
+        self.meshSettings['castellatedMeshControls']["maxGlobalCells"] = int(self.window.lineEditMaxGlobalCells.text())
+        self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"] = int(self.window.lineEditCellsBetweenLevels.text())
+        self.meshSettings['castellatedMeshControls']["resolveFeatureAngle"] = float(self.window.lineEditResolveFeatureAngle.text())
+
+        self.meshSettings['snapControls']["tolerance"] = float(self.window.lineEditTolerance.text())
+        self.meshSettings['snapControls']["nSolveIter"] = int(self.window.lineEditSolverIter.text())
+        self.meshSettings['snapControls']["nRelaxIter"] = int(self.window.lineEditRelaxIter.text())
+        self.meshSettings['snapControls']["nFeatureSnapIter"] = int(self.window.lineEditFeatureIter.text())
+
+        self.meshSettings['addLayersControls']["expansionRatio"] = float(self.window.lineEditExpansionRatio.text())
+        self.meshSettings['addLayersControls']["firstLayerThickness"] = float(self.window.lineEditFirstLayer.text())
+        self.meshSettings['addLayersControls']["featureAngle"] = float(self.window.lineEditLayerFeatureAngle.text())
+        self.meshSettings['addLayersControls']["nLayerIter"] = int(self.window.lineEditLayerIter.text())
+        self.meshSettings['addLayersControls']["nOuterIter"] = int(self.window.lineEditLayerOuterIter.text())
+
+        self.meshSettings['meshQualityControls']["maxNonOrtho"] = float(self.window.lineEditMaxNonOrtho.text())
+        self.meshSettings['meshQualityControls']["maxBoundarySkewness"] = float(self.window.lineEditBoundarySkewness.text())
+        self.meshSettings['meshQualityControls']["maxInternalSkewness"] = float(self.window.lineEditInternalSkewness.text())
+        self.meshSettings['meshQualityControls']["maxConcave"] = float(self.window.lineEditConcave.text())
+        self.meshSettings['meshQualityControls']["minDeterminant"] = float(self.window.lineEditDeterminant.text())
+
+        if self.window.radioButtonImplicitSnap.isChecked():
+            self.meshSettings['snapControls']["explicitFeatureSnap"] = False
+            self.meshSettings['snapControls']["implicitFeatureSnap"] = True
+        else:
+            self.meshSettings['snapControls']["explicitFeatureSnap"] = True
+            self.meshSettings['snapControls']["implicitFeatureSnap"] = False
+        self.meshSettings['addLayersControls']["relativeSizes"] = self.window.checkBoxRelativeSizes.isChecked()
+
+
+    def assign_values(self,meshSettings):
+        # to avoid unncessary changes to the original meshSettings dictionary, we will create a copy of it.
+        meshSettings['castellatedMeshControls']["maxLocalCells"] = self.meshSettings['castellatedMeshControls']["maxLocalCells"]
+        meshSettings['castellatedMeshControls']["maxGlobalCells"] = self.meshSettings['castellatedMeshControls']["maxGlobalCells"]
+        meshSettings['castellatedMeshControls']["nCellsBetweenLevels"] = self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"]
+        meshSettings['castellatedMeshControls']["resolveFeatureAngle"] = self.meshSettings['castellatedMeshControls']["resolveFeatureAngle"]
+        meshSettings['snapControls']["tolerance"] = self.meshSettings['snapControls']["tolerance"]
+        meshSettings['snapControls']["nSolveIter"] = self.meshSettings['snapControls']["nSolveIter"]
+        meshSettings['snapControls']["nRelaxIter"] = self.meshSettings['snapControls']["nRelaxIter"]
+        meshSettings['snapControls']["nFeatureSnapIter"] = self.meshSettings['snapControls']["nFeatureSnapIter"]
+        meshSettings['addLayersControls']["expansionRatio"] = self.meshSettings['addLayersControls']["expansionRatio"]
+        meshSettings['addLayersControls']["firstLayerThickness"] = self.meshSettings['addLayersControls']["firstLayerThickness"]
+        meshSettings['addLayersControls']["featureAngle"] = self.meshSettings['addLayersControls']["featureAngle"]
+        meshSettings['addLayersControls']["nLayerIter"] = self.meshSettings['addLayersControls']["nLayerIter"]
+        meshSettings['addLayersControls']["nOuterIter"] = self.meshSettings['addLayersControls']["nOuterIter"]
+        meshSettings['meshQualityControls']["maxNonOrtho"] = self.meshSettings['meshQualityControls']["maxNonOrtho"]
+        meshSettings['meshQualityControls']["maxBoundarySkewness"] = self.meshSettings['meshQualityControls']["maxBoundarySkewness"]
+        meshSettings['meshQualityControls']["maxInternalSkewness"] = self.meshSettings['meshQualityControls']["maxInternalSkewness"]
+        meshSettings['meshQualityControls']["maxConcave"] = self.meshSettings['meshQualityControls']["maxConcave"]
+        meshSettings['meshQualityControls']["minDeterminant"] = self.meshSettings['meshQualityControls']["minDeterminant"]
+        return meshSettings
+    
+    # this is to set default values for the mesh settings
+    def assign_default_values(self):    
+        global meshSettings
+        self.meshSettings['castellatedMeshControls']["maxLocalCells"] = meshSettings['castellatedMeshControls']["maxLocalCells"]
+        self.meshSettings['castellatedMeshControls']["maxGlobalCells"] = meshSettings['castellatedMeshControls']["maxGlobalCells"]
+        self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"] = meshSettings['castellatedMeshControls']["nCellsBetweenLevels"]
+        self.meshSettings['castellatedMeshControls']["resolveFeatureAngle"] = meshSettings['castellatedMeshControls']["resolveFeatureAngle"]
+        self.meshSettings['snapControls']["tolerance"] = meshSettings['snapControls']["tolerance"]
+        self.meshSettings['snapControls']["nSolveIter"] = meshSettings['snapControls']["nSolveIter"]
+        self.meshSettings['snapControls']["nRelaxIter"] = meshSettings['snapControls']["nRelaxIter"]
+        self.meshSettings['snapControls']["nFeatureSnapIter"] = meshSettings['snapControls']["nFeatureSnapIter"]
+        self.meshSettings['addLayersControls']["expansionRatio"] = meshSettings['addLayersControls']["expansionRatio"]
+        self.meshSettings['addLayersControls']["firstLayerThickness"] = meshSettings['addLayersControls']["firstLayerThickness"]
+        self.meshSettings['addLayersControls']["featureAngle"] = meshSettings['addLayersControls']["featureAngle"]
+        self.meshSettings['addLayersControls']["nLayerIter"] = meshSettings['addLayersControls']["nLayerIter"]
+        self.meshSettings['addLayersControls']["nOuterIter"] = meshSettings['addLayersControls']["nOuterIter"]
+        self.meshSettings['meshQualityControls']["maxNonOrtho"] = meshSettings['meshQualityControls']["maxNonOrtho"]
+        self.meshSettings['meshQualityControls']["maxBoundarySkewness"] = meshSettings['meshQualityControls']["maxBoundarySkewness"]
+        self.meshSettings['meshQualityControls']["maxInternalSkewness"] = meshSettings['meshQualityControls']["maxInternalSkewness"]
+        self.meshSettings['meshQualityControls']["maxConcave"] = meshSettings['meshQualityControls']["maxConcave"]
+        self.meshSettings['meshQualityControls']["minDeterminant"] = meshSettings['meshQualityControls']["minDeterminant"]
+        
+    def prepare_events(self):
+        self.window.pushButtonOK.clicked.connect(self.on_pushButtonOK_clicked)
+        self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
+        self.window.pushButtonDefault.clicked.connect(self.on_pushButtonDefault_clicked)
+        self.window.pushButtonApply.clicked.connect(self.on_pushButtonApply_clicked)
+
+    def on_pushButtonOK_clicked(self):
+        self.OK_clicked = True
+        self.on_pushButtonApply_clicked()
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        self.window.close()
+
+    def on_pushButtonDefault_clicked(self):
+        self.OK_clicked = False
+        # load default values
+        self.assign_default_values()
+        self.initialize_values()
+        #self.window.close()
+
+    def on_pushButtonApply_clicked(self):   
+        self.OK_clicked = True
+        self.read_values()
+
+    
+    def initialize_values(self):
+        self.window.lineEditMaxLocalCells.setText(str(self.meshSettings['castellatedMeshControls']["maxLocalCells"]))
+        self.window.lineEditMaxGlobalCells.setText(str(self.meshSettings['castellatedMeshControls']["maxGlobalCells"]))
+        self.window.lineEditCellsBetweenLevels.setText(str(self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"]))
+        self.window.lineEditResolveFeatureAngle.setText(str(self.meshSettings['castellatedMeshControls']["resolveFeatureAngle"]))
+
+        self.window.lineEditTolerance.setText(str(self.meshSettings['snapControls']["tolerance"]))
+        self.window.lineEditSolverIter.setText(str(self.meshSettings['snapControls']["nSolveIter"]))
+        self.window.lineEditRelaxIter.setText(str(self.meshSettings['snapControls']["nRelaxIter"]))
+        self.window.lineEditFeatureIter.setText(str(self.meshSettings['snapControls']["nFeatureSnapIter"]))
+
+        self.window.lineEditExpansionRatio.setText(str(self.meshSettings['addLayersControls']["expansionRatio"]))
+        self.window.lineEditFirstLayer.setText(str(self.meshSettings['addLayersControls']["firstLayerThickness"]))
+        self.window.lineEditLayerFeatureAngle.setText(str(self.meshSettings['addLayersControls']["featureAngle"]))
+        self.window.lineEditLayerIter.setText(str(self.meshSettings['addLayersControls']["nLayerIter"]))
+        self.window.lineEditLayerOuterIter.setText(str(self.meshSettings['addLayersControls']["nOuterIter"]))
+
+        self.window.lineEditMaxNonOrtho.setText(str(self.meshSettings['meshQualityControls']["maxNonOrtho"]))
+        self.window.lineEditBoundarySkewness.setText(str(self.meshSettings['meshQualityControls']["maxBoundarySkewness"]))
+        self.window.lineEditInternalSkewness.setText(str(self.meshSettings['meshQualityControls']["maxInternalSkewness"]))
+        self.window.lineEditConcave.setText(str(self.meshSettings['meshQualityControls']["maxConcave"]))
+        self.window.lineEditDeterminant.setText(str(self.meshSettings['meshQualityControls']["minDeterminant"]))
+
+        if self.meshSettings['snapControls']["implicitFeatureSnap"]:
+            self.window.radioButtonImplicitSnap.setChecked(True)
+        else:
+            self.window.radioButtonExplicitSnap.setChecked(True)
+
+        self.window.checkBoxRelativeSizes.setChecked(self.meshSettings['addLayersControls']["relativeSizes"])
+
+        
+    def __del__(self):
+        pass
 #---------------------------------------------------------
 # Driver function for different dialog boxes
 #---------------------------------------------------------
@@ -1532,6 +1715,12 @@ def postProcessDialogDriver():
     dialog = postProcessDialog()
     dialog.window.exec()
     dialog.window.show()
+
+def advancedMeshDialogDriver(meshSettings=None):
+    dialog = advancedMeshDialog(meshSettings=meshSettings)
+    dialog.window.exec()
+    dialog.window.show()
+    return dialog.meshSettings
 
 def main():
     pass

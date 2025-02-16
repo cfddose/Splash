@@ -115,7 +115,6 @@ class SplashCaseCreatorPrimitives:
                 boundaries.append(patch['name'])
         return boundaries # return the number of boundarys
             #SplashCaseCreatorIO.printMessage(f"{patch['name']}: {patch['purpose']}\t{patch['property']}")
-
     
     @staticmethod
     def change_patch_type(patches, patch_name, new_type='patch'):
@@ -142,17 +141,33 @@ class SplashCaseCreatorPrimitives:
             return data
         
     # Function to remove duplicates in a YAML file  
+    # @staticmethod
+    # def remove_duplicate_dicts_org(dict_list):
+    #     seen = set()
+    #     unique_dicts = []
+    #     for d in dict_list:
+    #         # Convert dictionary to a frozenset of its items to make it hashable
+    #         #print(d)
+    #         dict_tuple = frozenset(d.items())
+    #         if dict_tuple not in seen:
+    #             seen.add(dict_tuple)
+    #             unique_dicts.append(d)
+    #     return unique_dicts
+    
     @staticmethod
     def remove_duplicate_dicts(dict_list):
+        #print(dict_list)
         seen = set()
         unique_dicts = []
         for d in dict_list:
             # Convert dictionary to a frozenset of its items to make it hashable
             #print(d)
-            dict_tuple = frozenset(d.items())
-            if dict_tuple not in seen:
-                seen.add(dict_tuple)
+            assert "name" in d.keys(), "The dictionary does not have a 'name' key."
+            item_name = d['name']
+            if item_name not in seen:
+                seen.add(item_name)
                 unique_dicts.append(d)
+        #print("Unique Dicts: ",unique_dicts)
         return unique_dicts
     
     @staticmethod

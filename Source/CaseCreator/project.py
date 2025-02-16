@@ -47,6 +47,8 @@ from scriptGenerator import ScriptGenerator
 from postProcess import postProcess
 from mod_project import mod_project
 
+import copy
+
 
 #from ../constants/constants import meshSettings
 
@@ -81,6 +83,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.existing_project = False # flag to check if the project is already existing
         self.stl_files = [] # list to store the settings for stl files
         self.stl_names = [] # list to store the names of the stl files
+        self.geometries = [] # list to store the settings for non-STL geometries such as spheres, boxes, etc.
         self.internalFlow = False # default is external flow
         self.onGround = False # default is off the ground
         self.halfModel = False # default is full model
@@ -96,7 +99,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                    "Simulation Control Settings","Turbulence Model","Post Processing Settings"]
         self.minX, self.maxX, self.minY, self.maxY, self.minZ, self.maxZ = -1e-3, 1e-3, -1e-3, 1e-3, -1e-3, 1e-3
         self.lenX, self.lenY, self.lenZ = 2e-3, 2e-3, 2e-3
-    
+
     #--------------------------------------------------------------------
     # Methods to handle the project summary and changes
     #--------------------------------------------------------------------
@@ -132,7 +135,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         if self.internalFlow:
             self.summarize_boundary_conditions()
         
-
     # this will show the details of the background mesh
     def summarize_background_mesh(self):
         minX = self.meshSettings['domain']["minx"]
@@ -209,12 +211,14 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         #print(self.inletValues)
         #print(self.boundaryConditions)
         SplashCaseCreatorIO.printMessage("Writing settings to project_settings.yaml",GUIMode=self.GUIMode,window=self.window)
-        SplashCaseCreatorPrimitives.dict_to_yaml(settings, 'project_settings.yaml')
+        settings_file_path = os.path.join(self.project_path, 'project_settings.yaml')
+        SplashCaseCreatorPrimitives.dict_to_yaml(settings, settings_file_path)
 
     # If the project is already existing, load the settings from the project_settings.yaml file
     def load_settings(self):
         SplashCaseCreatorIO.printMessage("Loading project settings",GUIMode=self.GUIMode,window=self.window)
-        settings = SplashCaseCreatorPrimitives.yaml_to_dict('project_settings.yaml')
+        settings_file_path = os.path.join(self.project_path, 'project_settings.yaml')
+        settings = SplashCaseCreatorPrimitives.yaml_to_dict(settings_file_path)
         self.meshSettings = settings['meshSettings']
         
         self.physicalProperties = settings['physicalProperties']
@@ -278,16 +282,23 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
 
     # If the project is not existing, load the default settings
     def load_default_settings(self):
-        self.meshSettings = meshSettings
-        self.physicalProperties = physicalProperties
-        self.numericalSettings = numericalSettings
-        self.inletValues = inletValues
-        self.boundaryConditions = boundaryConditions
-        self.simulationSettings = simulationSettings
-        self.solverSettings = solverSettings
-        self.parallelSettings = parallelSettings
-        self.simulationFlowSettings = simulationFlowSettings
-        self.postProcessSettings = postProcessSettings
+        # It is necessary to reload these default settings for a new project
+        from constants import meshSettings, physicalProperties, numericalSettings, inletValues
+        from constants import solverSettings, boundaryConditions, simulationSettings
+        from constants import simulationFlowSettings, parallelSettings, postProcessSettings
+
+        
+        self.meshSettings = copy.deepcopy(meshSettings)
+        print(self.meshSettings['geometry'])
+        self.physicalProperties = copy.deepcopy(physicalProperties)
+        self.numericalSettings = copy.deepcopy(numericalSettings)
+        self.inletValues = copy.deepcopy(inletValues)
+        self.boundaryConditions = copy.deepcopy(boundaryConditions)
+        self.simulationSettings = copy.deepcopy(simulationSettings)
+        self.solverSettings = copy.deepcopy(solverSettings)
+        self.parallelSettings = copy.deepcopy(parallelSettings)
+        self.simulationFlowSettings = copy.deepcopy(simulationFlowSettings)
+        self.postProcessSettings = copy.deepcopy(postProcessSettings)
         #self.settings = (self.meshSettings, self.physicalProperties, 
         #                 self.numericalSettings, self.inletValues, self.boundaryConditions, self.simulationSettings, self.solverSettings)
 
@@ -332,35 +343,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
     #--------------------------------------------------------------------
     # Methods to STLs and geometry and boundary conditions
     #-------------------------------------------------------------------- 
-    # def change_boundary_condition(self,bcName,newBC):
-    #     if not self.internalFlow: # if it is external flow
-    #         isBcPatch = False # flag to check if the patch is a boundary patch
-    #         bcPatches = self.meshSettings['patches']
-    #         for aPatch in self.meshSettings['patches']:
-    #             if bcName == aPatch['name']:
-    #                 aPatch['type'] = newBC
-    #                 aPatch['purpose'] = newBC
-    #                 SplashCaseCreatorIO.printMessage(f"Boundary condition {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
-    #                 return 0
-    #         if bcName in bcPatches:
-    #             self.meshSettings['patches'][bcName]['type'] = newBC
-    #             self.meshSettings['patches'][bcName]['purpose'] = newBC
-    #             newProperty = self.set_property(newBC)
-    #             self.meshSettings['bcPatches'][bcName]['property'] = newProperty
-    #             SplashCaseCreatorIO.printMessage(f"Boundary condition {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
-    #             return 0
-    #         else:
-    #             SplashCaseCreatorIO.printMessage("Boundary condition not found in the list")
-    #     geometry = self.meshSettings['geometry']
-    #     for obj in geometry:
-    #         if obj['name'] == bcName:
-    #             obj['purpose'] = newBC
-    #             newProperty = self.set_property(newBC)
-    #             # The previous code was just wrong! I mistaken between geometry and bcPatches
-    #             self.meshSettings['geometry'][bcName]['property'] = newProperty
-    #             SplashCaseCreatorIO.printMessage(f"Boundary condition of {bcName} changed to {newBC}",GUIMode=self.GUIMode,window=self.window)
-    #             return 0
-    #     return -1
 
     def change_stl_refinement_level(self,stl_file_number=0):
         SplashCaseCreatorIO.printMessage("Changing refinement level")
@@ -393,8 +375,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 new_list.append(d)
         self.stl_files = new_list
         self.meshSettings['geometry'] = SplashCaseCreatorPrimitives.remove_duplicate_dicts(self.meshSettings['geometry'])
-        #print("stl_files",self.stl_files)
-        #print("Mesh settings",self.meshSettings["geometry"])
+        
 
     def change_stl_property(self,stl_file_name,property):
         for stl in self.meshSettings['geometry']:
@@ -420,6 +401,20 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                     nLayers = 0
                 property = stl['property']
                 bounds = stl['bounds']
+                return purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds
+        return None
+
+    def get_boundary_properties(self,boundary_name):
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                purpose = boundary['purpose']
+                refMin = 0
+                refMax = 0
+                featureEdges = False
+                featureLevel = 0
+                nLayers = 0
+                property = boundary['property']
+                bounds = None
                 return purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds
         return None
     
@@ -449,41 +444,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                     return boundary
         return None
 
-    def add_stl_to_mesh_settings(self, stl_name,refMin=0, refMax=0, featureEdges=True, 
-                                 featureLevel=1,purpose='wall',property=None,bounds=None, nLayers=3):
-        already_exists = False # flag to check if the stl file already exists in the project
-        idx = 0 # index of the stl file in the list
-        # Purpose is wall by default
-        # Other purposes are patch, refinementRegion, refinementSurface, cellZone, baffles
-        
-        if self.refinement == 0:
-            nLayers = 3
-        elif self.refinement == 1:
-            nLayers = 5
-        else:
-            nLayers = 7
-        
-        stl_ = {'name': stl_name, 'type':'triSurfaceMesh','purpose':purpose, 'refineMin': refMin, 'refineMax': refMax, 
-                'featureEdges':featureEdges, 'featureLevel':featureLevel, 'nLayers':nLayers, 'property':property, 'bounds':bounds}
-        
-        # this snippet is to prevent the same stl file from being added multiple times
-        # Instead of using set, we are using a list to store the stl files
-        # To check if the stl file already exists in the project, stl names are compared.
-        # list all the stl files in the project
-        for stl_name in self.stl_names:
-            if stl_name == stl_['name']:
-                SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project")
-                already_exists = True
-                break
-            idx += 1
-        if not already_exists:
-            self.stl_names.append(stl_name)
-            self.stl_files.append(stl_)
-        else:    
-            self.stl_files[idx] = stl_
-            return 1 # flag to indicate that the stl file is replaced
-        return 0
-    
     def remove_stl_from_mesh_settings(self,stl_name):
         idx = 0
         for stl in self.meshSettings['geometry']:
@@ -538,6 +498,23 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 return 0
         return -1
     
+    def set_boundary_properties(self,boundary_name,boundary_properties):
+        refMin,refMax,refLevel,nLayers,usage,edgeRefine,ami,property = boundary_properties
+        usageToPurpose = {'Wall':'wall', 'Inlet':'inlet','Outlet':'outlet','Refinement_Region':'refinementRegion',
+                          'Refinement_Surface':'refinementSurface','Cell_Zone':'cellZone','Baffles':'baffles',
+                          'Symmetry':'symmetry','Cyclic':'cyclic','Empty':'empty'}
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                boundary['purpose'] = usageToPurpose[usage]
+                boundary['property'] = property
+                if usageToPurpose[usage] in ['wall','symmetry','cyclic','empty']:
+                    boundary['type'] = usageToPurpose[usage]
+                    boundary['property'] = None
+
+                
+                return 0
+        return -1
+    
     def set_external_boundary_condition(self,patch_name,boundary_condition):
         for patch in self.meshSettings['patches']:
             if patch['name'] == patch_name:
@@ -546,141 +523,127 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                     patch['property'] = list(boundary_condition[0])
                 return 0
 
-    def add_stl_to_project(self):
-        for stl_file in self.stl_files:
-            #self.ask_stl_settings(stl_file)
-            self.meshSettings['geometry'].append(stl_file)
-        self.remove_duplicate_stl_files()
-
     # This is the parent function to add a predefined VTK object to the project
     # If there is already a VTK object with the same name, it will not be added
     def add_geometry_to_project(self,geometry):
         #print("Adding geometry to project")
         geometry_name = geometry['name']
-        if geometry_name in self.stl_names:
+        if geometry_name in self.stl_names or geometry_name in self.geometries:
             SplashCaseCreatorIO.printMessage(f"Geometry {geometry_name} already exists in the project")
             return -1
         else:
             self.meshSettings['geometry'].append(geometry)
-            #self.stl_names.append(geometry_name)
-        self.remove_duplicate_stl_files()
-        #print("Geometry added to project")
+            self.geometries.append(geometry_name)
+            return 0
+        
+    def add_stl_to_project(self,geometry):
+        #print("Adding geometry to project")
+        geometry_name = geometry['name']
+        if geometry_name in self.stl_names or geometry_name in self.geometries:
+            SplashCaseCreatorIO.printMessage(f"STL {geometry_name} already exists in the project")
+            return -1
+        for stl_file in self.stl_files:
+            if stl_file['name'] == geometry_name:
+                SplashCaseCreatorIO.printMessage(f"STL {geometry_name} already exists in the project")
+                return -1
+        self.meshSettings['geometry'].append(geometry)
+        self.stl_names.append(geometry_name)
+        self.stl_files.append(geometry)
+        return 0
+            
 
     # To add predefined VTK objects to the project such as spheres or boxes
     # This object will be used for meshing and possibly for boundary conditions
     def add_vtk_object_to_project(self,obj_name="sphere1",obj_properties={},obj_type="sphere"):
         if obj_type == "sphere":
             x, y, z, radius = obj_properties['x'], obj_properties['y'], obj_properties['z'], obj_properties['radius']
-            geometry = {'name': obj_name, 'type':'searchableSphere','center':[x,y,z],'radius':radius,'purpose':'refinementRegion','featureEdges':False}
+            geometry = {'name': obj_name, 'type':'searchableSphere','center':[x,y,z],'radius':radius,'purpose':'refinementRegion','featureEdges':False,'refineMin':obj_properties['refineMin'],
+                        'refineMax':obj_properties['refineMax'],'property':obj_properties['property']}
             self.add_geometry_to_project(geometry)
         elif obj_type == "box":
             minx, maxx, miny, maxy, minz, maxz = obj_properties['minx'], obj_properties['maxx'], obj_properties['miny'], obj_properties['maxy'], obj_properties['minz'], obj_properties['maxz']
-            geometry = {'name': obj_name, 'type':'searchableBox','min':[minx,miny,minz],'max':[maxx,maxy,maxz],'purpose':'refinementRegion','featureEdges':False}
+            geometry = {'name': obj_name, 'type':'searchableBox','min':[minx,miny,minz],'max':[maxx,maxy,maxz],'purpose':'refinementRegion','featureEdges':False,
+                        'refineMin':obj_properties['refineMin'],'refineMax':obj_properties['refineMax'],'property':obj_properties['property']}
             self.add_geometry_to_project(geometry)
         elif obj_type == "cylinder":
             x, y, z, radius, height = obj_properties['x'], obj_properties['y'], obj_properties['z'], obj_properties['radius'], obj_properties['height']
-            geometry = {'name': obj_name, 'type':'searchableCylinder','center':[x,y,z],'radius':radius,'height':height,'purpose':'refinementRegion','featureEdges':False}
+            geometry = {'name': obj_name, 'type':'searchableCylinder','center':[x,y,z],'radius':radius,'height':height,'purpose':'refinementRegion','featureEdges':False,
+                        'refineMin':obj_properties['refineMin'],'refineMax':obj_properties['refineMax'],'property':obj_properties['property']}
+            self.add_geometry_to_project(geometry)
+        elif obj_type == "stl":
+            geometry = {'name': obj_name, 'type':'triSurfaceMesh','purpose':'wall','featureEdges':True,'refineMin':obj_properties['refineMin'],
+                        'refineMax':obj_properties['refineMax'],'property':obj_properties['property'],'bounds':obj_properties['bounds']}
             self.add_geometry_to_project(geometry)
         else:
             SplashCaseCreatorIO.printMessage("Invalid object type")
             return -1
-
-    def add_stl_file(self): # to only copy the STL file to the project directory and add it to the STL list
-        stl_file = SplashCaseCreatorPrimitives.ask_for_file([("STL Geometry", "*.stl"), ("OBJ Geometry", "*.obj")],self.GUIMode)
-        if stl_file is None:
-            #SplashCaseCreatorIO.printWarning("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode)
-            SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
-            return -1
-        if os.path.exists(stl_file):
-            # add the stl file to the project
-            # This is a bit confusing. 
-            # stl_name is the name of the file, stl_file is the path to the file
-            file_path_to_token = stl_file.split("/")
-            stl_name = file_path_to_token[-1]
-            if stl_name in self.stl_names:
-                #SplashCaseCreatorIO.printWarning(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode)
-                SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
-                return -1
-            else: # this is to prevent the bug of having the same file added multiple times
-                if self.GUIMode:
-                    purpose = "wall"
-                    property = None
-                else:
-                    purpose = self.ask_purpose()
-                    property = self.set_property(purpose)
-                bounds = stlAnalysis.compute_bounding_box(stl_file)
-                bounds = tuple(bounds)
-                SplashCaseCreatorIO.printMessage(f"Bounds of the geometry: {bounds}",GUIMode=self.GUIMode,window=self.window)
-                if purpose == 'refinementRegion' or purpose == 'refinementSurface':
-                    featureEdges = False
-                else:  
-                    featureEdges = True
-                self.add_stl_to_mesh_settings(stl_name,purpose=purpose,property=property,featureEdges=featureEdges,bounds=bounds)
-            # this is the path to the constant/triSurface inside project directory where STL will be copied
-            stl_path = os.path.join(self.project_path, "constant", "triSurface", stl_name)
-            try:
-                SplashCaseCreatorIO.printMessage(f"Copying {stl_name} to the project directory",GUIMode=self.GUIMode,window=self.window)
-                shutil.copy(stl_file, stl_path)
-            except OSError as error:
-                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
-                return -1
-            try:
-                stlAnalysis.set_stl_solid_name(stl_path)
-            except Exception as error:
-                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
-                return -1
-        else:
-            SplashCaseCreatorIO.printError("File does not exist. Aborting project creation.",GUIMode=self.GUIMode)
-            return -1
-        self.current_stl_file = stl_path
-        return 0
+        
+    # to add refinement box to mesh settings
+    def addRefinementBoxToMesh(self,stl_path,boxName='refinementBox',refLevel=2,internalFlow=False):
+        if(internalFlow):
+            return #meshSettings
+        stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
+        box = stlAnalysis.getRefinementBox(stlBoundingBox)
+        obj_properties = {'minx':box[0],'maxx':box[1],'miny':box[2],'maxy':box[3],'minz':box[4],'maxz':box[5],'refineMin':0,'refineMax':refLevel,'property':None}
+        self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
     
-    def add_one_stl_file(self,stl_file): # to only copy the STL file to the project directory and add it to the STL list
-        #stl_file = SplashCaseCreatorPrimitives.ask_for_file([("STL Geometry", "*.stl"), ("OBJ Geometry", "*.obj")],self.GUIMode)
+    def addFineBoxToMesh(self,stl_path,boxName='fineBox',refLevel=2):
+        stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
+        fineBox = stlAnalysis.getRefinementBoxClose(stlBoundingBox)
+        obj_properties = {'minx':fineBox[0],'maxx':fineBox[1],'miny':fineBox[2],'maxy':fineBox[3],'minz':fineBox[4],'maxz':fineBox[5],'refineMin':0,'refineMax':refLevel,'property':None}
+        self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
+        
+    # refinement box for the ground for external automotive flows
+    
+    def addGroundRefinementBoxToMesh(self,stl_path,refLevel=2):
+        #if(internalFlow):
+        #    return meshSettings
+        boxName = 'groundBox'
+        stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
+        xmin, xmax, ymin, ymax, zmin, zmax = stlBoundingBox
+        z = meshSettings['domain']['minz']
+        z_delta = 0.2*(zmax-zmin)
+        box = [-1000.0,1000.,-1000,1000,z-z_delta,z+z_delta]
+        obj_properties = {'minx':box[0],'maxx':box[1],'miny':box[2],'maxy':box[3],'minz':box[4],'maxz':box[5],'refineMin':0,'refineMax':refLevel,'property':None}
+        self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box") 
+    
+    def add_stl_file(self,stl_file):
         if stl_file is None:
-            #SplashCaseCreatorIO.printWarning("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode)
             SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
             return -1
-        if os.path.exists(stl_file):
-            # add the stl file to the project
-            # This is a bit confusing. 
-            # stl_name is the name of the file, stl_file is the path to the file
-            file_path_to_token = stl_file.split("/")
-            stl_name = file_path_to_token[-1]
-            if stl_name in self.stl_names:
-                #SplashCaseCreatorIO.printWarning(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode)
-                SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
+        print("Existing stl files")
+        print(self.stl_names)
+        
+        stl_name = stl_file.split("/")[-1]
+        print("Adding stl file:",stl_name)
+        if stl_name in self.stl_names:
+            SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        
+        purpose = 'wall'
+        property = None
+        bounds = stlAnalysis.compute_bounding_box(stl_file)
+        bounds = tuple(bounds)
+        # this is the path to the constant/triSurface inside project directory where STL will be copied
+        stl_path = os.path.join(self.project_path, "constant", "triSurface", stl_name)
+        try:
+            SplashCaseCreatorIO.printMessage(f"Copying {stl_name} to the project directory",GUIMode=self.GUIMode,window=self.window)
+            shutil.copy(stl_file, stl_path)
+        except OSError as error:
+            SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
+            return -1
+        try:
+            stlAnalysis.set_stl_solid_name(stl_path)
+            # If everything is successful, add the stl file to the project
+            stl_geometry = {'name': stl_name, 'type':'triSurfaceMesh','purpose':purpose, 'refineMin': 0, 'refineMax': 0, 
+                            'featureEdges':True, 'featureLevel':1, 'nLayers':3, 'property':property, 'bounds':bounds}
+            status = self.add_stl_to_project(stl_geometry)
+            if status == -1:
                 return -1
-            else: # this is to prevent the bug of having the same file added multiple times
-                if self.GUIMode:
-                    purpose = "wall"
-                    property = None
-                else:
-                    purpose = self.ask_purpose()
-                    property = self.set_property(purpose)
-                bounds = stlAnalysis.compute_bounding_box(stl_file)
-                bounds = tuple(bounds)
-                SplashCaseCreatorIO.printMessage(f"Bounds of the geometry: {bounds}",GUIMode=self.GUIMode,window=self.window)
-                if purpose == 'refinementRegion' or purpose == 'refinementSurface':
-                    featureEdges = False
-                else:  
-                    featureEdges = True
-                self.add_stl_to_mesh_settings(stl_name,purpose=purpose,property=property,featureEdges=featureEdges,bounds=bounds)
-            # this is the path to the constant/triSurface inside project directory where STL will be copied
-            stl_path = os.path.join(self.project_path, "constant", "triSurface", stl_name)
-            try:
-                SplashCaseCreatorIO.printMessage(f"Copying {stl_name} to the project directory",GUIMode=self.GUIMode,window=self.window)
-                shutil.copy(stl_file, stl_path)
-            except OSError as error:
-                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
-                return -1
-            try:
-                stlAnalysis.set_stl_solid_name(stl_path)
-            except Exception as error:
-                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
-                return -1
-        else:
-            SplashCaseCreatorIO.printError("File does not exist. Aborting project creation.",GUIMode=self.GUIMode)
+            #self.stl_names.append(stl_name)
+            #self.stl_files.append(stl_geometry)
+        except Exception as error:
+            SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
             return -1
         self.current_stl_file = stl_path
         return 0
@@ -712,9 +675,9 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 #except OSError as error:
                 #    SplashCaseCreatorIO.printError(error)
                 #    return -1
-                print(f"STL file {stl_name} removed from the project")
-                self.list_stl_files()
-                print(self.stl_files)
+                #print(f"STL file {stl_name} removed from the project")
+                #self.list_stl_files()
+                #print(self.stl_files)
                 return 0
         self.list_stl_files()
         return -1
@@ -779,16 +742,24 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.set_max_domain_size(domain_size,nx,ny,nz)
         self.meshSettings = stlAnalysis.set_mesh_location(self.meshSettings, stl_path,self.internalFlow)
         refinementBoxLevel = max(2,refLevel-3)
-        self.meshSettings = stlAnalysis.addRefinementBoxToMesh(meshSettings=self.meshSettings, stl_path=stl_path,refLevel=refinementBoxLevel,internalFlow=self.internalFlow)
+        self.addRefinementBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel,internalFlow=self.internalFlow)
+        self.addFineBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel)
         if(self.internalFlow==False and self.onGround==True):
             # if the flow is external and the geometry is on the ground, add a ground refinement box
-            self.meshSettings = stlAnalysis.addGroundRefinementBoxToMesh(meshSettings=self.meshSettings, stl_path=stl_path,refLevel=refinementBoxLevel)
+            self.addGroundRefinementBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel)
         self.meshSettings = stlAnalysis.set_layer_thickness(self.meshSettings, 0.5) # set the layer thickness to 0.5 times the cell size
         # store the background mesh size for future reference
         maxCellSize = abs((domain_size[1]-domain_size[0])/nx)
         self.meshSettings['maxCellSize'] = maxCellSize
         #self.meshSettings = stlAnalysis.set_min_vol(self.meshSettings, minVol)
         return 0
+    
+    def analyze_stl_by_name(self,stl_name):
+        idx = self.get_stl_index(stl_name)
+        if idx == -1:
+            SplashCaseCreatorIO.printError("STL file not found. Aborting operation",GUIMode=self.GUIMode)
+            return -1
+        self.analyze_stl_file(idx)
     
     def adjust_domain_size(self):
         # adjust the domain size based on the bounding box of the stl files
@@ -1093,38 +1064,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
     def set_numerical_settings(self,numericalSettings):
         self.numericalSettings = numericalSettings
     
-    # def set_property_gui(self,purpose='wall'):
-    #     if purpose == 'inlet':
-    #         U = SplashCaseCreatorDataInput.get_inlet_values(GUIMode=self.GUIMode,window=self.window)
-    #         property = tuple(U)
-    #         SplashCaseCreatorIO.printMessage(f"Setting property of {purpose} to {property}")
-    #     elif purpose == 'refinementRegion' :
-    #         refLevel = SplashCaseCreatorIO.get_input_int("Enter refinement level: ")
-    #         property = refLevel
-    #     elif purpose == 'cellZone':
-    #         refLevel = SplashCaseCreatorIO.get_input_int("Enter refinement level: ")
-    #         createPatches = SplashCaseCreatorIO.get_input_bool("Create patches for this cellZone? (y/N): ")
-    #         property = (refLevel, createPatches,0) # 0 is just a placeholder for listing the patches
-    #     elif purpose == 'refinementSurface':
-    #         refLevel = SplashCaseCreatorIO.get_input_int("Enter refinement level: ")
-    #         property = refLevel
-    #     else:
-    #         property = None
-    #     return property
-    
-   
-    # def ask_stl_settings(self,stl_file):
-    #     SplashCaseCreatorIO.printMessage(f"Settings of the {stl_file['name']} file")
-    #     stl_file['refineMin'] = SplashCaseCreatorIO.get_input("Min Refinement: ")
-    #     stl_file['refineMax'] = SplashCaseCreatorIO.get_input("Max Refinement: ")
-    #     featureEdges = SplashCaseCreatorIO.get_input("Refine Feature Edges?: (y/N) ")
-    #     if(featureEdges == 'y'):
-    #         stl_file['featureEdges'] = True
-    #     else:    
-    #         stl_file['featureEdges'] = False
-    #     stl_file['featureLevel'] = SplashCaseCreatorIO.get_input("Feature Level: ")
-    #     stl_file['nLayers'] = SplashCaseCreatorIO.get_input("Number of Layers: ")
-
         
     def get_stl_index(self,stl_file_name):
         for idx,stl in enumerate(self.stl_files):
@@ -1191,12 +1130,18 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.lenZ = maxz - minz
 
     def set_max_domain_size(self,domain_size,nx,ny,nz):
-        self.minX = min(domain_size[0],self.minX)
-        self.maxX = max(domain_size[1],self.maxX)
-        self.minY = min(domain_size[2],self.minY)
-        self.maxY = max(domain_size[3],self.maxY)
-        self.minZ = min(domain_size[4],self.minZ)
-        self.maxZ = max(domain_size[5],self.maxZ)
+        # self.minX = min(domain_size[0],self.minX)
+        # self.maxX = max(domain_size[1],self.maxX)
+        # self.minY = min(domain_size[2],self.minY)
+        # self.maxY = max(domain_size[3],self.maxY)
+        # self.minZ = min(domain_size[4],self.minZ)
+        # self.maxZ = max(domain_size[5],self.maxZ)
+        self.meshSettings['domain']['minx'] = domain_size[0]
+        self.meshSettings['domain']['maxx'] = domain_size[1]
+        self.meshSettings['domain']['miny'] = domain_size[2]
+        self.meshSettings['domain']['maxy'] = domain_size[3]
+        self.meshSettings['domain']['minz'] = domain_size[4]
+        self.meshSettings['domain']['maxz'] = domain_size[5]
 
         self.meshSettings['domain']['nx'] = nx
         self.meshSettings['domain']['ny'] = ny
@@ -1213,19 +1158,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.lenY = max(dy,self.lenY)
         self.lenZ = max(dz,self.lenZ)
         
-    # def set_domain_size(self,stl_name):
-    #     if stl_name is None:
-    #         SplashCaseCreatorIO.printError("No stl file selected. Aborting operation",GUIMode=self.GUIMode)
-    #         return -1
-        
-    #     stl_idx = self.get_stl_index(stl_name)
-    #     if stl_idx == -1:
-    #         SplashCaseCreatorIO.printError("STL file not found. Aborting operation",GUIMode=self.GUIMode)
-    #         return -1
-    #     stl_file = self.stl_files[stl_idx]
-    #     stl_path = os.path.join(self.project_path, "constant", "triSurface", stl_name)
-    #     stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
-
            
     def set_inlet_values(self):
         if(not self.internalFlow): # external flow
@@ -1365,7 +1297,7 @@ def main():
     while yN.lower() == 'y':
         project.add_stl_file()
         yN = SplashCaseCreatorIO.get_input("Add another STL file to the project (y/N)?: ")
-    project.add_stl_to_project()
+    #project.add_stl_to_project()
     # Before creating the project files, the settings are flushed to the project_settings.yaml file
     project.list_stl_files()
     project.ask_flow_type()

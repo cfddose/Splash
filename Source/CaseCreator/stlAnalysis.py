@@ -131,40 +131,6 @@ class stlAnalysis:
         boxMaxZ = stlMaxZ + 0.45*bbZ
         return (boxMinX,boxMaxX,boxMinY,boxMaxY,boxMinZ,boxMaxZ)
     
-    # to add refinement box to mesh settings
-    @staticmethod
-    def addRefinementBoxToMesh(meshSettings,stl_path,boxName='refinementBox',refLevel=2,internalFlow=False):
-        if(internalFlow):
-            return meshSettings
-        stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
-        box = stlAnalysis.getRefinementBox(stlBoundingBox)
-        meshSettings['geometry'].append({'name': boxName,'type':'searchableBox', 'purpose':'refinement',
-                                         'min': [box[0], box[2], box[4]], 'max': [box[1], box[3], box[5]],
-                                         'refineMax': refLevel-1})
-        
-        fineBox = stlAnalysis.getRefinementBoxClose(stlBoundingBox)
-        meshSettings['geometry'].append({'name': 'fineBox','type':'searchableBox', 'purpose':'refinement',
-                                         'min': [fineBox[0], fineBox[2], fineBox[4]], 'max': [fineBox[1], fineBox[3], fineBox[5]],
-                                         'refineMax': refLevel})
-        
-        return meshSettings
-    
-    # refinement box for the ground for external automotive flows
-    @staticmethod
-    def addGroundRefinementBoxToMesh(meshSettings,stl_path,refLevel=2):
-        #if(internalFlow):
-        #    return meshSettings
-        boxName = 'groundBox'
-        stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
-        xmin, xmax, ymin, ymax, zmin, zmax = stlBoundingBox
-        z = meshSettings['domain']['minz']
-        z_delta = 0.2*(zmax-zmin)
-        box = [-1000.0,1000.,-1000,1000,z-z_delta,z+z_delta]
-        meshSettings['geometry'].append({'name': boxName,'type':'searchableBox', 'purpose':'refinement',
-                                         'min': [box[0], box[2], box[4]], 'max': [box[1], box[3], box[5]],
-                                         'refineMax': refLevel})
-        return meshSettings
-
     # to calculate nearest wall thickness for a target yPlus value
     @staticmethod
     def calc_y(nu=1e-6,rho=1000.,L=1.0,u=1.0,target_yPlus=200):
