@@ -376,7 +376,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.stl_files = new_list
         self.meshSettings['geometry'] = SplashCaseCreatorPrimitives.remove_duplicate_dicts(self.meshSettings['geometry'])
         
-
     def change_stl_property(self,stl_file_name,property):
         for stl in self.meshSettings['geometry']:
             if stl['name'] == stl_file_name: 
@@ -551,7 +550,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.stl_files.append(geometry)
         return 0
             
-
     # To add predefined VTK objects to the project such as spheres or boxes
     # This object will be used for meshing and possibly for boundary conditions
     def add_vtk_object_to_project(self,obj_name="sphere1",obj_properties={},obj_type="sphere"):
