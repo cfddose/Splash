@@ -16,11 +16,14 @@
   <widget class="QLabel" name="labelPrompt">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>161</width>
-     <height>16</height>
+     <x>10</x>
+     <y>10</y>
+     <width>291</width>
+     <height>21</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 14pt &quot;Sans Serif&quot;;</string>
    </property>
    <property name="text">
     <string>TextLabel</string>
@@ -29,11 +32,14 @@
   <widget class="QLineEdit" name="lineEditX">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>30</y>
+     <x>120</x>
+     <y>40</y>
      <width>81</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
    </property>
    <property name="text">
     <string>0</string>
@@ -43,36 +49,46 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>30</y>
+     <y>40</y>
      <width>91</width>
      <height>21</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">font: 12pt &quot;Sans Serif&quot;;</string>
+   </property>
    <property name="text">
-    <string>X Component</string>
+    <string>X Coord.</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>50</y>
+     <y>60</y>
      <width>91</width>
      <height>21</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">font: 12pt &quot;Sans Serif&quot;;
+</string>
+   </property>
    <property name="text">
-    <string>Y Component</string>
+    <string>Y Coord.</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="lineEditY">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>50</y>
+     <x>120</x>
+     <y>60</y>
      <width>81</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
    </property>
    <property name="text">
     <string>0</string>
@@ -82,23 +98,29 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>70</y>
-     <width>91</width>
+     <y>80</y>
+     <width>111</width>
      <height>21</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">font: 12pt &quot;Sans Serif&quot;;</string>
+   </property>
    <property name="text">
-    <string>Z Component</string>
+    <string>Z Coord.</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="lineEditZ">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>70</y>
+     <x>120</x>
+     <y>80</y>
      <width>81</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
    </property>
    <property name="text">
     <string>0</string>
@@ -107,11 +129,15 @@
   <widget class="QPushButton" name="pushButtonOK">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>30</y>
+     <x>210</x>
+     <y>40</y>
      <width>75</width>
      <height>21</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 12pt &quot;Sans Serif&quot;;
+color: rgb(85, 255, 0);</string>
    </property>
    <property name="text">
     <string>OK</string>
@@ -120,11 +146,14 @@
   <widget class="QPushButton" name="pushButtonCancel">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>70</y>
+     <x>210</x>
+     <y>80</y>
      <width>75</width>
      <height>21</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 12pt &quot;Sans Serif&quot;;</string>
    </property>
    <property name="text">
     <string>Cancel</string>
@@ -133,26 +162,46 @@
   <widget class="QDoubleSpinBox" name="sphereRadiusLocationInMesh">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>100</y>
+     <x>120</x>
+     <y>110</y>
      <width>81</width>
      <height>26</height>
     </rect>
    </property>
-   <property name="minimum">
-    <double>0.01</double>  <!-- Prevent 0 radius -->
-   </property>
-   <property name="maximum">
-    <double>10.0</double>  <!-- Allow bigger values -->
-   </property>
-   <property name="singleStep">
-    <double>0.01</double>  <!-- Step size -->
+   <property name="styleSheet">
+    <string notr="true">color: rgb(0, 170, 255);
+font: 11pt &quot;Sans Serif&quot;;</string>
    </property>
    <property name="decimals">
-    <number>3</number>  <!-- Display up to 3 decimal places -->
+    <number>3</number>
+   </property>
+   <property name="minimum">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="maximum">
+    <double>10.000000000000000</double>
+   </property>
+   <property name="singleStep">
+    <double>0.010000000000000</double>
    </property>
    <property name="value">
-    <double>0.05</double>  <!-- Default initial value -->
+    <double>0.050000000000000</double>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>110</y>
+     <width>101</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 12pt &quot;Sans Serif&quot;;</string>
+   </property>
+   <property name="text">
+    <string>Probe radius</string>
    </property>
   </widget>
  </widget>
