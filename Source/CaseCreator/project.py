@@ -34,15 +34,16 @@ from constants import solverSettings, boundaryConditions, simulationSettings
 from constants import simulationFlowSettings, parallelSettings, postProcessSettings
 from stlAnalysis import stlAnalysis
 from blockMeshGenerator import generate_blockMeshDict
-from decomposeParGenerator import createDecomposeParDict
+from decomposeParGenerator import generate_DecomposeParDict
 from snappyHexMeshGenerator import generate_snappyHexMeshDict
-from surfaceExtractor import create_surfaceFeatureExtractDict
+from surfaceExtractor import generate_surfaceFeatureExtractDict
 from transportAndTurbulence import create_transportPropertiesDict, create_turbulencePropertiesDict
 #from transportAndTurbulence import write_transportPropertiesDict, write_turbulencePropertiesDict
 from boundaryConditionsGenerator import create_boundary_conditions
 #from boundaryConditions import create_boundary_conditions
-from controlDictGenerator import createControlDict
-from numericalSettingsGenerator import create_fvSchemesDict, create_fvSolutionDict
+from controlDictGenerator import generate_ControlDict
+from numericalSettingsGenerator import generate_fvSchemesDict, generate_fvSolutionDict
+from changeDictGenerator import generate_ChangeDictionaryDict
 from scriptGenerator import ScriptGenerator
 from postProcess import postProcess
 from mod_project import mod_project
@@ -988,22 +989,24 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         os.chdir("system")
         # create the controlDict file
         SplashCaseCreatorIO.printMessage("Creating the system files",GUIMode=self.GUIMode,window=self.window)
-        controlDict = createControlDict(self.simulationSettings)
+        controlDict = generate_ControlDict(self.simulationSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("controlDict", controlDict)
         blockMeshDict = generate_blockMeshDict(self.meshSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("blockMeshDict", blockMeshDict)
         snappyHexMeshDict = generate_snappyHexMeshDict(self.meshSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("snappyHexMeshDict", snappyHexMeshDict)
-        surfaceFeatureExtractDict = create_surfaceFeatureExtractDict(self.meshSettings)
+        surfaceFeatureExtractDict = generate_surfaceFeatureExtractDict(self.meshSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("surfaceFeatureExtractDict", surfaceFeatureExtractDict)
-        fvSchemesDict = create_fvSchemesDict(self.numericalSettings)
+        fvSchemesDict = generate_fvSchemesDict(self.numericalSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("fvSchemes", fvSchemesDict)
-        fvSolutionDict = create_fvSolutionDict(self.numericalSettings, self.solverSettings)
+        fvSolutionDict = generate_fvSolutionDict(self.numericalSettings, self.solverSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("fvSolution", fvSolutionDict)
-        decomposeParDict = createDecomposeParDict(self.parallelSettings)
+        decomposeParDict = generate_DecomposeParDict(self.parallelSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("decomposeParDict", decomposeParDict)
         FODict = postProcess.create_FOs(self.meshSettings,self.postProcessSettings,useFOs=self.useFOs)
         SplashCaseCreatorPrimitives.write_dict_to_file("FOs", FODict)
+        changeDictionaryDict = generate_ChangeDictionaryDict(self.meshSettings)
+        SplashCaseCreatorPrimitives.write_dict_to_file("changeDictionaryDict", changeDictionaryDict)
         # go back to the main directory
         os.chdir("..")
         # create mesh script

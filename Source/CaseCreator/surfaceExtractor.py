@@ -23,7 +23,7 @@ import yaml
 from primitives import SplashCaseCreatorPrimitives
 from constants import meshSettings
 
-def create_surfaceFeatureExtractDict(meshSettings):
+def generate_surfaceFeatureExtractDict(meshSettings):
     header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="surfaceFeatureExtractDict")
     surfaceFeatureExtractDict = f""+header
     for anEntry in meshSettings['geometry']:

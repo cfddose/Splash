@@ -22,7 +22,7 @@
 #from constants import parallelSettings
 from primitives import SplashCaseCreatorPrimitives
 
-def createDecomposeParDict(parallelSettings):
+def generate_DecomposeParDict(parallelSettings):
     decomposeParDict = SplashCaseCreatorPrimitives.createFoamHeader(className='dictionary', objectName='decomposeParDict')
     decomposeParDict += f"""
 numberOfSubdomains {parallelSettings['numberOfSubdomains']};

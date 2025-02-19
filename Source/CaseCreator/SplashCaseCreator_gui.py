@@ -286,7 +286,8 @@ class mainWindow(QMainWindow):
         self.window = loader.load(ui_file, None)
         ui_file.close()
         self.setCentralWidget(self.window)
-        self.setGeometry(100, 100, 1400, 880)
+        # Increased the window height
+        self.setGeometry(100, 100, 1400, 930)
         self.setWindowTitle("Splash Case Creator")
         
         # Add timer label programmatically
@@ -372,17 +373,18 @@ class mainWindow(QMainWindow):
             self.window.tableViewProperties.horizontalHeader().setStyleSheet("color: black")
         
     # FLAG! For that purpose is this?    
-    def __del__(self):
-        pass
+    # def __del__(self):
+    #     pass
 
-    def openCADDialog(self):
-        fname,ftype = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', 
-        'c:\\',"CAD files (*.brep *.igs *.iges)")
-        if(fname==""):
-            return -1 # CAD file not loaded
-        else:
-            #print("Current CAD File: ",fname)
-            return fname
+    # This is not used at all. So, commented out.
+    # def openCADDialog(self):
+    #     fname,ftype = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', 
+    #     'c:\\',"CAD files (*.brep *.igs *.iges)")
+    #     if(fname==""):
+    #         return -1 # CAD file not loaded
+    #     else:
+    #         #print("Current CAD File: ",fname)
+    #         return fname
                        
     # manage sub windows
     def prepare_subWindows(self):
@@ -454,7 +456,7 @@ class mainWindow(QMainWindow):
             purpose, refMin, refMax, featureEdges, featureLevel, nLayers, property, bounds = stl_properties
             
             self.window.tableViewProperties.clearContents()
-            self.window.tableViewProperties.setRowCount(4)
+            self.window.tableViewProperties.setRowCount(5)
             self.window.tableViewProperties.setColumnCount(2)
 
             # Setting headers (if not already set elsewhere)
@@ -468,9 +470,11 @@ class mainWindow(QMainWindow):
             self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(featureEdges)))
             self.window.tableViewProperties.setItem(3, 0, QtWidgets.QTableWidgetItem("Feature Level"))
             self.window.tableViewProperties.setItem(3, 1, QtWidgets.QTableWidgetItem(str(featureLevel)))
+            self.window.tableViewProperties.setItem(4, 0, QtWidgets.QTableWidgetItem("Purpose"))
+            self.window.tableViewProperties.setItem(4, 1, QtWidgets.QTableWidgetItem(str(purpose)))
             
             # Additional rows for other properties
-            additional_row = 4
+            additional_row = 5
             self.window.tableViewProperties.setRowCount(additional_row + 8)
             self.window.tableViewProperties.setItem(additional_row, 0, QtWidgets.QTableWidgetItem("nLayers"))
             self.window.tableViewProperties.setItem(additional_row, 1, QtWidgets.QTableWidgetItem(str(nLayers)))
@@ -486,6 +490,7 @@ class mainWindow(QMainWindow):
             self.window.tableViewProperties.setItem(additional_row + 5, 1, QtWidgets.QTableWidgetItem(f"{bounds[4]:.2f}"))
             self.window.tableViewProperties.setItem(additional_row + 6, 0, QtWidgets.QTableWidgetItem("Max Z")) 
             self.window.tableViewProperties.setItem(additional_row + 6, 1, QtWidgets.QTableWidgetItem(f"{bounds[5]:.2f}"))
+            
         else:
             # Unpack boundary properties
             #print(f"Boundary Properties: {boundary_properties}")
@@ -956,7 +961,6 @@ class mainWindow(QMainWindow):
             if item not in currentItems:
                 self.window.listWidgetObjList.addItem(item)
         
-
     def removeExternalBoundaries(self):
         # remove inlet, outlet, front, back, top, bottom from the list object
         #self.updateStatusBar("Removing External Boundaries")
