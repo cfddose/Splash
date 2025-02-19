@@ -64,6 +64,132 @@
    <property name="currentIndex">
     <number>0</number>
    </property>
+   <widget class="QWidget" name="tab_3">
+    <attribute name="title">
+     <string>General</string>
+    </attribute>
+    <widget class="QLabel" name="label_20">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>20</y>
+       <width>141</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Background mesh size</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEditMeshSize">
+     <property name="geometry">
+      <rect>
+       <x>182</x>
+       <y>20</y>
+       <width>191</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QFrame" name="frame">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>110</y>
+       <width>371</width>
+       <height>141</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <widget class="QCheckBox" name="checkBox">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>10</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Extrude Mesh</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxFace1">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>34</y>
+        <width>201</width>
+        <height>32</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_21">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>40</y>
+        <width>58</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Face 1</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_22">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>70</y>
+        <width>58</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Face 2</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxFace2">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>70</y>
+        <width>201</width>
+        <height>32</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_23">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>100</y>
+        <width>58</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Layers</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEditExtrudeLayers">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>100</y>
+        <width>113</width>
+        <height>21</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
    <widget class="QWidget" name="castellated">
     <attribute name="title">
      <string>Castellated</string>
