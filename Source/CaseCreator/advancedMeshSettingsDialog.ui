@@ -189,6 +189,19 @@
       </property>
      </widget>
     </widget>
+    <widget class="QCheckBox" name="checkBoxHalfDomain">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>50</y>
+       <width>111</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Half domain</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="castellated">
     <attribute name="title">

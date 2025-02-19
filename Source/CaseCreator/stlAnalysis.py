@@ -54,12 +54,12 @@ class stlAnalysis:
         maxZ = stlMaxZ + 2.0*characLength*sizeFactor
         
         if(internalFlow):
-            minX = stlMinX - 0.1*bbX*sizeFactor
-            maxX = stlMaxX + 0.1*bbX*sizeFactor
-            minY = stlMinY - 0.1*bbY*sizeFactor
-            maxY = stlMaxY + 0.1*bbY*sizeFactor
-            minZ = stlMinZ - 0.1*bbZ*sizeFactor
-            maxZ = stlMaxZ + 0.1*bbZ*sizeFactor
+            minX = stlMinX - 0.05*bbX*sizeFactor
+            maxX = stlMaxX + 0.05*bbX*sizeFactor
+            minY = stlMinY - 0.05*bbY*sizeFactor
+            maxY = stlMaxY + 0.05*bbY*sizeFactor
+            minZ = stlMinZ - 0.05*bbZ*sizeFactor
+            maxZ = stlMaxZ + 0.05*bbZ*sizeFactor
         """
         if(bbX > 0.1 and bbY > 0.1 and bbZ > 0.1):
             (minX,maxX,minY,maxY,minZ,maxZ) = (np.around(minX,decimals=1),

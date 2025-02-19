@@ -1458,6 +1458,9 @@ class advancedMeshDialog(QDialog):
             self.meshSettings['snapControls']["implicitFeatureSnap"] = False
         self.meshSettings['addLayersControls']["relativeSizes"] = self.window.checkBoxRelativeSizes.isChecked()
 
+        # general mesh settings
+        self.meshSettings['maxCellSize'] = float(self.window.lineEditMeshSize.text())
+
 
     def assign_values(self,meshSettings):
         # to avoid unncessary changes to the original meshSettings dictionary, we will create a copy of it.
@@ -1551,6 +1554,10 @@ class advancedMeshDialog(QDialog):
         self.window.lineEditInternalSkewness.setText(str(self.meshSettings['meshQualityControls']["maxInternalSkewness"]))
         self.window.lineEditConcave.setText(str(self.meshSettings['meshQualityControls']["maxConcave"]))
         self.window.lineEditDeterminant.setText(str(self.meshSettings['meshQualityControls']["minDeterminant"]))
+
+        # general settings
+        self.window.lineEditMeshSize.setText(str(self.meshSettings['maxCellSize']))
+        self.window.checkBoxHalfDomain.setChecked(self.meshSettings['halfModel'])
 
         if self.meshSettings['snapControls']["implicitFeatureSnap"]:
             self.window.radioButtonImplicitSnap.setChecked(True)

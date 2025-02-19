@@ -1434,7 +1434,13 @@ class mainWindow(QMainWindow):
         self.project.simulationSettings,self.project.parallelSettings = controlsDialogDriver(self.project.simulationSettings,self.project.parallelSettings,self.project.transient)
 
     def advancedMeshDialog(self):
+        meshSize = self.project.meshSettings['maxCellSize']
         self.project.meshSettings = advancedMeshDialogDriver(self.project.meshSettings)
+        if meshSize!=self.project.meshSettings['maxCellSize']:
+            self.project.update_mesh_size(self.project.meshSettings['maxCellSize'])
+            self.prepareDomainView()
+        if self.project.meshSettings['halfModel']:
+            self.project.halfModel = True
 
     
     def postProcessDialog(self):

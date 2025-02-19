@@ -38,9 +38,7 @@ from decomposeParGenerator import generate_DecomposeParDict
 from snappyHexMeshGenerator import generate_snappyHexMeshDict
 from surfaceExtractor import generate_surfaceFeatureExtractDict
 from transportAndTurbulence import create_transportPropertiesDict, create_turbulencePropertiesDict
-#from transportAndTurbulence import write_transportPropertiesDict, write_turbulencePropertiesDict
 from boundaryConditionsGenerator import create_boundary_conditions
-#from boundaryConditions import create_boundary_conditions
 from controlDictGenerator import generate_ControlDict
 from numericalSettingsGenerator import generate_fvSchemesDict, generate_fvSolutionDict
 from changeDictGenerator import generate_ChangeDictionaryDict
@@ -738,6 +736,8 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.update_max_stl_length(stlBoundingBox)
         featureLevel = max(refLevel,1)
         self.meshSettings = stlAnalysis.set_mesh_settings(self.meshSettings, domain_size, nx, ny, nz, refLevel, featureLevel,nLayers=nLayers) 
+        # update the max cell size for reference and later use
+        self.meshSettings['maxCellSize'] = self.get_mesh_size()
         self.set_max_domain_size(domain_size,nx,ny,nz)
         self.meshSettings = stlAnalysis.set_mesh_location(self.meshSettings, stl_path,self.internalFlow)
         refinementBoxLevel = max(2,refLevel-3)
@@ -1123,6 +1123,34 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         nz = self.meshSettings['domain']['nz']
         return minx,maxx,miny,maxy,minz,maxz,nx,ny,nz
     
+    def get_mesh_size(self):
+        dX = self.meshSettings['domain']['maxx'] - self.meshSettings['domain']['minx']
+        dY = self.meshSettings['domain']['maxy'] - self.meshSettings['domain']['miny']
+        dZ = self.meshSettings['domain']['maxz'] - self.meshSettings['domain']['minz']
+        dX = dX/self.meshSettings['domain']['nx']
+        dY = dY/self.meshSettings['domain']['ny']
+        dZ = dZ/self.meshSettings['domain']['nz']
+        return max(dX,dY,dZ)
+    
+    def set_mesh_size(self,dL=0.01):
+        minx,maxx,miny,maxy,minz,maxz,nx,ny,nz = self.get_domain_size()
+        dX = maxx - minx
+        dY = maxy - miny
+        dZ = maxz - minz
+        nx = int(dX/dL)
+        ny = int(dY/dL)
+        nz = int(dZ/dL)
+        # make sure the number of cells is at least 1 in every direction
+        nx = max(nx,1)
+        ny = max(ny,1)
+        nz = max(nz,1)
+        self.meshSettings['domain']['nx'] = nx
+        self.meshSettings['domain']['ny'] = ny
+        self.meshSettings['domain']['nz'] = nz
+
+    def update_mesh_size(self,dL=0.01):
+        self.meshSettings['maxCellSize'] = dL
+        self.set_mesh_size(dL)
     
     def update_max_lengths(self):
         minx,maxx,miny,maxy,minz,maxz,nx,ny,nz = self.get_domain_size()

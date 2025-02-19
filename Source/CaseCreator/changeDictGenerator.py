@@ -26,11 +26,16 @@ import os
 from primitives import SplashCaseCreatorPrimitives
 
 def generateForOnePatch(patch="inlet",patch_type="patch"):
+    # if the patch name includes .stl, then it is a geometry patch
+    if ".stl" in patch:
+        patch = patch.replace(".stl", "")
+    if ".obj" in patch:
+        patch = patch.replace(".obj", "")
     output = f""
     output += f"    {patch}\n"
     output += f"    {{\n"
     output += f"        type            {patch_type};\n"
-    output += f"        inGroups        {patch_type};\n"
+    output += f"        inGroups        1({patch_type});\n"
     output += f"     }}\n"
     return output
 
@@ -45,12 +50,20 @@ def generate_ChangeDictionaryDict(meshSettings):
             changeDict += generateForOnePatch(patch["name"], patch_type=patch["type"])
     for patch in meshSettings['geometry']:
         if(patch['type'] == 'triSurfaceMesh'):
-            changeDict += generateForOnePatch(patch["name"], patch_type=patch["type"])
+            if(patch['purpose'] == 'wall'):
+                patch_type = 'wall'
+            elif(patch['purpose'] == 'inlet'or patch['purpose'] == 'outlet'):
+                patch_type = 'patch'
+            elif(patch['purpose'] == 'symmetry'):
+                patch_type = 'symmetry'
+            else:
+                patch_type = patch['type']
+            changeDict += generateForOnePatch(patch["name"], patch_type=patch_type)
     changeDict += f"\n}}"
     return changeDict
 
 def writeChangeDictionaryDict(meshSettings):
-    changeDict = generateChangeDictionaryDict(meshSettings)
+    changeDict = generate_ChangeDictionaryDict(meshSettings)
     SplashCaseCreatorPrimitives.write_to_file("changeDictionaryDict", changeDict)
 
 
