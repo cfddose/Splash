@@ -34,6 +34,20 @@ class SplashCaseCreatorPrimitives:
         pass
 
     @staticmethod
+    def move_item_up(lst, index):
+        if index == 0:
+            return -1
+        lst[index], lst[index-1] = lst[index-1], lst[index]
+        return 0
+    
+    @staticmethod
+    def move_item_down(lst, index):
+        if index == len(lst)-1:
+            return -1
+        lst[index], lst[index+1] = lst[index+1], lst[index]
+        return 0
+
+    @staticmethod
     def bounds_to_str(bounds):
         bounds_str = f"({bounds[0]:.2f} {bounds[1]:.2f} {bounds[2]:.2f})"
         bounds_str += f"\n({bounds[3]:.2f} {bounds[4]:.2f} {bounds[5]:.2f})"

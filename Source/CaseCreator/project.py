@@ -45,8 +45,9 @@ from changeDictGenerator import generate_ChangeDictionaryDict
 from scriptGenerator import ScriptGenerator
 from postProcess import postProcess
 from mod_project import mod_project
-
 import copy
+from stlPreparation import is_stl_binary, convert_binary_to_ascii
+from stlPreparation import separate_stl, is_multipatch_stl
 
 
 #from ../constants/constants import meshSettings
@@ -83,6 +84,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.stl_files = [] # list to store the settings for stl files
         self.stl_names = [] # list to store the names of the stl files
         self.geometries = [] # list to store the settings for non-STL geometries such as spheres, boxes, etc.
+        self.stl_paths = [] # list to store the paths of the stl files
         self.internalFlow = False # default is external flow
         self.onGround = False # default is off the ground
         self.halfModel = False # default is full model
@@ -584,7 +586,8 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         obj_properties = {'minx':box[0],'maxx':box[1],'miny':box[2],'maxy':box[3],'minz':box[4],'maxz':box[5],'refineMin':0,'refineMax':refLevel,'property':None}
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
     
-    def addFineBoxToMesh(self,stl_path,boxName='fineBox',refLevel=2):
+    def addFineBoxToMesh(self,stl_path,boxName='fineBox',refLevel=2,internalFlow=False):
+        
         stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
         fineBox = stlAnalysis.getRefinementBoxClose(stlBoundingBox)
         obj_properties = {'minx':fineBox[0],'maxx':fineBox[1],'miny':fineBox[2],'maxy':fineBox[3],'minz':fineBox[4],'maxz':fineBox[5],'refineMin':0,'refineMax':refLevel,'property':None}
@@ -604,15 +607,47 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         obj_properties = {'minx':box[0],'maxx':box[1],'miny':box[2],'maxy':box[3],'minz':box[4],'maxz':box[5],'refineMin':0,'refineMax':refLevel,'property':None}
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box") 
     
-    def add_stl_file(self,stl_file):
+    def add_multipatch_stl_file(self,stl_file):
+        # first, copy the file to the project directory
         if stl_file is None:
             SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
             return -1
-        print("Existing stl files")
-        print(self.stl_names)
+        stl_name = stl_file.split("/")[-1]
+        #print("Adding stl file:",stl_name)
+        if stl_name in self.stl_names:
+            SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        # create a temp directory to store the stl file
+        temp_dir = os.path.join(self.project_path,"temp")
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+        temp_stl_path = os.path.join(temp_dir,stl_name)
+        try:
+            shutil.copy(stl_file,temp_stl_path)
+            separate_stl(temp_stl_path)
+            # list all files in the temp directory
+            files = os.listdir(temp_dir)
+            for file in files:
+                if file.endswith(".stl"):
+                    #print(file)
+                    stl_path = os.path.join(temp_dir,file)
+                    if stl_path == temp_stl_path:
+                        continue
+                    self.add_single_stl_file(stl_path)
+        except OSError as error:
+            SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
+            return -1
+        return 3 # 3 means multiple STL files added
+        
+    def add_single_stl_file(self,stl_file):
+        if stl_file is None:
+            SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        #print("Existing stl files")
+        #print(self.stl_names)
         
         stl_name = stl_file.split("/")[-1]
-        print("Adding stl file:",stl_name)
+        #print("Adding stl file:",stl_name)
         if stl_name in self.stl_names:
             SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
             return -1
@@ -643,7 +678,56 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
             SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
             return -1
         self.current_stl_file = stl_path
+        self.stl_paths.append(stl_path)
         return 0
+        
+    # this is the main STL file addition function
+
+    def add_stl_file(self,stl_file):
+        if stl_file is None:
+            SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        #print("Existing stl files")
+        #print(self.stl_names)
+        
+        stl_name = stl_file.split("/")[-1]
+        #print("Adding stl file:",stl_name)
+        if stl_name in self.stl_names:
+            SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        
+        # check if the stl file is in binary format
+        if is_stl_binary(stl_file):
+            # create a temp directory in the project directory
+            temp_dir = os.path.join(self.project_path,"temp")
+            if not os.path.exists(temp_dir):
+                os.mkdir(temp_dir)
+            temp_stl_path = os.path.join(temp_dir,stl_name)
+            try:
+                shutil.copy(stl_file,temp_stl_path)
+            except OSError as error:
+                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
+                return -1
+            # convert the binary stl file to ascii format
+            ascii_stl_path = os.path.join(temp_dir,stl_name.split(".")[0]+"_ascii.stl")
+            try:
+                convert_binary_to_ascii(input_file_path=temp_stl_path,output_file_path=ascii_stl_path)
+            except Exception as error:
+                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
+                return -1
+            # add the ascii stl file to the project
+            status = self.add_single_stl_file(ascii_stl_path)
+            return status
+        else:
+            # check if the stl file is a multi-patch stl file
+            if is_multipatch_stl(stl_file):
+                status = self.add_multipatch_stl_file(stl_file)
+                return status
+            else:
+                status = self.add_single_stl_file(stl_file)
+                return status
+        
+            
             
     # this is a wrapper of the primitives 
     def list_stl_files(self):

@@ -959,6 +959,14 @@ class VTKManager:
 
         # Re-render the scene to apply changes
         self.render_all()
+
+    def hide_axes(self):
+        """
+        Hides the geometry-related axes while keeping the bottom-left orientation marker active.
+        """
+        self.geometry_axes_actor.SetVisibility(False)
+        self.axes_widget.SetEnabled(True)
+        self.render_all()
      
      
     ## ------------------------ STEP File Handling -------------------------------        

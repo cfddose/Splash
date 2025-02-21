@@ -396,6 +396,7 @@ class mainWindow(QMainWindow):
             #print(f"Adding to list: {stl['name']}")
             self.window.listWidgetObjList.addItem(stl['name'])
         for idx, geometry in enumerate(self.project.geometries):
+            print(f"GEO: {geometry}")
             print(f"Adding to list: {geometry['name']}")
             self.window.listWidgetObjList.addItem(geometry['name'])
 
@@ -599,6 +600,8 @@ class mainWindow(QMainWindow):
         self.window.pushButtonAddSTL.clicked.connect(self.importSTL)
         self.window.pushButtonRemoveSTL.clicked.connect(self.removeSTL)
         self.window.pushButtonMeshPoint.clicked.connect(self.setMeshPoint)
+        self.window.pushButtonUpList.clicked.connect(self.moveUpSTL)
+        self.window.pushButtonDownList.clicked.connect(self.moveDownSTL)
 
         # Toggle axes on the main render window
         self.window.axesCheckBox.stateChanged.connect(self.toggle_axes_with_vtk_manager) 
@@ -760,7 +763,11 @@ class mainWindow(QMainWindow):
             return
         #self.project.add_stl_to_project()
         #print(f"Project STL Files: {self.project.stl_files}")
-        self.vtk_manager.render_stl(self.project.current_stl_file)
+        if stl_status == 0:
+            self.vtk_manager.render_stl(self.project.current_stl_file)
+        elif stl_status == 3: # this is a special condition for multiple patch STL file
+            for stl in self.project.stl_paths:
+                self.vtk_manager.render_stl(stl)
         self.update_list()
         self.updateStatusBar("STL imported successfully.")
         return 
@@ -809,6 +816,37 @@ class mainWindow(QMainWindow):
         stl = item.text()
         self.project.remove_stl_file_by_name(stl)
         self.vtk_manager.remove_stl(stl)
+        self.update_list()
+        self.readyStatusBar()
+
+    def moveUpSTL(self):
+        
+        item = self.window.listWidgetObjList.currentItem()
+        #print(f"Moving up STL {item.text()}")
+        
+        if item.text() not in self.project.stl_names:
+            return
+        if item==None or item.text()=="":
+            return
+        idx = self.project.get_stl_index(item.text())
+        if idx==0:
+            return
+        SplashCaseCreatorPrimitives.move_item_up(self.project.stl_files,idx)
+        self.update_list()
+        self.readyStatusBar()
+
+    def moveDownSTL(self):
+        
+        item = self.window.listWidgetObjList.currentItem()
+        #print(f"Moving down STL {item.text()}")
+        if item.text() not in self.project.stl_names:
+            return
+        if item==None or item.text()=="":
+            return
+        idx = self.project.get_stl_index(item.text())
+        if idx==len(self.project.stl_files)-1:
+            return
+        SplashCaseCreatorPrimitives.move_item_down(self.project.stl_files,idx)
         self.update_list()
         self.readyStatusBar()
 
