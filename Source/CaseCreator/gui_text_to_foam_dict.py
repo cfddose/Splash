@@ -23,9 +23,9 @@
 This file contains the dictionaries connecting the GUI text to the OpenFOAM dictionary entries.
 
 """
-grad_schemes = {"Gauss Linear":"Gauss linear","Gauss Linear (Cell Limited)":"cellLimited Gauss Linear 0.5",
-                "Gauss Linear (Face Limited)":"faceLimited Gauss Linear 1","Gauss Linear (Cell MD Limited)":"cellMDLimited Gauss Linear 1",
-                "Gauss Linear (Face MD Limited)":"faceMDLimited Gauss Linear 1",
+grad_schemes = {"Gauss Linear":"Gauss linear","Gauss Linear (Cell Limited)":"cellLimited Gauss linear 0.5",
+                "Gauss Linear (Face Limited)":"faceLimited Gauss linear 1","Gauss Linear (Cell MD Limited)":"cellMDLimited Gauss linear 1",
+                "Gauss Linear (Face MD Limited)":"faceMDLimited Gauss linear 1",
                "Least Squares":"leastSquares"}
 
 div_schemes = {"Gauss Linear":"Gauss linear","Gauss Upwind":"Gauss upwind","Gauss Linear Upwind":"Gauss linearUpwind",

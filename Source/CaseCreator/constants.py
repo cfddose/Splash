@@ -292,7 +292,7 @@ simulationSettings = {
     'timePrecision': 8,
     'runTimeModifiable': 'true',
     'adjustTimeStep': 'no',
-    'maxCo': 0.5,
+    'maxCo': 0.9,
     'functions': [],
     'libs': [],
     'allowSystemOperations': 'true',

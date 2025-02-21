@@ -390,7 +390,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBoxFixedCo">
+  <widget class="QCheckBox" name="checkBoxAdjustTimeStep">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -400,7 +400,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Fixed Courant Number</string>
+    <string>Adjustable Time Step</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_14">

@@ -1355,10 +1355,22 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 #self.simulationSettings['deltaT'] = SplashCaseCreatorIO.get_input_float("Time step: ")
             self.simulationSettings['adjustTimeStep'] = 'no'
             self.simulationSettings['maxCo'] = 0.9
-            self.numericalSettings['ddtSchemes']['default'] = 'Euler'
+            self.simulationSettings['endTime'] = 10.0
+            self.simulationSettings['writeInterval'] = 0.1
+            self.simulationSettings['deltaT'] = 0.01
+            #self.numericalSettings['ddtSchemes']['default'] = 'Euler'
             # if steady state, SIMPLEC is used. If transient, PIMPLE is used
             # for PIMPLE, the relaxation factors are set to 0.7 and p = 0.3
             self.numericalSettings['relaxationFactors']['p'] = 0.3
+        else:  
+            self.simulationSettings['transient'] = False
+            self.simulationSettings['application'] = 'simpleFoam'
+            self.simulationFlowSettings['solver'] = 'simpleFoam'
+            self.simulationSettings['endTime'] = 1000
+            self.simulationSettings['writeInterval'] = 100
+            self.simulationSettings['deltaT'] = 1
+            self.simulationSettings['adjustTimeStep'] = 'no'
+            self.simulationSettings['maxCo'] = 0.9
             
 
     def ask_ground_type(self):

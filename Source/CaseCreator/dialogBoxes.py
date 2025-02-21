@@ -1121,10 +1121,12 @@ class numericalSettingsDialog(QDialog):
         self.numericalSettings['ddtSchemes']['default'] = self.temporal_schemes[temp_sch]
         self.numericalSettings['gradSchemes']['default'] = self.grad_schemes[grad_sch]
         self.numericalSettings['gradSchemes']['grad(U)'] = self.grad_schemes[grad_sch]
-        self.numericalSettings['divSchemes']['default'] = self.div_schemes[div_sch]
+        
         if div_sch == "Gauss Linear" or div_sch == "Gauss Upwind":
             self.numericalSettings['divSchemes']['div(phi,U)'] = self.div_schemes[div_sch]
+            self.numericalSettings['divSchemes']['default'] = self.div_schemes[div_sch]
         else:
+            self.numericalSettings['divSchemes']['default'] = self.div_schemes["Gauss Linear"]
             self.numericalSettings['divSchemes']['div(phi,U)'] = self.div_schemes[div_sch]+" grad(U)"
         #self.numericalSettings['divSchemes']['div(phi,U)'] = self.div_schemes[div_sch]
         self.numericalSettings['divSchemes']['div(phi,k)'] = self.div_schemes[div_turb]
@@ -1138,12 +1140,13 @@ class numericalSettingsDialog(QDialog):
     
 
 class controlsDialog(QDialog):
-    def __init__(self,simulationSettings=None,parallelSettings=None,transient=False):
+    def __init__(self,simulationSettings=None,parallelSettings=None):
         super().__init__()
         self.OK_clicked = False
-        self.transient = transient
+        
         self.simulationSettings = simulationSettings
         self.parallelSettings = parallelSettings
+        self.transient = self.simulationSettings["transient"]
         #print(self.simulationSettings)
         #print(self.parallelSettings)
         self.load_ui()
@@ -1164,6 +1167,7 @@ class controlsDialog(QDialog):
         self.window.lineEditX.setValidator(QIntValidator())
         self.window.lineEditY.setValidator(QIntValidator())
         self.window.lineEditZ.setValidator(QIntValidator())
+        self.window.lineEditMaxCo.setValidator(QDoubleValidator())
 
 
     def change_parallel_settings(self):
@@ -1202,6 +1206,8 @@ class controlsDialog(QDialog):
         self.window.comboBoxWriteControl.setCurrentText(self.simulationSettings["writeControl"])
         self.window.comboBoxWriteFormat.setCurrentText(self.simulationSettings["writeFormat"])
         self.window.lineEditWritePrecision.setText(str(self.simulationSettings["writePrecision"]))
+        self.window.checkBoxAdjustTimeStep.setChecked(self.simulationSettings["adjustTimeStep"]=="yes")
+        self.window.lineEditMaxCo.setText(str(self.simulationSettings["maxCo"]))
 
     def fill_parallel_settings(self):
         if self.parallelSettings['parallel']==True:
@@ -1250,15 +1256,7 @@ class controlsDialog(QDialog):
         self.window.checkBoxParallel.stateChanged.connect(self.change_parallel_settings)
         self.window.comboBoxDecompositionMethod.currentIndexChanged.connect(self.change_parallel_settings)
     
-    def on_pushButtonOK_clicked(self):
-        self.on_pushButtonApply_clicked()
-        self.window.close()
-
-    def on_pushButtonCancel_clicked(self):
-        self.window.close()
-
-    def on_pushButtonApply_clicked(self):
-        self.OK_clicked = True
+    def read_values(self):
         self.simulationSettings["startTime"] = self.window.lineEditStartTime.text()
         self.simulationSettings["endTime"] = self.window.lineEditEndTime.text()
         self.simulationSettings["deltaT"] = self.window.lineEditTimeStep.text()
@@ -1266,6 +1264,11 @@ class controlsDialog(QDialog):
         self.simulationSettings["writeControl"] = self.window.comboBoxWriteControl.currentText()
         self.simulationSettings["writePrecision"] = self.window.lineEditWritePrecision.text()
         self.simulationSettings["writeFormat"] = self.window.comboBoxWriteFormat.currentText()
+        if self.window.checkBoxAdjustTimeStep.isChecked():
+            self.simulationSettings["adjustTimeStep"] = 'yes'
+        else:
+            self.simulationSettings["adjustTimeStep"] = 'no'
+        self.simulationSettings["maxCo"] = self.window.lineEditMaxCo.text()
         self.parallelSettings["parallel"] = self.window.checkBoxParallel.isChecked()
         self.parallelSettings["numberOfSubdomains"] = int(self.window.lineEdit_nProcs.text())
         self.parallelSettings["method"] = self.window.comboBoxDecompositionMethod.currentText()
@@ -1295,6 +1298,17 @@ class controlsDialog(QDialog):
             self.parallelSettings["x"] = 1
             self.parallelSettings["y"] = 1
             self.parallelSettings["z"] = 1
+
+    def on_pushButtonOK_clicked(self):
+        self.on_pushButtonApply_clicked()
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        self.window.close()
+
+    def on_pushButtonApply_clicked(self):
+        self.OK_clicked = True
+        self.read_values()
         
         #self.window.close()
 
@@ -1688,8 +1702,8 @@ def numericsDialogDriver(current_mode=0,numericalSettings=None,turbulenceModel=N
     
     return dialog.current_mode,dialog.numericalSettings,dialog.turbulence_model
 
-def controlsDialogDriver(simulationSettings=None,parallelSettings=None,transient=False):
-    dialog = controlsDialog(simulationSettings,parallelSettings,transient=transient)
+def controlsDialogDriver(simulationSettings=None,parallelSettings=None):
+    dialog = controlsDialog(simulationSettings,parallelSettings)
     dialog.window.exec()
     dialog.window.show()
     return dialog.simulationSettings,dialog.parallelSettings

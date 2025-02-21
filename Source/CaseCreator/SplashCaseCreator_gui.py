@@ -1478,7 +1478,7 @@ class mainWindow(QMainWindow):
         #self.project.print_numerical_settings()
 
     def controlsDialog(self):
-        self.project.simulationSettings,self.project.parallelSettings = controlsDialogDriver(self.project.simulationSettings,self.project.parallelSettings,self.project.transient)
+        self.project.simulationSettings,self.project.parallelSettings = controlsDialogDriver(self.project.simulationSettings,self.project.parallelSettings)
 
     def advancedMeshDialog(self):
         meshSize = self.project.meshSettings['maxCellSize']
