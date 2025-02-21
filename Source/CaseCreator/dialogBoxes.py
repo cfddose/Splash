@@ -34,7 +34,7 @@ import sys
 from time import sleep
 import os
 from gui_text_to_foam_dict import grad_schemes,div_schemes,temporal_schemes,laplacian_schemes
-from gui_text_to_foam_dict import value_to_key
+from gui_text_to_foam_dict import value_to_key, key_to_value, snGrad_schemes
 
 # For resetting to default settings 
 from constants import meshSettings
@@ -882,6 +882,7 @@ class numericalSettingsDialog(QDialog):
         self.grad_schemes = grad_schemes
         self.div_schemes = div_schemes
         self.laplacian_schemes = laplacian_schemes
+        self.snGrad_schemes = snGrad_schemes
         
         
         self.OK_clicked = False
@@ -1131,6 +1132,7 @@ class numericalSettingsDialog(QDialog):
         self.numericalSettings['divSchemes']['div(phi,omega)'] = self.div_schemes[div_turb]
         self.numericalSettings['divSchemes']['div(phi,nuTilda)'] = self.div_schemes[div_turb]
         self.numericalSettings['laplacianSchemes']['default'] = self.laplacian_schemes[lap_sch] #"Gauss linear "+ self.window.comboBoxLaplacian.currentText()
+        self.numericalSettings['snGradSchemes']['default'] = self.snGrad_schemes[lap_sch]
         #self.numericalSettings['snGradSchemes']['default'] = self.window.comboBoxLaplacian.currentText()
         self.print_numerical_settings()
     

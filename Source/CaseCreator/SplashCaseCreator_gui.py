@@ -1255,6 +1255,14 @@ class mainWindow(QMainWindow):
             self.window.checkBoxOnGround.setChecked(self.project.onGround)
             self.chooseExternalFlow()
 
+        
+        if self.project.transient:
+            self.window.checkBoxSteadyTransient.setText("Transient")
+            self.window.checkBoxSteadyTransient.setChecked(True)
+        else:
+            self.window.checkBoxSteadyTransient.setText("Steady-State")
+            self.window.checkBoxSteadyTransient.setChecked(False)
+
         # Update window title and status
         self.project_opened = True
         self.setWindowTitle(f"Case Creator: {self.project.project_name}")

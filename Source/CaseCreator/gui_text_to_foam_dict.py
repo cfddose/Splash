@@ -35,7 +35,8 @@ temporal_schemes = {"Steady State":"steadyState","Euler":"Euler","Backward Euler
 laplacian_schemes = {"corrected ":"Gauss linear limited corrected 1","limited 0.333":"Gauss linear limited corrected 0.333",
                      "limited 0.5":"Gauss linear limited corrected 0.5","uncorrected":"Gauss linear limited corrected 0",}
 
-
+snGrad_schemes = {"corrected ":"limited corrected 1","limited 0.333":"limited corrected 0.333",
+                     "limited 0.5":"limited corrected 0.5","uncorrected":"limited corrected 0",}
 
 def value_to_key(dict,value):
     """
