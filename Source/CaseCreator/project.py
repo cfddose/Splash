@@ -153,6 +153,17 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         SplashCaseCreatorIO.printMessage(f"Background mesh size: {nx}x{ny}x{nz} cells",GUIMode=self.GUIMode,window=self.window)
         SplashCaseCreatorIO.printMessage(f"Background cell size: {self.meshSettings['maxCellSize']} m",GUIMode=self.GUIMode,window=self.window)
     
+    def print_numerical_settings(self):
+        print("\n----------------------Numerical Settings----------------------")
+        print("ddtScheme",self.numericalSettings['ddtSchemes']['default'])
+        print("grad",self.numericalSettings['gradSchemes']['default'])
+        print("gradU",self.numericalSettings['gradSchemes']['grad(U)'])
+        print("div",self.numericalSettings['divSchemes']['default'])
+        print("div, convection",self.numericalSettings['divSchemes']['div(phi,U)'])
+        print("div, k",self.numericalSettings['divSchemes']['div(phi,k)'])
+        print("laplacian",self.numericalSettings['laplacianSchemes']['default'])
+        print("snGrad",self.numericalSettings['snGradSchemes']['default'])
+        print("----------------------------------------------------------------")
     # --------------------------------------------------------------------
     # Core methods necessary for the project backend
     # --------------------------------------------------------------------
@@ -587,7 +598,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
     
     def addFineBoxToMesh(self,stl_path,boxName='fineBox',refLevel=2,internalFlow=False):
-        
+
         stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
         fineBox = stlAnalysis.getRefinementBoxClose(stlBoundingBox)
         obj_properties = {'minx':fineBox[0],'maxx':fineBox[1],'miny':fineBox[2],'maxy':fineBox[3],'minz':fineBox[4],'maxz':fineBox[5],'refineMin':0,'refineMax':refLevel,'property':None}
@@ -709,7 +720,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
                 return -1
             # convert the binary stl file to ascii format
-            ascii_stl_path = os.path.join(temp_dir,stl_name.split(".")[0]+"_ascii.stl")
+            ascii_stl_path = os.path.join(temp_dir,stl_name.split(".")[0]+".stl")
             try:
                 convert_binary_to_ascii(input_file_path=temp_stl_path,output_file_path=ascii_stl_path)
             except Exception as error:

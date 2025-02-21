@@ -58,9 +58,9 @@ meshSettings = {
 #         'bottom':   {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 2, 3]},
 #         'top':      {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [4, 5, 6, 7]},
 # },
-    'snappyHexSteps': {'castellatedMesh': 'true',
-                       'snap': 'true',
-                        'addLayers': 'true'},
+    'snappyHexSteps': {'castellatedMesh': True,
+                       'snap': True,
+                        'addLayers': True,},
 
     'geometry': [], #[{'name': 'stl1.stl','type':'triSurfaceMesh', 'refineMin': 1, 'refineMax': 3, 
                 #     'featureEdges':'true','featureLevel':3,'nLayers':3},
@@ -141,7 +141,7 @@ physicalProperties = {
 }
 
 numericalSettings = {
-    'basicMode': True,
+    'mode': 0,
     'ddtSchemes': {'default': 'steadyState',},
     'gradSchemes': {'default': 'cellLimited Gauss linear 0.5',
                     'grad(p)': 'Gauss linear',

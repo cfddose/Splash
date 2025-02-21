@@ -1467,6 +1467,7 @@ class mainWindow(QMainWindow):
                                                                                                  self.project.physicalProperties['turbulenceModel'],
                                                                                                  transient=self.project.transient)  
         self.project.physicalProperties['turbulenceModel'] = turbulence_model
+        #self.project.print_numerical_settings()
 
     def controlsDialog(self):
         self.project.simulationSettings,self.project.parallelSettings = controlsDialogDriver(self.project.simulationSettings,self.project.parallelSettings,self.project.transient)

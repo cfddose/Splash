@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>300</x>
-     <y>320</y>
+     <y>340</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -30,7 +30,7 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>320</y>
+     <y>340</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -43,7 +43,7 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>320</y>
+     <y>340</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -58,7 +58,7 @@
      <x>20</x>
      <y>20</y>
      <width>401</width>
-     <height>291</height>
+     <height>321</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -72,7 +72,7 @@
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>20</y>
+       <y>10</y>
        <width>141</width>
        <height>16</height>
       </rect>
@@ -85,7 +85,7 @@
      <property name="geometry">
       <rect>
        <x>182</x>
-       <y>20</y>
+       <y>10</y>
        <width>191</width>
        <height>21</height>
       </rect>
@@ -95,7 +95,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>130</y>
        <width>371</width>
        <height>141</height>
       </rect>
@@ -169,7 +169,7 @@
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>100</y>
+        <y>110</y>
         <width>58</width>
         <height>20</height>
        </rect>
@@ -182,7 +182,7 @@
       <property name="geometry">
        <rect>
         <x>100</x>
-        <y>100</y>
+        <y>110</y>
         <width>113</width>
         <height>21</height>
        </rect>
@@ -192,14 +192,53 @@
     <widget class="QCheckBox" name="checkBoxHalfDomain">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>50</y>
+       <x>260</x>
+       <y>40</y>
        <width>111</width>
        <height>20</height>
       </rect>
      </property>
      <property name="text">
       <string>Half domain</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBoxCastellated">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>40</y>
+       <width>141</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Castellated Mesh</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBoxSnap">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>70</y>
+       <width>141</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Snapping</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBoxAddLayers">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>100</y>
+       <width>141</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Layer Addition</string>
      </property>
     </widget>
    </widget>
@@ -473,10 +512,10 @@
       </rect>
      </property>
      <property name="text">
-      <string>First Layer Thickness</string>
+      <string>Final Layer Thickness</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEditFirstLayer">
+    <widget class="QLineEdit" name="lineEditFinalLayer">
      <property name="geometry">
       <rect>
        <x>170</x>
@@ -723,7 +762,7 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>320</y>
+     <y>340</y>
      <width>75</width>
      <height>24</height>
     </rect>
