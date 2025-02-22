@@ -49,6 +49,8 @@ import copy
 from stlPreparation import is_stl_binary, convert_binary_to_ascii
 from stlPreparation import separate_stl, is_multipatch_stl
 
+from dialogBoxes import yesNoCancelDialogDriver, yesNoDialogDriver
+
 
 #from ../constants/constants import meshSettings
 
@@ -732,8 +734,18 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         else:
             # check if the stl file is a multi-patch stl file
             if is_multipatch_stl(stl_file):
-                status = self.add_multipatch_stl_file(stl_file)
-                return status
+                # ask the user if they want to add all the patches separately or as a single solid
+                yesNo = yesNoDialogDriver("Multiple patches detected. Do you want to add all the patches separately?")
+                if yesNo:
+                    SplashCaseCreatorIO.printMessage("Adding multiple patches separately")
+                    status = self.add_multipatch_stl_file(stl_file)
+                    return status
+                else:
+                    SplashCaseCreatorIO.printMessage("Adding all patches as a single solid")
+                    status = self.add_single_stl_file(stl_file)
+                    return status
+                #status = self.add_multipatch_stl_file(stl_file)
+                #return status
             else:
                 status = self.add_single_stl_file(stl_file)
                 return status

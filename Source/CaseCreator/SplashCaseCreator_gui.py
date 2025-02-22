@@ -287,7 +287,7 @@ class mainWindow(QMainWindow):
         ui_file.close()
         self.setCentralWidget(self.window)
         # Increased the window height
-        self.setGeometry(100, 100, 1400, 930)
+        self.setGeometry(100, 100, 1550, 930)
         self.setWindowTitle("Splash Case Creator")
         
         # Add timer label programmatically
