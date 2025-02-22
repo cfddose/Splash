@@ -301,7 +301,7 @@ simulationSettings = {
     'deltaT': 1,
     'startFrom': 'startTime',
     'stopAt': 'endTime',
-    'writeControl': 'runTime',
+    'writeControl': 'adjustableRunTime',
     'writeInterval': 100,
     'purgeWrite': 0,
     'writeFormat': 'binary',
