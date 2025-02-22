@@ -27,6 +27,7 @@
 from primitives import SplashCaseCreatorPrimitives, SplashCaseCreatorIO
 from constants import meshSettings, boundaryConditions, inletValues
 from stlAnalysis import stlAnalysis
+import copy
 
 def write_vector_boundary_condition(patch="inlet1", purpose="inlet", property=None):
     """
@@ -67,6 +68,61 @@ def write_vector_boundary_condition(patch="inlet1", purpose="inlet", property=No
     }}\n"""
     return bc
 
+def assign_initial_boundary_conditions(meshSettings, boundaryConditions):
+    """
+    Assign boundary conditions to patches in meshSettings.
+
+    Parameters:
+    meshSettings (dict): Dictionary specifying mesh settings.
+    boundaryConditions (dict): Dictionary specifying boundary conditions for U, p, k, and omega.
+    """
+    #patchFound = False
+    for patch in meshSettings['patches']:
+        patchName = patch['name']
+        purpose = patch['purpose']
+        #patchFound = True
+        # create a new dictionary for the boundary condition
+        boundaryConditions[patchName] = {}
+        # assign the boundary conditions
+        if purpose == "inlet":
+            # copy the velocity inlet boundary conditions
+            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['velocityInlet'])
+        elif purpose == "outlet":
+            # copy the pressure outlet boundary conditions
+            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['pressureOutlet'])
+        elif purpose == "wall":
+            # copy the wall boundary conditions
+            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['wall'])
+        elif purpose == "symmetry":
+            # copy the symmetry boundary conditions
+            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['symmetry'])
+        else:
+                raise ValueError("Invalid boundary condition type")
+    return meshSettings
+
+# def change_boundary_condition(meshSettings, boundaryConditions, patchName, purpose, property):
+#     """
+#     Change the boundary condition for a patch.
+
+#     Parameters:
+#     meshSettings (dict): Dictionary specifying mesh settings.
+#     boundaryConditions (dict): Dictionary specifying boundary conditions for U, p, k, and omega.
+#     patchName (str): Name of the patch.
+#     purpose (str): Purpose of the patch.
+#     property (dict): Dictionary specifying the property values.
+#     """
+#     # check if the patch exists
+#     patchFound = False
+#     for patch in meshSettings['patches']:
+#         if patch['name'] == patchName:
+#             patchFound = True
+#             break
+#     if not patchFound:
+#         raise ValueError("Patch not found")
+#     # change the boundary condition
+#     if purpose == "inlet":
+
+
 def create_scalar_file(meshSettings,boundaryConditions,scalarName="k",dimensions=(0,2,-2)):
     header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName=scalarName)
     dims = SplashCaseCreatorPrimitives.createDimensions(M=dimensions[0],L=dimensions[1],T=dimensions[2])
@@ -76,20 +132,30 @@ def create_scalar_file(meshSettings,boundaryConditions,scalarName="k",dimensions
 
     if(meshSettings['internalFlow'] == False):
         for boundary_patch in meshSettings['patches']:
+            scalarValue = boundaryConditions[boundary_patch][scalarName+"_value"]
             if(scalarName == "k" or scalarName == "epsilon" or scalarName == "omega" or scalarName == "nuTilda"):
-                s_file += write_turbulence_boundary_condition(patch=boundary_patch['name'], purpose=boundary_patch['purpose'], property=boundary_patch['property'])
+                
+                s_file += write_turbulence_boundary_condition(patch=boundary_patch['name'], 
+                                                              purpose=boundary_patch['purpose'], 
+                                                              property=scalarValue)
             elif(scalarName == "p"):
-                s_file += write_pressure_boundary_condition(patch=boundary_patch['name'], purpose=boundary_patch['purpose'], property=boundary_patch['property'])
+                s_file += write_pressure_boundary_condition(patch=boundary_patch['name'], 
+                                                            purpose=boundary_patch['purpose'], 
+                                                            property=scalarValue)
             else:
                 raise ValueError("Invalid scalar field type")
     # If internal flow, set the boundary conditions for STL patches
     for patch in meshSettings['geometry']:
-        
+        scalarValue = boundaryConditions[patch][scalarName+"_value"]
         if(patch['type'] == 'triSurfaceMesh'):
             if(scalarName == "k" or scalarName == "epsilon" or scalarName == "omega" or scalarName == "nuTilda"):
-                s_file += write_turbulence_boundary_condition(patch=patch["name"], purpose=patch['purpose'], property=patch['property'])
+                s_file += write_turbulence_boundary_condition(patch=patch["name"], 
+                                                              purpose=patch['purpose'], 
+                                                              property=scalarValue)
             elif(scalarName == "p"):
-                s_file += write_pressure_boundary_condition(patch=patch["name"], purpose=patch['purpose'], property=patch['property'])
+                s_file += write_pressure_boundary_condition(patch=patch["name"], 
+                                                            purpose=patch['purpose'], 
+                                                            property=scalarValue)
             else:
                 raise ValueError("Invalid scalar field type")        
     s_file += """
@@ -272,3 +338,15 @@ def create_boundary_conditions(meshSettings, boundaryConditions):
     SplashCaseCreatorPrimitives.write_to_file("epsilon", epsilon_file)
 
     SplashCaseCreatorPrimitives.write_to_file("nut", nut_file)
+
+    return
+
+def main():
+    settingsFile = "/Users/thawtar/Desktop/Work/03_Splash/02_Run/ahmed/project_settings.yaml"
+    # Load mesh settings from settings file
+    settings = SplashCaseCreatorIO.load_yaml(settingsFile)
+    # Update boundary conditions with inlet values
+    boundaryConditions = update_boundary_conditions(boundaryConditions, inletValues)
+    # Create boundary conditions files
+    create_boundary_conditions(meshSettings, boundaryConditions)
+    return

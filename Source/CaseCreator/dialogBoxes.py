@@ -1138,7 +1138,6 @@ class numericalSettingsDialog(QDialog):
         #self.numericalSettings['snGradSchemes']['default'] = self.window.comboBoxLaplacian.currentText()
         self.print_numerical_settings()
     
-
 class controlsDialog(QDialog):
     def __init__(self,simulationSettings=None,parallelSettings=None):
         super().__init__()

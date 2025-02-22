@@ -272,6 +272,25 @@ boundaryConditions = {
      'epsilon_type': 'epsilonWallFunction','epsilon_value': '$internalField',
      'nut_type': 'nutkWallFunction','nut_value': '$internalField',
      'nutilda_type': 'fixedValue','nutilda_value':'$internalField'},
+    
+    'symmetry':
+    {'u_type': 'symmetry','u_value': [0, 0, 0],
+     'p_type': 'symmetry','p_value': 0,
+     'k_type': 'symmetry','k_value': '$internalField',
+     'omega_type': 'symmetry','omega_value': '$internalField',
+     'epsilon_type': 'symmetry','epsilon_value': '$internalField',
+     'nut_type': 'symmetry','nut_value': '$internalField',
+     'nutilda_type': 'symmetry','nutilda_value': '$internalField',},
+
+    'empty':
+    {'u_type': 'empty','u_value': [0, 0, 0],
+     'p_type': 'empty','p_value': 0,
+     'k_type': 'empty','k_value': 0,
+     'omega_type': 'empty','omega_value': 0,
+     'epsilon_type': 'empty','epsilon_value': 0,
+     'nut_type': 'empty','nut_value': 0,
+     'nutilda_type': 'empty','nutilda_value': 0,},
+
 }
 
 simulationSettings = {

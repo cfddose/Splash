@@ -38,6 +38,9 @@ laplacian_schemes = {"corrected ":"Gauss linear limited corrected 1","limited 0.
 snGrad_schemes = {"corrected ":"limited corrected 1","limited 0.333":"limited corrected 0.333",
                      "limited 0.5":"limited corrected 0.5","uncorrected":"limited corrected 0",}
 
+boundary_conditions = {"Fixed Value":"fixedValue","Zero Gradient":"zeroGradient",
+                        "Inlet Outlet":"inletOutlet",}
+                          
 def value_to_key(dict,value):
     """
     This function returns the key of a dictionary given a value.
