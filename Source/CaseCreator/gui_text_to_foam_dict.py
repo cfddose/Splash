@@ -39,7 +39,11 @@ snGrad_schemes = {"corrected ":"limited corrected 1","limited 0.333":"limited co
                      "limited 0.5":"limited corrected 0.5","uncorrected":"limited corrected 0",}
 
 boundary_conditions = {"Fixed Value":"fixedValue","Zero Gradient":"zeroGradient",
-                        "Inlet Outlet":"inletOutlet",}
+                        "Inlet Outlet":"inletOutlet","Non-slip":"noSlip","Slip":"slip","Pressure Inlet Outlet":"pressureInletOutlet",
+                        "Pressure Inlet":"pressureInlet","Pressure Outlet":"pressureOutlet","Empty":"empty","Symmetry":"symmetry",
+                        "Cyclic":"cyclic","Cyclic AMI":"cyclicAMI","Cyclic GGI":"cyclicGGI","Direction Mixed":"directionMixed",
+                        "Moving Wall":"movingWall","Zero Gradient":"zeroGradient","Fixed Flux Pressure":"fixedFluxPressure",
+                        }
                           
 def value_to_key(dict,value):
     """

@@ -51,6 +51,9 @@ from stlPreparation import separate_stl, is_multipatch_stl
 
 from dialogBoxes import yesNoCancelDialogDriver, yesNoDialogDriver
 
+# for boundary conditions management
+from boundaryConditions import assign_boundary_condition
+
 
 #from ../constants/constants import meshSettings
 
@@ -493,6 +496,26 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 return 0
         return -1
     
+
+    # This group is to manage external flow boundary conditions automatically
+    def add_external_boundary_conditions(self):
+        for patch in self.meshSettings['patches']:
+            self.boundaryConditions = assign_boundary_condition(boundaryConditions=self.boundaryConditions,
+                                                                meshSettings=self.meshSettings,patchName=patch['name'],
+                                                                purpose=patch['purpose'])
+    
+    def remove_external_boundary_conditions(self):
+        for patch in self.meshSettings['patches']:
+            if patch['name'] in self.boundaryConditions:
+                self.boundaryConditions.pop(patch['name'])
+
+
+    def add_or_remove_external_boundary_conditions(self):
+        if self.internalFlow:
+            self.remove_external_boundary_conditions()
+        else:
+            self.add_external_boundary_conditions()
+
     def set_boundary_condition(self,stl_file_name,boundary_condition):
         for stl in self.meshSettings['geometry']:
             if stl['name'] == stl_file_name:
@@ -607,7 +630,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
         
     # refinement box for the ground for external automotive flows
-    
     def addGroundRefinementBoxToMesh(self,stl_path,refLevel=2):
         #if(internalFlow):
         #    return meshSettings
@@ -692,10 +714,11 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
             return -1
         self.current_stl_file = stl_path
         self.stl_paths.append(stl_path)
+        # if everything is successful, finally, we can give a boundary condition
+        self.boundaryConditions = assign_boundary_condition(self.boundaryConditions,self.meshSettings,stl_name,purpose=purpose)
         return 0
         
     # this is the main STL file addition function
-
     def add_stl_file(self,stl_file):
         if stl_file is None:
             SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
@@ -749,9 +772,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
             else:
                 status = self.add_single_stl_file(stl_file)
                 return status
-        
-            
-            
+                
     # this is a wrapper of the primitives 
     def list_stl_files(self):
         SplashCaseCreatorPrimitives.list_stl_files(self.stl_files,self.GUIMode,self.window)
@@ -786,6 +807,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.list_stl_files()
         return -1
     
+
     # check if the stl file is already in the project
     def check_stl_file(self,stl_name):
         stl_exists = False

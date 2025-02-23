@@ -41,6 +41,11 @@ from constants import meshSettings
 
 # to keep theme consistent
 from theme_switcher import apply_theme_dialog_boxes
+
+# For boundary conditions
+from boundaryConditions import assign_boundary_value_vector, assign_boundary_value_scalar
+from gui_text_to_foam_dict import boundary_conditions, value_to_key, key_to_value
+
 global_darkmode = True
 
 loader = QUiLoader()
@@ -871,6 +876,281 @@ class boundaryConditionDialog(QDialog):
     def __del__(self):
         pass
 
+class boundaryConditionDialog_modified(QDialog):
+    def __init__(self,boundaryConditions,boundary=None):
+        super().__init__()
+        self.boundary = boundary
+        
+        self.boundary_name = boundary["name"]
+        self.purpose = boundary["purpose"]
+        self.pressureType = "Gauge"
+        self.boundaryConditions = boundaryConditions
+        self.load_ui()
+        global global_darkmode
+        apply_theme_dialog_boxes(self.window, global_darkmode)
+        self.setNameAndType()
+        self.window.setWindowTitle(f"Boundary Condition: {self.boundary['name']} ({self.boundary['purpose']})")
+        self.disable_unnecessary_fields()
+        self.fill_input_types()
+        self.OK_clicked = False
+        self.window.lineEditU.setValidator(QDoubleValidator())
+        self.window.lineEditV.setValidator(QDoubleValidator())
+        self.window.lineEditW.setValidator(QDoubleValidator())
+        self.window.lineEditPressure.setValidator(QDoubleValidator())
+        self.window.lineEditK.setValidator(QDoubleValidator())
+        self.window.lineEditEpsilon.setValidator(QDoubleValidator())
+        self.window.lineEditOmega.setValidator(QDoubleValidator())
+        self.prepare_events()
+
+    def disable_unnecessary_fields(self):
+        if(self.purpose=="wall"):
+            self.window.lineEditU.setEnabled(False)
+            self.window.lineEditV.setEnabled(False)
+            self.window.lineEditW.setEnabled(False)
+            self.window.lineEditVelMag.setEnabled(False)
+            self.window.lineEditPressure.setEnabled(False)
+            self.window.lineEditIntensity.setEnabled(False)
+            self.window.lineEditLengthScale.setEnabled(False)
+            self.window.lineEditViscosityRatio.setEnabled(False)
+            self.window.lineEditHydraulicDia.setEnabled(False)
+            self.window.lineEditK.setEnabled(False)
+            self.window.lineEditEpsilon.setEnabled(False)
+            self.window.lineEditOmega.setEnabled(False)
+        elif(self.purpose=="symmetry" or self.purpose=="refinementRegion" or self.purpose=="refinementSurface"):
+            self.window.lineEditU.setEnabled(False)
+            self.window.lineEditV.setEnabled(False)
+            self.window.lineEditW.setEnabled(False)
+            self.window.lineEditVelMag.setEnabled(False)
+            self.window.lineEditPressure.setEnabled(False)
+            self.window.lineEditIntensity.setEnabled(False)
+            self.window.lineEditLengthScale.setEnabled(False)
+            self.window.lineEditViscosityRatio.setEnabled(False)
+            self.window.lineEditHydraulicDia.setEnabled(False)
+            self.window.lineEditK.setEnabled(False)
+            self.window.lineEditEpsilon.setEnabled(False)
+            self.window.lineEditOmega.setEnabled(False)
+        elif(self.purpose=="outlet"):
+            self.window.lineEditK.setEnabled(False)
+            self.window.lineEditEpsilon.setEnabled(False)
+            self.window.lineEditOmega.setEnabled(False)
+        else:
+            pass
+
+
+    # to set the default values of the input fields based on the boundary type
+    def fill_input_types(self):
+        if(self.purpose=="wall"):
+            self.fill_wall_bcs()
+        elif(self.purpose=="inlet"):
+            self.fill_inlet_bcs()
+        elif(self.purpose=="outlet"):
+            self.fill_outlet_bcs()
+        else:
+            pass
+
+    def setNameAndType(self):
+        self.window.labelBC.setText(f"{self.boundary['name']} ({self.boundary['purpose']})")
+
+    def prepare_events(self):
+        self.window.pushButtonOK.clicked.connect(self.on_pushButtonOK_clicked)
+        self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
+        self.window.pushButtonApply.clicked.connect(self.on_pushButtonApply_clicked)
+        self.window.comboBoxVelocityStyle.currentIndexChanged.connect(self.changeVelocityStyle)
+        self.window.comboBoxPressure.currentIndexChanged.connect(self.changePressureType)
+
+        
+    def changeVelocityStyle(self):
+        if(self.window.comboBoxVelocityStyle.currentText()=="Components"):
+            self.window.lineEditVelMag.setEnabled(False)
+            self.window.lineEditU.setEnabled(True)
+            self.window.lineEditV.setEnabled(True)
+            self.window.lineEditW.setEnabled(True)
+        else:
+            self.window.lineEditVelMag.setEnabled(True)  
+            self.window.lineEditU.setEnabled(False)
+            self.window.lineEditV.setEnabled(False)
+            self.window.lineEditW.setEnabled(False) 
+
+    def changePressureType(self):
+        if(self.window.comboBoxPressure.currentText()=="Gauge Pressure"):
+            self.pressureType = "Gauge"
+        else:
+            self.pressureType = "Total"
+
+    def fill_wall_bcs(self):
+        # clear all items
+        self.window.comboBoxVelocityStyle.clear()
+        self.window.comboBoxVelocityStyle.addItem("Non-slip")
+        self.window.comboBoxVelocityStyle.addItem("Slip")
+        self.window.comboBoxVelocityStyle.addItem("Moving Wall")
+        self.window.comboBoxPressure.clear()
+        self.window.comboBoxPressure.addItem("Zero Gradient")
+        #self.window.comboBoxPressure.addItem("Fixed Flux Pressure")
+        self.window.comboBoxTurbulence.clear()
+        self.window.comboBoxTurbulence.addItem("Wall Functions")
+        #self.window.comboBoxTurbulence.addItem("Resolve Wall (y+<1)")
+        # disable unnecessary fields
+        self.window.lineEditU.setEnabled(False)
+        self.window.lineEditV.setEnabled(False)
+        self.window.lineEditW.setEnabled(False)
+        self.window.lineEditVelMag.setEnabled(False)
+        self.window.lineEditPressure.setEnabled(False)
+        self.window.lineEditIntensity.setEnabled(False)
+        self.window.lineEditLengthScale.setEnabled(False)
+        self.window.lineEditViscosityRatio.setEnabled(False)
+        self.window.lineEditHydraulicDia.setEnabled(False)
+        self.window.lineEditK.setEnabled(False)
+        self.window.lineEditEpsilon.setEnabled(False)
+        self.window.lineEditOmega.setEnabled(False)
+
+    def fill_inlet_bcs(self):
+        self.window.comboBoxVelocityStyle.clear()
+        self.window.comboBoxVelocityStyle.addItem("Components")
+        self.window.comboBoxVelocityStyle.addItem("Normal to boundary")
+        #self.window.comboBoxVelocityStyle.addItem("Parabolic Profile")
+        self.window.comboBoxPressure.clear()
+        self.window.comboBoxPressure.addItem("Zero Gradient")
+        self.window.comboBoxPressure.addItem("Fixed Flux Pressure")
+        
+        self.window.comboBoxTurbulence.clear()
+        self.fill_turbulence_types()
+
+        # disable unnecessary fields
+        self.window.lineEditVelMag.setEnabled(False)
+        u,v,w = self.boundary["property"][0],self.boundary["property"][1],self.boundary["property"][2]
+        self.window.lineEditU.setText(str(u))
+        self.window.lineEditV.setText(str(v))
+        self.window.lineEditW.setText(str(w))
+        self.window.lineEditPressure.setEnabled(False)
+
+
+    def fill_outlet_bcs(self):
+        self.window.comboBoxVelocityStyle.clear()
+        self.window.comboBoxVelocityStyle.addItem("Zero Gradient")
+        self.window.comboBoxVelocityStyle.addItem("Inlet Outlet")
+        
+        self.window.comboBoxPressure.clear()
+        self.window.comboBoxPressure.addItem("Fixed Value")
+        self.window.comboBoxPressure.addItem("Fixed Flux Pressure")
+        self.window.comboBoxTurbulence.clear()
+        self.window.comboBoxTurbulence.addItem("Zero Gradient")
+        self.window.comboBoxTurbulence.addItem("Inlet Outlet")
+        # disable unnecessary fields
+        self.window.lineEditU.setEnabled(False)
+        self.window.lineEditV.setEnabled(False)
+        self.window.lineEditW.setEnabled(False)
+        self.window.lineEditVelMag.setEnabled(False)
+        self.window.lineEditK.setEnabled(False)
+        self.window.lineEditEpsilon.setEnabled(False)
+        self.window.lineEditOmega.setEnabled(False)
+
+        # set default value for pressure
+        self.window.lineEditPressure.setText("0")
+
+
+    def fill_turbulence_types(self):
+        self.window.comboBoxTurbulence.addItem("Intensity and Length Scale")
+        self.window.comboBoxTurbulence.addItem("Intensity and Viscosity Ratio")
+        self.window.comboBoxTurbulence.addItem("Intensity and Hydraulic Diameter")
+        self.window.comboBoxTurbulence.addItem("Turbulent Kinetic Energy (k) and Specific Dissipation Rate (omega)")
+        self.window.comboBoxTurbulence.addItem("Turbulent Kinetic Energy (k) and Dissipation Rate (epsilon)")
+        # default values
+        self.window.comboBoxTurbulence.setCurrentText("Intensity and Length Scale")
+        self.window.lineEditIntensity.setEnabled(True)
+        self.window.lineEditLengthScale.setEnabled(True)
+        self.window.lineEditViscosityRatio.setEnabled(False)
+        self.window.lineEditHydraulicDia.setEnabled(False)
+        self.window.lineEditK.setEnabled(False)
+        self.window.lineEditEpsilon.setEnabled(False)
+        self.window.lineEditOmega.setEnabled(False)
+
+    def load_ui(self):
+        #ui_path = r"C:\Users\Ridwa\Desktop\CFD\01_CFD_Software_Development\SplashCaseCreatorCFD\src\boundaryConditionDialog.ui"
+        ui_path = os.path.join(src, "boundaryConditionDialog.ui")
+        ui_file = QFile(ui_path)
+        #ui_file = QFile("inputDialog.ui")
+        ui_file.open(QFile.ReadOnly)
+        self.window = loader.load(ui_file, None)
+        ui_file.close()
+
+    # Read all the fields in the dialog
+    # and store them in the boundaryConditions dictionary properly
+    def read_values(self):
+        velocity_style = self.window.comboBoxVelocityStyle.currentText()
+        pressure_type = self.window.comboBoxPressure.currentText()
+        if self.purpose=="inlet":
+            # Velocity boundary conditions
+            if(velocity_style=="Components"):
+                U = float(self.window.lineEditU.text())
+                V = float(self.window.lineEditV.text())
+                W = float(self.window.lineEditW.text())
+                self.boundaryConditions[self.boundary_name]['u_type'] = "fixedValue"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [U,V,W]
+            elif velocity_style=="Normal to boundary":
+                U_mag = float(self.window.lineEditVelMag.text())
+                self.boundaryConditions[self.boundary_name]['u_type'] = "surfaceNormalFixedValue"
+                self.boundaryConditions[self.boundary_name]['u_value'] = U_mag
+            else: # just put a placeholder
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            # Pressure boundary conditions
+            self.boundaryConditions[self.boundary_name]['p_type'] = boundary_conditions[pressure_type]
+            self.boundaryConditions[self.boundary_name]['p_value'] = 0 # just placeholder, again
+            # Turbulence boundary conditions
+            turbulence_type = self.window.comboBoxTurbulence.currentText()
+            if turbulence_type=="Intensity and Length Scale":
+                intensity = float(self.window.lineEditIntensity.text())
+                length_scale = float(self.window.lineEditLengthScale.text())
+                self.boundaryConditions[self.boundary_name]['k_type'] = "fixedValue"
+        elif self.purpose=="outlet":
+            if(velocity_style=="Zero Gradient"):
+                self.boundaryConditions[self.boundary_name]['u_type'] = "zeroGradient"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            else:
+                self.boundaryConditions[self.boundary_name]['u_type'] = "inletOutlet"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            # Pressure boundary conditions
+            pressure_value = float(self.window.lineEditPressure.text())
+            self.boundaryConditions[self.boundary_name]['p_type'] = "fixedValue"
+            self.boundaryConditions[self.boundary_name]['p_value'] = pressure_value
+            # Turbulence boundary conditions
+            self.boundaryConditions[self.boundary_name]['k_type'] = "zeroGradient"
+            self.boundaryConditions[self.boundary_name]['k_value'] = 1e-6
+        elif self.purpose=="wall":
+            if(velocity_style=="Non-slip"):
+                self.boundaryConditions[self.boundary_name]['u_type'] = "noSlip"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            elif(velocity_style=="Slip"):
+                self.boundaryConditions[self.boundary_name]['u_type'] = "slip"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            else:
+                self.boundaryConditions[self.boundary_name]['u_type'] = "movingWall"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            # Pressure boundary conditions
+            self.boundaryConditions[self.boundary_name]['p_type'] = "zeroGradient"
+            self.boundaryConditions[self.boundary_name]['p_value'] = 0
+            # Turbulence boundary conditions
+            self.boundaryConditions[self.boundary_name]['k_type'] = "wallFunctions"
+            self.boundaryConditions[self.boundary_name]['k_value'] = "$internalField"
+        else:
+            pass # for other boundary types, default constraints are used
+                
+
+            
+
+    def on_pushButtonApply_clicked(self):
+        #print("Push Button OK Clicked")
+        self.OK_clicked = True
+        self.read_values()
+        #self.window.close()
+
+    def on_pushButtonOK_clicked(self):
+        self.on_pushButtonApply_clicked()
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        self.window.close()
+
+
 class numericalSettingsDialog(QDialog):
     def __init__(self,current_mode=0,numericalSettings=None,turbulenceModel="kOmegaSST",transient=False):
         super().__init__()
@@ -1678,9 +1958,9 @@ def physicalModelsDialogDriver(initialProperties=None):
     
     return (fluid,rho,nu,cp,)
 
-def boundaryConditionDialogDriver(boundary=None,external_boundary=False):
+def boundaryConditionDialogDriver(boundary=None):
     #print(boundary)
-    dialog = boundaryConditionDialog(boundary,external_boundary)
+    dialog = boundaryConditionDialog(boundary)
     dialog.window.exec()
     dialog.window.show()
     OK_clicked = dialog.OK_clicked

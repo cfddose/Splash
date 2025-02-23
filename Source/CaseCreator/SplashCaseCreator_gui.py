@@ -336,8 +336,7 @@ class mainWindow(QMainWindow):
         
         # Connect theme toggle
         self.window.themeToggle.stateChanged.connect(self.toggle_theme)
-        
-        
+              
     def launch_splash(self):
         """Launch Splash.py in a separate thread."""
         self.splash_thread = SplashLauncherThread()
@@ -1038,7 +1037,7 @@ class mainWindow(QMainWindow):
             #VTKManager.add_x_grid(self.ren,self.project.meshSettings['minX'],self.project.meshSettings['maxX'],self.project.meshSettings['nX'])
             self.addBoundaryGrids()
             #self.readyStatusBar()
-        
+
     def chooseInternalFlow(self):
         self.project.internalFlow = True
         self.project.meshSettings['internalFlow'] = True
@@ -1046,6 +1045,7 @@ class mainWindow(QMainWindow):
         self.window.checkBoxOnGround.setEnabled(False)
         self.window.radioButtonInternal.setChecked(True)
         self.addOrRemoveExternalBoundaries()
+        self.project.add_or_remove_external_boundary_conditions()
         self.updateStatusBar("Choosing Internal Flow")
         #sleep(0.001)
         self.readyStatusBar()
@@ -1057,6 +1057,7 @@ class mainWindow(QMainWindow):
         self.project.meshSettings['onGround'] = self.window.checkBoxOnGround.isChecked()
         self.project.onGround = self.window.checkBoxOnGround.isChecked()
         self.addOrRemoveExternalBoundaries()
+        self.project.add_external_boundary_conditions()
         #self.vtk_manager.add_boundary_grid()
         self.updateStatusBar("Choosing External Flow")
         #sleep(0.001)
@@ -1438,6 +1439,37 @@ class mainWindow(QMainWindow):
         self.project.physicalProperties['Cp'] = cp
         #self.project.physicalProperties['turbulenceModel'] = turbulence_model
 
+    def boundaryConditionDialog_org(self):
+        stl = self.project.get_stl(self.current_obj)
+        patch_names = [patch['name'] for patch in self.project.meshSettings['patches']]
+        if stl==None:
+            # May be this is a predefined external boundary
+            if self.current_obj in patch_names:
+                boundary = None 
+                for patch in self.project.meshSettings['patches']:
+                    if patch['name']==self.current_obj:
+                        boundary = patch
+                        break
+                #boundary['name'] = self.current_obj
+                boundaryConditions = boundaryConditionDialogDriver(boundary)
+                self.project.set_external_boundary_condition(self.current_obj,boundaryConditions)
+                self.listClicked()
+                self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")
+                self.readyStatusBar()
+                return
+            else:
+                SplashCaseCreatorIO.printError("Patch not found",GUIMode=True)
+                return
+        
+        boundaryConditions = boundaryConditionDialogDriver(stl)
+        if boundaryConditions==None:
+            return
+        # update the boundary conditions
+        self.project.set_boundary_condition(self.current_obj,boundaryConditions)
+        self.listClicked()
+        self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")
+        self.readyStatusBar()
+
     def boundaryConditionDialog(self):
         stl = self.project.get_stl(self.current_obj)
         patch_names = [patch['name'] for patch in self.project.meshSettings['patches']]
@@ -1450,7 +1482,7 @@ class mainWindow(QMainWindow):
                         boundary = patch
                         break
                 #boundary['name'] = self.current_obj
-                boundaryConditions = boundaryConditionDialogDriver(boundary,external_boundary=True)
+                boundaryConditions = boundaryConditionDialogDriver(boundary)
                 self.project.set_external_boundary_condition(self.current_obj,boundaryConditions)
                 self.listClicked()
                 self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")

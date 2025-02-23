@@ -68,6 +68,74 @@ def write_vector_boundary_condition(patch="inlet1", purpose="inlet", property=No
     }}\n"""
     return bc
 
+
+def find_patch(patchName, meshSettings):
+    """
+    Find a patch in meshSettings.
+
+    Parameters:
+    patchName (str): Name of the patch.
+    meshSettings (dict): Dictionary specifying mesh settings.
+    """
+    # Check whether the patch name is inside the boundary conditions
+    patchFound = False
+    # for added stl patches
+    for patch in meshSettings['geometry']:
+        if patch['name'] == patchName:
+            patchFound = True
+            break
+    # for domain boundary patches
+    for patch in meshSettings['patches']:
+        if patch['name'] == patchName:
+            patchFound = True
+            break
+    return patchFound
+
+# Assign boundary condition for a given patch and assign initial conditions.
+# These conditions can be modified later.
+# This can be used to change the boundary conditions for a specific patch.
+def assign_boundary_condition(boundaryConditions,meshSettings, patchName='inlet', purpose="inlet"):
+    # Check whether the patch name is inside the boundary conditions
+    patchFound = find_patch(patchName, meshSettings)
+
+    # If the patch name is not found in STL list nor in the domain boundary patches
+    if patchFound == False:
+        raise ValueError("Patch name not found in boundary conditions")
+    # Change the boundary condition
+    if purpose == "inlet":
+        # copy the velocity inlet boundary conditions
+        boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['velocityInlet'])
+    elif purpose == "outlet":
+        # copy the pressure outlet boundary conditions
+        boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['pressureOutlet'])
+    elif purpose == "wall":
+        # copy the wall boundary conditions
+        boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['wall'])
+    elif purpose == "symmetry":
+        # copy the symmetry boundary conditions
+        boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['symmetry'])
+    elif purpose == "empty":
+        boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['empty'])
+    else:
+        #raise ValueError("Invalid boundary condition type")
+        print("Invalid boundary condition type found (Example: cyclic, symmetryPlane)")
+        pass
+    return boundaryConditions
+
+def assign_boundary_value_vector(boundaryConditions,meshSettings, patchName='inlet', value=[1,0,0]):
+    patchFound = find_patch(patchName, meshSettings)
+    if patchFound == False:
+        raise ValueError("Patch name not found in boundary conditions")
+    boundaryConditions[patchName]['u_value'] = value
+    return boundaryConditions
+
+def assign_boundary_value_scalar(boundaryConditions,meshSettings, patchName='inlet',value_type='p_value', value=0.0):
+    patchFound = find_patch(patchName, meshSettings)
+    if patchFound == False:
+        raise ValueError("Patch name not found in boundary conditions")
+    boundaryConditions[patchName][value_type] = value
+    return boundaryConditions
+    
 def assign_initial_boundary_conditions(meshSettings, boundaryConditions):
     """
     Assign boundary conditions to patches in meshSettings.
@@ -80,48 +148,8 @@ def assign_initial_boundary_conditions(meshSettings, boundaryConditions):
     for patch in meshSettings['patches']:
         patchName = patch['name']
         purpose = patch['purpose']
-        #patchFound = True
-        # create a new dictionary for the boundary condition
-        boundaryConditions[patchName] = {}
-        # assign the boundary conditions
-        if purpose == "inlet":
-            # copy the velocity inlet boundary conditions
-            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['velocityInlet'])
-        elif purpose == "outlet":
-            # copy the pressure outlet boundary conditions
-            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['pressureOutlet'])
-        elif purpose == "wall":
-            # copy the wall boundary conditions
-            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['wall'])
-        elif purpose == "symmetry":
-            # copy the symmetry boundary conditions
-            boundaryConditions[patchName] = copy.deepcopy(boundaryConditions['symmetry'])
-        else:
-                raise ValueError("Invalid boundary condition type")
-    return meshSettings
-
-# def change_boundary_condition(meshSettings, boundaryConditions, patchName, purpose, property):
-#     """
-#     Change the boundary condition for a patch.
-
-#     Parameters:
-#     meshSettings (dict): Dictionary specifying mesh settings.
-#     boundaryConditions (dict): Dictionary specifying boundary conditions for U, p, k, and omega.
-#     patchName (str): Name of the patch.
-#     purpose (str): Purpose of the patch.
-#     property (dict): Dictionary specifying the property values.
-#     """
-#     # check if the patch exists
-#     patchFound = False
-#     for patch in meshSettings['patches']:
-#         if patch['name'] == patchName:
-#             patchFound = True
-#             break
-#     if not patchFound:
-#         raise ValueError("Patch not found")
-#     # change the boundary condition
-#     if purpose == "inlet":
-
+        boundaryConditions = assign_boundary_condition(boundaryConditions, patchName, purpose)
+    return boundaryConditions
 
 def create_scalar_file(meshSettings,boundaryConditions,scalarName="k",dimensions=(0,2,-2)):
     header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName=scalarName)
