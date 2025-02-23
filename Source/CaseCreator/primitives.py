@@ -24,11 +24,10 @@ import yaml
 import sys
 from tkinter import filedialog, Tk
 from headers import get_SplashCaseCreator_header
-try:
-    from PySide6.QtWidgets import QMessageBox
-    from dialogBoxes import sphereDialogDriver, inputDialogDriver, vectorInputDialogDriver
-except:
-    pass
+
+from PySide6.QtWidgets import QMessageBox
+from dialogBoxes import sphereDialogDriver, inputDialogDriver, vectorInputDialogDriver
+
 class SplashCaseCreatorPrimitives:
     def __init__(self):
         pass

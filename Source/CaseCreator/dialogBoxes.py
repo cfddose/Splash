@@ -28,7 +28,6 @@ from PySide6.QtGui import QDoubleValidator, QIntValidator
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
 
-#from primitives import SplashCaseCreatorPrimitives
 
 import sys
 from time import sleep
@@ -43,7 +42,7 @@ from constants import meshSettings
 from theme_switcher import apply_theme_dialog_boxes
 
 # For boundary conditions
-from boundaryConditions import assign_boundary_value_vector, assign_boundary_value_scalar
+#from boundaryConditions import assign_boundary_value_vector, assign_boundary_value_scalar
 from gui_text_to_foam_dict import boundary_conditions, value_to_key, key_to_value
 
 global_darkmode = True
@@ -1901,6 +1900,7 @@ def boxDialogDriver():
     if(dialog.created==False):
         return None
     return (name,minx,miny,minz,maxx,maxy,maxz)
+
 
 def inputDialogDriver(prompt="Enter Input",input_type="string"):
     dialog = inputDialog(prompt=prompt,input_type=input_type)

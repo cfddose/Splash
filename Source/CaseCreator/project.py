@@ -623,7 +623,8 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
     
     def addFineBoxToMesh(self,stl_path,boxName='fineBox',refLevel=2,internalFlow=False):
-
+        if internalFlow:
+            return
         stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
         fineBox = stlAnalysis.getRefinementBoxClose(stlBoundingBox)
         obj_properties = {'minx':fineBox[0],'maxx':fineBox[1],'miny':fineBox[2],'maxy':fineBox[3],'minz':fineBox[4],'maxz':fineBox[5],'refineMin':0,'refineMax':refLevel,'property':None}
@@ -786,7 +787,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         return stl_paths
     
     def remove_stl_file_by_name(self,stl_name):
-        print("Before removing")
+        #print("Before removing")
         self.list_stl_files()
         for stl in self.stl_files:
             if stl['name'] == stl_name:
@@ -871,7 +872,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.meshSettings = stlAnalysis.set_mesh_location(self.meshSettings, stl_path,self.internalFlow)
         refinementBoxLevel = max(2,refLevel-3)
         self.addRefinementBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel,internalFlow=self.internalFlow)
-        self.addFineBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel)
+        self.addFineBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel,internalFlow=self.internalFlow)
         if(self.internalFlow==False and self.onGround==True):
             # if the flow is external and the geometry is on the ground, add a ground refinement box
             self.addGroundRefinementBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel)
