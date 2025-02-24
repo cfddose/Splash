@@ -1317,10 +1317,16 @@ class mainWindow(QMainWindow):
         self.project.meshSettings['onGround'] = onGround
         self.project.onGround = onGround
 
-        # If object is on the ground, the bottom boundary condition is wall
+        # If object is on the ground, the bottom boundary condition is a moving wall
         if onGround:
+            inlet_velocity = self.project.get_boundary_property("inlet")
             self.project.set_external_boundary_condition(patch_name="bottom",boundary_condition="wall")
-            self.project.set_boundary_type(patch_name="bottom",boundary_type="wall")
+            self.project.set_boundary_purpose(patch_name="bottom",purpose="wall")
+            self.project.set_boundary_property(patch_name="bottom",property=inlet_velocity)
+        else:
+            self.project.set_external_boundary_condition(patch_name="bottom",boundary_condition="symmetry")
+            self.project.set_boundary_purpose(patch_name="bottom",purpose="symmetry")
+            self.project.set_boundary_property(patch_name="bottom",property=None)
         if len(self.project.stl_files)==0:
             self.updateTerminal("No STL files loaded")
             self.readyStatusBar()

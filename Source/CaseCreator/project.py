@@ -435,6 +435,13 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 return purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds
         return None
     
+    # to access only the "property" part 
+    def get_boundary_property(self,boundary_name):
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                return boundary['property']
+        return None
+    
     def show_stl_properties(self,stl_file_name):
         purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds = self.get_stl_properties(stl_file_name)
         SplashCaseCreatorIO.printMessage(f"STL file: {stl_file_name}")
@@ -540,6 +547,24 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 return 0
         return -1
     
+    def set_boundary_purpose(self,patch_name,purpose="wall"):
+        boundary_type = "wall"
+        boundary_purpose = purpose
+        if boundary_purpose=="inlet" or boundary_purpose=="outlet":
+            boundary_type = "patch"
+        elif boundary_purpose=="wall":
+            boundary_type = "wall"
+        elif boundary_purpose=="symmetry" or boundary_purpose=="empty":
+            boundary_type = boundary_purpose
+        else:
+            pass #boundary_type = "wall"
+        for patch in self.meshSettings['patches']:
+            if patch['name'] == patch_name:
+                patch['purpose'] = boundary_purpose
+                patch['type'] = boundary_type
+                return 0
+        return -1
+    
     def set_boundary_properties(self,boundary_name,boundary_properties):
         refMin,refMax,refLevel,nLayers,usage,edgeRefine,ami,property = boundary_properties
         usageToPurpose = {'Wall':'wall', 'Inlet':'inlet','Outlet':'outlet','Refinement_Region':'refinementRegion',
@@ -558,6 +583,15 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                     boundary['property'] = None
 
                 
+                return 0
+        return -1
+    
+    # only to access the "property" part of the boundary
+    def set_boundary_property(self,patch_name,property):
+        boundary_name = patch_name
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                boundary['property'] = property
                 return 0
         return -1
     
