@@ -32,8 +32,8 @@ from PySide6.QtWidgets import QMessageBox
 import sys
 from time import sleep
 import os
-from gui_text_to_foam_dict import grad_schemes,div_schemes,temporal_schemes,laplacian_schemes
-from gui_text_to_foam_dict import value_to_key, key_to_value, snGrad_schemes
+from database import grad_schemes,div_schemes,temporal_schemes,laplacian_schemes
+from database import value_to_key, key_to_value, snGrad_schemes
 
 # For resetting to default settings 
 from constants import meshSettings
@@ -43,7 +43,7 @@ from theme_switcher import apply_theme_dialog_boxes
 
 # For boundary conditions
 #from boundaryConditions import assign_boundary_value_vector, assign_boundary_value_scalar
-from gui_text_to_foam_dict import boundary_conditions, value_to_key, key_to_value
+#from database import boundary_conditions, value_to_key, key_to_value
 
 global_darkmode = True
 
@@ -1133,9 +1133,6 @@ class boundaryConditionDialog_modified(QDialog):
         else:
             pass # for other boundary types, default constraints are used
                 
-
-            
-
     def on_pushButtonApply_clicked(self):
         #print("Push Button OK Clicked")
         self.OK_clicked = True

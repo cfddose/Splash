@@ -39,6 +39,7 @@ from snappyHexMeshGenerator import generate_snappyHexMeshDict
 from surfaceExtractor import generate_surfaceFeatureExtractDict
 from transportAndTurbulence import create_transportPropertiesDict, create_turbulencePropertiesDict
 from boundaryConditionsGenerator import create_boundary_conditions
+#from boundaryConditions import create_boundary_conditions
 from controlDictGenerator import generate_ControlDict
 from numericalSettingsGenerator import generate_fvSchemesDict, generate_fvSolutionDict
 from changeDictGenerator import generate_ChangeDictionaryDict
@@ -493,6 +494,11 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                     stl['property'] = refLevel
                 else:
                     stl['property'] = property
+                
+                # finally, assign initial boundary condition
+                self.boundaryConditions = assign_boundary_condition(boundaryConditions=self.boundaryConditions,
+                                                                    meshSettings=self.meshSettings,patchName=stl['name'],
+                                                                    purpose=stl['purpose'])
                 return 0
         return -1
     
@@ -543,6 +549,10 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
             if boundary['name'] == boundary_name:
                 boundary['purpose'] = usageToPurpose[usage]
                 boundary['property'] = property
+                # finally, assign initial boundary condition
+                self.boundaryConditions = assign_boundary_condition(boundaryConditions=self.boundaryConditions,
+                                                                    meshSettings=self.meshSettings,patchName=boundary['name'],
+                                                                    purpose=boundary['purpose'])
                 if usageToPurpose[usage] in ['wall','symmetry','cyclic','empty']:
                     boundary['type'] = usageToPurpose[usage]
                     boundary['property'] = None

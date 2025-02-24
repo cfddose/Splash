@@ -44,6 +44,9 @@ boundary_conditions = {"Fixed Value":"fixedValue","Zero Gradient":"zeroGradient"
                         "Cyclic":"cyclic","Cyclic AMI":"cyclicAMI","Cyclic GGI":"cyclicGGI","Direction Mixed":"directionMixed",
                         "Moving Wall":"movingWall","Zero Gradient":"zeroGradient","Fixed Flux Pressure":"fixedFluxPressure",
                         }
+
+# List of scalars available for boundary conditions
+boundary_conditions_scalars = ["k","epsilon","omega","nut","nuTilda","nutilda","p","T","rho","rhoE","alpha","alphat","p_rgh",]
                           
 def value_to_key(dict,value):
     """
