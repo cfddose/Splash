@@ -23,7 +23,7 @@ from constants import meshSettings, physicalProperties, numericalSettings, inlet
 from primitives import SplashCaseCreatorPrimitives
 from constants import simulationSettings
 
-def createControlDict(simulationSettings):
+def generate_ControlDict(simulationSettings):
     controlDict = SplashCaseCreatorPrimitives.createFoamHeader(className='dictionary', objectName='controlDict')
     controlDict += f"""
 application     {simulationSettings['application']};

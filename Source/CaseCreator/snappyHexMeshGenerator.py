@@ -38,9 +38,9 @@ def generate_snappyHexMeshDict(meshSettings):
     header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="snappyHexMeshDict")
 
     steps = f"""
-castellatedMesh {meshSettings['snappyHexSteps']['castellatedMesh']};
-snap            {meshSettings['snappyHexSteps']['snap']};
-addLayers       {meshSettings['snappyHexSteps']['addLayers']};"""
+castellatedMesh {trueFalse[meshSettings['snappyHexSteps']['castellatedMesh']]};
+snap            {trueFalse[meshSettings['snappyHexSteps']['snap']]};
+addLayers       {trueFalse[meshSettings['snappyHexSteps']['addLayers']]};"""
 
     features = ""
     refinementSurfaces = ""

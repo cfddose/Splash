@@ -44,6 +44,7 @@ runApplication surfaceFeatureExtract
 runApplication decomposePar -force
 runParallel snappyHexMesh -overwrite
 runApplication reconstructParMesh -constant -latestTime
+runApplication changeDictionary 
 #rm -rf processor*
 #rm log.decomposePar
 #runApplication decomposePar -force

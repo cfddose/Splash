@@ -133,7 +133,7 @@ def create_solverFinalDict(solverSettings,solverName="U"):
 """
     return solverDict
 
-def create_fvSolutionDict(numericalSettings,solverSettings):
+def generate_fvSolutionDict(numericalSettings,solverSettings):
     header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="fvSolution")
     fvSolutionDict = f""+header
     fvSolutionDict += f"""
@@ -149,7 +149,7 @@ solvers
     fvSolutionDict += create_algorithmDict(numericalSettings)
     return fvSolutionDict
 
-def create_fvSchemesDict(numericalSettings):
+def generate_fvSchemesDict(numericalSettings):
     header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="fvSchemes")
     fvSchemesDict = f""+header
     fvSchemesDict += f"""

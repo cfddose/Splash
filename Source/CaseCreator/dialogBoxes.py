@@ -28,19 +28,23 @@ from PySide6.QtGui import QDoubleValidator, QIntValidator
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
 
-#from primitives import SplashCaseCreatorPrimitives
 
 import sys
 from time import sleep
 import os
-from gui_text_to_foam_dict import grad_schemes,div_schemes,temporal_schemes,laplacian_schemes
-from gui_text_to_foam_dict import value_to_key
+from database import grad_schemes,div_schemes,temporal_schemes,laplacian_schemes
+from database import value_to_key, key_to_value, snGrad_schemes
 
 # For resetting to default settings 
 from constants import meshSettings
 
 # to keep theme consistent
 from theme_switcher import apply_theme_dialog_boxes
+
+# For boundary conditions
+#from boundaryConditions import assign_boundary_value_vector, assign_boundary_value_scalar
+#from database import boundary_conditions, value_to_key, key_to_value
+
 global_darkmode = True
 
 loader = QUiLoader()
@@ -871,6 +875,278 @@ class boundaryConditionDialog(QDialog):
     def __del__(self):
         pass
 
+class boundaryConditionDialog_modified(QDialog):
+    def __init__(self,boundaryConditions,boundary=None):
+        super().__init__()
+        self.boundary = boundary
+        
+        self.boundary_name = boundary["name"]
+        self.purpose = boundary["purpose"]
+        self.pressureType = "Gauge"
+        self.boundaryConditions = boundaryConditions
+        self.load_ui()
+        global global_darkmode
+        apply_theme_dialog_boxes(self.window, global_darkmode)
+        self.setNameAndType()
+        self.window.setWindowTitle(f"Boundary Condition: {self.boundary['name']} ({self.boundary['purpose']})")
+        self.disable_unnecessary_fields()
+        self.fill_input_types()
+        self.OK_clicked = False
+        self.window.lineEditU.setValidator(QDoubleValidator())
+        self.window.lineEditV.setValidator(QDoubleValidator())
+        self.window.lineEditW.setValidator(QDoubleValidator())
+        self.window.lineEditPressure.setValidator(QDoubleValidator())
+        self.window.lineEditK.setValidator(QDoubleValidator())
+        self.window.lineEditEpsilon.setValidator(QDoubleValidator())
+        self.window.lineEditOmega.setValidator(QDoubleValidator())
+        self.prepare_events()
+
+    def disable_unnecessary_fields(self):
+        if(self.purpose=="wall"):
+            self.window.lineEditU.setEnabled(False)
+            self.window.lineEditV.setEnabled(False)
+            self.window.lineEditW.setEnabled(False)
+            self.window.lineEditVelMag.setEnabled(False)
+            self.window.lineEditPressure.setEnabled(False)
+            self.window.lineEditIntensity.setEnabled(False)
+            self.window.lineEditLengthScale.setEnabled(False)
+            self.window.lineEditViscosityRatio.setEnabled(False)
+            self.window.lineEditHydraulicDia.setEnabled(False)
+            self.window.lineEditK.setEnabled(False)
+            self.window.lineEditEpsilon.setEnabled(False)
+            self.window.lineEditOmega.setEnabled(False)
+        elif(self.purpose=="symmetry" or self.purpose=="refinementRegion" or self.purpose=="refinementSurface"):
+            self.window.lineEditU.setEnabled(False)
+            self.window.lineEditV.setEnabled(False)
+            self.window.lineEditW.setEnabled(False)
+            self.window.lineEditVelMag.setEnabled(False)
+            self.window.lineEditPressure.setEnabled(False)
+            self.window.lineEditIntensity.setEnabled(False)
+            self.window.lineEditLengthScale.setEnabled(False)
+            self.window.lineEditViscosityRatio.setEnabled(False)
+            self.window.lineEditHydraulicDia.setEnabled(False)
+            self.window.lineEditK.setEnabled(False)
+            self.window.lineEditEpsilon.setEnabled(False)
+            self.window.lineEditOmega.setEnabled(False)
+        elif(self.purpose=="outlet"):
+            self.window.lineEditK.setEnabled(False)
+            self.window.lineEditEpsilon.setEnabled(False)
+            self.window.lineEditOmega.setEnabled(False)
+        else:
+            pass
+
+
+    # to set the default values of the input fields based on the boundary type
+    def fill_input_types(self):
+        if(self.purpose=="wall"):
+            self.fill_wall_bcs()
+        elif(self.purpose=="inlet"):
+            self.fill_inlet_bcs()
+        elif(self.purpose=="outlet"):
+            self.fill_outlet_bcs()
+        else:
+            pass
+
+    def setNameAndType(self):
+        self.window.labelBC.setText(f"{self.boundary['name']} ({self.boundary['purpose']})")
+
+    def prepare_events(self):
+        self.window.pushButtonOK.clicked.connect(self.on_pushButtonOK_clicked)
+        self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
+        self.window.pushButtonApply.clicked.connect(self.on_pushButtonApply_clicked)
+        self.window.comboBoxVelocityStyle.currentIndexChanged.connect(self.changeVelocityStyle)
+        self.window.comboBoxPressure.currentIndexChanged.connect(self.changePressureType)
+
+        
+    def changeVelocityStyle(self):
+        if(self.window.comboBoxVelocityStyle.currentText()=="Components"):
+            self.window.lineEditVelMag.setEnabled(False)
+            self.window.lineEditU.setEnabled(True)
+            self.window.lineEditV.setEnabled(True)
+            self.window.lineEditW.setEnabled(True)
+        else:
+            self.window.lineEditVelMag.setEnabled(True)  
+            self.window.lineEditU.setEnabled(False)
+            self.window.lineEditV.setEnabled(False)
+            self.window.lineEditW.setEnabled(False) 
+
+    def changePressureType(self):
+        if(self.window.comboBoxPressure.currentText()=="Gauge Pressure"):
+            self.pressureType = "Gauge"
+        else:
+            self.pressureType = "Total"
+
+    def fill_wall_bcs(self):
+        # clear all items
+        self.window.comboBoxVelocityStyle.clear()
+        self.window.comboBoxVelocityStyle.addItem("Non-slip")
+        self.window.comboBoxVelocityStyle.addItem("Slip")
+        self.window.comboBoxVelocityStyle.addItem("Moving Wall")
+        self.window.comboBoxPressure.clear()
+        self.window.comboBoxPressure.addItem("Zero Gradient")
+        #self.window.comboBoxPressure.addItem("Fixed Flux Pressure")
+        self.window.comboBoxTurbulence.clear()
+        self.window.comboBoxTurbulence.addItem("Wall Functions")
+        #self.window.comboBoxTurbulence.addItem("Resolve Wall (y+<1)")
+        # disable unnecessary fields
+        self.window.lineEditU.setEnabled(False)
+        self.window.lineEditV.setEnabled(False)
+        self.window.lineEditW.setEnabled(False)
+        self.window.lineEditVelMag.setEnabled(False)
+        self.window.lineEditPressure.setEnabled(False)
+        self.window.lineEditIntensity.setEnabled(False)
+        self.window.lineEditLengthScale.setEnabled(False)
+        self.window.lineEditViscosityRatio.setEnabled(False)
+        self.window.lineEditHydraulicDia.setEnabled(False)
+        self.window.lineEditK.setEnabled(False)
+        self.window.lineEditEpsilon.setEnabled(False)
+        self.window.lineEditOmega.setEnabled(False)
+
+    def fill_inlet_bcs(self):
+        self.window.comboBoxVelocityStyle.clear()
+        self.window.comboBoxVelocityStyle.addItem("Components")
+        self.window.comboBoxVelocityStyle.addItem("Normal to boundary")
+        #self.window.comboBoxVelocityStyle.addItem("Parabolic Profile")
+        self.window.comboBoxPressure.clear()
+        self.window.comboBoxPressure.addItem("Zero Gradient")
+        self.window.comboBoxPressure.addItem("Fixed Flux Pressure")
+        
+        self.window.comboBoxTurbulence.clear()
+        self.fill_turbulence_types()
+
+        # disable unnecessary fields
+        self.window.lineEditVelMag.setEnabled(False)
+        u,v,w = self.boundary["property"][0],self.boundary["property"][1],self.boundary["property"][2]
+        self.window.lineEditU.setText(str(u))
+        self.window.lineEditV.setText(str(v))
+        self.window.lineEditW.setText(str(w))
+        self.window.lineEditPressure.setEnabled(False)
+
+
+    def fill_outlet_bcs(self):
+        self.window.comboBoxVelocityStyle.clear()
+        self.window.comboBoxVelocityStyle.addItem("Zero Gradient")
+        self.window.comboBoxVelocityStyle.addItem("Inlet Outlet")
+        
+        self.window.comboBoxPressure.clear()
+        self.window.comboBoxPressure.addItem("Fixed Value")
+        self.window.comboBoxPressure.addItem("Fixed Flux Pressure")
+        self.window.comboBoxTurbulence.clear()
+        self.window.comboBoxTurbulence.addItem("Zero Gradient")
+        self.window.comboBoxTurbulence.addItem("Inlet Outlet")
+        # disable unnecessary fields
+        self.window.lineEditU.setEnabled(False)
+        self.window.lineEditV.setEnabled(False)
+        self.window.lineEditW.setEnabled(False)
+        self.window.lineEditVelMag.setEnabled(False)
+        self.window.lineEditK.setEnabled(False)
+        self.window.lineEditEpsilon.setEnabled(False)
+        self.window.lineEditOmega.setEnabled(False)
+
+        # set default value for pressure
+        self.window.lineEditPressure.setText("0")
+
+
+    def fill_turbulence_types(self):
+        self.window.comboBoxTurbulence.addItem("Intensity and Length Scale")
+        self.window.comboBoxTurbulence.addItem("Intensity and Viscosity Ratio")
+        self.window.comboBoxTurbulence.addItem("Intensity and Hydraulic Diameter")
+        self.window.comboBoxTurbulence.addItem("Turbulent Kinetic Energy (k) and Specific Dissipation Rate (omega)")
+        self.window.comboBoxTurbulence.addItem("Turbulent Kinetic Energy (k) and Dissipation Rate (epsilon)")
+        # default values
+        self.window.comboBoxTurbulence.setCurrentText("Intensity and Length Scale")
+        self.window.lineEditIntensity.setEnabled(True)
+        self.window.lineEditLengthScale.setEnabled(True)
+        self.window.lineEditViscosityRatio.setEnabled(False)
+        self.window.lineEditHydraulicDia.setEnabled(False)
+        self.window.lineEditK.setEnabled(False)
+        self.window.lineEditEpsilon.setEnabled(False)
+        self.window.lineEditOmega.setEnabled(False)
+
+    def load_ui(self):
+        #ui_path = r"C:\Users\Ridwa\Desktop\CFD\01_CFD_Software_Development\SplashCaseCreatorCFD\src\boundaryConditionDialog.ui"
+        ui_path = os.path.join(src, "boundaryConditionDialog.ui")
+        ui_file = QFile(ui_path)
+        #ui_file = QFile("inputDialog.ui")
+        ui_file.open(QFile.ReadOnly)
+        self.window = loader.load(ui_file, None)
+        ui_file.close()
+
+    # Read all the fields in the dialog
+    # and store them in the boundaryConditions dictionary properly
+    def read_values(self):
+        velocity_style = self.window.comboBoxVelocityStyle.currentText()
+        pressure_type = self.window.comboBoxPressure.currentText()
+        if self.purpose=="inlet":
+            # Velocity boundary conditions
+            if(velocity_style=="Components"):
+                U = float(self.window.lineEditU.text())
+                V = float(self.window.lineEditV.text())
+                W = float(self.window.lineEditW.text())
+                self.boundaryConditions[self.boundary_name]['u_type'] = "fixedValue"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [U,V,W]
+            elif velocity_style=="Normal to boundary":
+                U_mag = float(self.window.lineEditVelMag.text())
+                self.boundaryConditions[self.boundary_name]['u_type'] = "surfaceNormalFixedValue"
+                self.boundaryConditions[self.boundary_name]['u_value'] = U_mag
+            else: # just put a placeholder
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            # Pressure boundary conditions
+            self.boundaryConditions[self.boundary_name]['p_type'] = boundary_conditions[pressure_type]
+            self.boundaryConditions[self.boundary_name]['p_value'] = 0 # just placeholder, again
+            # Turbulence boundary conditions
+            turbulence_type = self.window.comboBoxTurbulence.currentText()
+            if turbulence_type=="Intensity and Length Scale":
+                intensity = float(self.window.lineEditIntensity.text())
+                length_scale = float(self.window.lineEditLengthScale.text())
+                self.boundaryConditions[self.boundary_name]['k_type'] = "fixedValue"
+        elif self.purpose=="outlet":
+            if(velocity_style=="Zero Gradient"):
+                self.boundaryConditions[self.boundary_name]['u_type'] = "zeroGradient"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            else:
+                self.boundaryConditions[self.boundary_name]['u_type'] = "inletOutlet"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            # Pressure boundary conditions
+            pressure_value = float(self.window.lineEditPressure.text())
+            self.boundaryConditions[self.boundary_name]['p_type'] = "fixedValue"
+            self.boundaryConditions[self.boundary_name]['p_value'] = pressure_value
+            # Turbulence boundary conditions
+            self.boundaryConditions[self.boundary_name]['k_type'] = "zeroGradient"
+            self.boundaryConditions[self.boundary_name]['k_value'] = 1e-6
+        elif self.purpose=="wall":
+            if(velocity_style=="Non-slip"):
+                self.boundaryConditions[self.boundary_name]['u_type'] = "noSlip"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            elif(velocity_style=="Slip"):
+                self.boundaryConditions[self.boundary_name]['u_type'] = "slip"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            else:
+                self.boundaryConditions[self.boundary_name]['u_type'] = "movingWall"
+                self.boundaryConditions[self.boundary_name]['u_value'] = [0,0,0]
+            # Pressure boundary conditions
+            self.boundaryConditions[self.boundary_name]['p_type'] = "zeroGradient"
+            self.boundaryConditions[self.boundary_name]['p_value'] = 0
+            # Turbulence boundary conditions
+            self.boundaryConditions[self.boundary_name]['k_type'] = "wallFunctions"
+            self.boundaryConditions[self.boundary_name]['k_value'] = "$internalField"
+        else:
+            pass # for other boundary types, default constraints are used
+                
+    def on_pushButtonApply_clicked(self):
+        #print("Push Button OK Clicked")
+        self.OK_clicked = True
+        self.read_values()
+        #self.window.close()
+
+    def on_pushButtonOK_clicked(self):
+        self.on_pushButtonApply_clicked()
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        self.window.close()
+
+
 class numericalSettingsDialog(QDialog):
     def __init__(self,current_mode=0,numericalSettings=None,turbulenceModel="kOmegaSST",transient=False):
         super().__init__()
@@ -878,21 +1154,19 @@ class numericalSettingsDialog(QDialog):
         self.transient = transient
         self.turbulence_model = turbulenceModel
         self.modes = ["Balanced (Blended 2nd Order schemes)","Stablity Mode (1st Order schemes)","Accuracy Mode (2nd Order schemes)","Advanced Mode"]
-        self.temporal_schemes = {"Steady State":"steadyState","Euler":"Euler","Backward Euler (2nd Order)":"backward","Crank-Nicolson (Blended 2nd Order)":"crankNicolson 0.5","Crank-Nicolson (2nd Order)":"crankNicolson 1.0"}
+        self.temporal_schemes = temporal_schemes #
         self.grad_schemes = grad_schemes
         self.div_schemes = div_schemes
         self.laplacian_schemes = laplacian_schemes
-        self.current_mode = current_mode
+        self.snGrad_schemes = snGrad_schemes
+        
         
         self.OK_clicked = False
         
         # default values for numerical settings. 
         self.numericalSettings = numericalSettings
-        if numericalSettings!=None:
-            if "basicMode" in numericalSettings.keys():
-                self.basicMode = numericalSettings["basicMode"]
-            else:
-                self.basicMode = True
+        self.current_mode = self.numericalSettings["mode"]
+        
         self.load_ui()
         global global_darkmode
         apply_theme_dialog_boxes(self.window, global_darkmode)
@@ -905,17 +1179,9 @@ class numericalSettingsDialog(QDialog):
         self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
         self.window.pushButtonApply.clicked.connect(self.on_pushButtonApply_clicked)
         self.window.pushButtonDefault.clicked.connect(self.on_pushButtonDefault_clicked)
-        self.window.comboBoxMode.currentIndexChanged.connect(self.changeMode)
+        self.window.comboBoxMode.currentIndexChanged.connect(self.readSettings)
         self.window.comboBoxTurbulenceModels.currentIndexChanged.connect(self.changeTurbulenceModel)
-        
-        # These correspond to the changes in advanced mode
-        self.window.comboBoxTemporal.currentIndexChanged.connect(self.setAdvancedMode)
-        self.window.comboBoxGradScheme.currentIndexChanged.connect(self.setAdvancedMode)
-        self.window.comboBoxDivScheme.currentIndexChanged.connect(self.setAdvancedMode)
-        self.window.comboBoxDivTurb.currentIndexChanged.connect(self.setAdvancedMode)
-        self.window.comboBoxLaplacian.currentIndexChanged.connect(self.setAdvancedMode)
-  
-
+      
     def load_ui(self):
         #ui_path = r"C:\Users\Ridwa\Desktop\CFD\01_CFD_Software_Development\SplashCaseCreatorCFD\src\numericDialog.ui"
         ui_path = os.path.join(src, "numericDialog.ui")
@@ -932,35 +1198,16 @@ class numericalSettingsDialog(QDialog):
 
         for scheme in self.grad_schemes.keys():
             self.window.comboBoxGradScheme.addItem(scheme)
-        #self.window.comboBoxGradScheme.addItem("Gauss linear")
-        #self.window.comboBoxGradScheme.addItem("Gauss Linear (Cell Limited)")
-        #self.window.comboBoxGradScheme.addItem("Gauss Linear (Cell MD Limited)")
-        #self.window.comboBoxGradScheme.addItem("Gauss Linear (Face Limited)")
-        #self.window.comboBoxGradScheme.addItem("Gauss Linear (Face MD Limited)")
-        #self.window.comboBoxGradScheme.addItem("Least Squares")
-
+        
         for scheme in self.div_schemes.keys():
             self.window.comboBoxDivScheme.addItem(scheme)
-
-        #self.window.comboBoxDivScheme.addItem("Gauss Linear")
-        #self.window.comboBoxDivScheme.addItem("Gauss Linear Upwind")
-        #self.window.comboBoxDivScheme.addItem("Gauss Upwind")  
-        #self.window.comboBoxDivScheme.addItem("Gauss LUST")      
-        #self.window.comboBoxDivScheme.addItem("Gauss Linear Limited")
-        #self.window.comboBoxDivScheme.addItem("Gauss Linear LimitedV")
-
-        #self.window.comboBoxGradScheme.addItem("grad(U)")
 
         self.window.comboBoxDivTurb.addItem("Gauss Upwind") 
         self.window.comboBoxDivTurb.addItem("Gauss Limited Linear")
 
         for scheme in self.laplacian_schemes.keys():
             self.window.comboBoxLaplacian.addItem(scheme)
-        #self.window.comboBoxLaplacian.addItem("corrected")
-        
-        #self.window.comboBoxLaplacian.addItem("limited 0.333")
-        #self.window.comboBoxLaplacian.addItem("limited 0.666")
-        #self.window.comboBoxLaplacian.addItem("limited 1.0")
+       
         print("Transient",self.transient)
         if self.transient==False:
             self.window.comboBoxTemporal.addItem("Steady State")
@@ -970,10 +1217,9 @@ class numericalSettingsDialog(QDialog):
             self.window.comboBoxTemporal.addItem("Crank-Nicolson (Blended 2nd Order)")
             self.window.comboBoxTemporal.addItem("Crank-Nicolson (2nd Order)")
         if self.current_mode==0 or self.current_mode==1 or self.current_mode==2:
-            self.setBasicMode()
             self.window.frame.setVisible(False)
         else:
-            self.setAdvancedMode()
+            self.initAdvancedMode()
             self.window.frame.setVisible(True)
         
     def fill_turbulence_models(self):
@@ -995,11 +1241,12 @@ class numericalSettingsDialog(QDialog):
         self.window.pushButtonCancel.clicked.connect(self.on_pushButtonCancel_clicked)
         self.window.pushButtonApply.clicked.connect(self.on_pushButtonApply_clicked)
         self.window.pushButtonDefault.clicked.connect(self.on_pushButtonDefault_clicked)
-        self.window.comboBoxMode.currentIndexChanged.connect(self.changeMode)
+        self.window.comboBoxMode.currentIndexChanged.connect(self.readSettings)
 
     def on_pushButtonOK_clicked(self):
         #print("Push Button OK Clicked")
         self.on_pushButtonApply_clicked()
+        self.print_numerical_settings()
         self.window.close()
 
     def on_pushButtonCancel_clicked(self):
@@ -1009,19 +1256,17 @@ class numericalSettingsDialog(QDialog):
         #self.window.close()
         #print("Default Settings Choosen")
         self.window.comboBoxMode.setCurrentText("Balanced (Blended 2nd Order schemes)")
+        self.current_mode = 0
+        
         self.window.comboBoxTurbulenceModels.setCurrentText("kOmegaSST")
-        self.setBasicMode()
+        self.readSettings()
 
 
     def on_pushButtonApply_clicked(self):
         self.OK_clicked = True
-        self.current_mode = self.window.comboBoxMode.currentIndex()
+        #self.current_mode = self.window.comboBoxMode.currentIndex()
         self.turbulence_model = self.window.comboBoxTurbulenceModels.currentText()
-        # if advanced mode is selected, then we need to set the numerical schemes
-        if self.current_mode==3:
-            #print("Advanced Mode Settings Used")
-            self.setAdvancedMode()
-        #self.print_numerical_settings()
+        self.readSettings()
     
     def print_numerical_settings(self):
         print("\n----------------------Numerical Settings----------------------")
@@ -1037,16 +1282,16 @@ class numericalSettingsDialog(QDialog):
     """
     We have 3 basic modes: Balanced, Stability, Accuracy.
     This function will set the numerical schemes based on the mode selected.
+    It will read the mode and set the numerical settings accordingly.
     """
-    def setBasicMode(self):
-        self.basicMode = True
-        self.numericalSettings['basicMode'] = True
+    def readSettings(self):
         if(self.window.comboBoxMode.currentText()=="Balanced (Blended 2nd Order schemes)"):
-            #print("Balanced Mode")
-            #self.print_numerical_settings()
+            # First, hide the advanced settings
+            self.window.frame.setVisible(False) 
+            self.current_mode = 0
             self.numericalSettings['ddtSchemes']['default'] = "Euler"
-            self.numericalSettings['gradSchemes']['default'] = "cellLimited Gauss linear 1"
-            self.numericalSettings['gradSchemes']['grad(U)'] = "cellLimited Gauss linear 1"
+            self.numericalSettings['gradSchemes']['default'] = "cellLimited Gauss linear 0.5"
+            self.numericalSettings['gradSchemes']['grad(U)'] = "cellLimited Gauss linear 0.5"
             self.numericalSettings['divSchemes']['default'] = "Gauss linear"
             self.numericalSettings['divSchemes']['div(phi,U)'] = "Gauss linearUpwind grad(U)"
             self.numericalSettings['divSchemes']['div(phi,k)'] = "Gauss upwind"
@@ -1064,8 +1309,11 @@ class numericalSettingsDialog(QDialog):
                 self.numericalSettings['divSchemes']['div(phi,omega)'] = "bounded Gauss upwind"
                 self.numericalSettings['divSchemes']['div(phi,nuTilda)'] = "bounded Gauss upwind"
         elif(self.window.comboBoxMode.currentText()=="Accuracy Mode (2nd Order schemes)"):
+            self.window.frame.setVisible(False) 
+            self.current_mode = 2
             self.numericalSettings['ddtSchemes']['default'] = "CrankNicolson 0.5"
             self.numericalSettings['gradSchemes']['default'] = "Gauss linear"
+            self.numericalSettings['gradSchemes']['grad(U)'] = "Gauss linear"
             self.numericalSettings['divSchemes']['default'] = "Gauss linear"
             self.numericalSettings['divSchemes']['div(phi,U)'] = "Gauss linear"
             self.numericalSettings['divSchemes']['div(phi,k)'] = "Gauss limitedLinear 1"
@@ -1079,11 +1327,17 @@ class numericalSettingsDialog(QDialog):
                 self.numericalSettings['ddtSchemes']['default'] = "steadyState"
              
         elif(self.window.comboBoxMode.currentText()=="Stablity Mode (1st Order schemes)"):
+            self.window.frame.setVisible(False) 
+            self.current_mode = 1
             self.numericalSettings['ddtSchemes']['default'] = "Euler"
             self.numericalSettings['gradSchemes']['default'] = "cellLimited Gauss linear 1"
             self.numericalSettings['gradSchemes']['grad(U)'] = "cellLimited Gauss linear 1"
             self.numericalSettings['divSchemes']['default'] = "Gauss upwind"
             self.numericalSettings['divSchemes']['div(phi,U)'] = "Gauss upwind"
+            self.numericalSettings['divSchemes']['div(phi,k)'] = "Gauss upwind"
+            self.numericalSettings['divSchemes']['div(phi,epsilon)'] = "Gauss upwind"
+            self.numericalSettings['divSchemes']['div(phi,omega)'] = "Gauss upwind"
+            self.numericalSettings['divSchemes']['div(phi,nuTilda)'] = "Gauss upwind"
             self.numericalSettings['laplacianSchemes']['default'] = "Gauss linear limited corrected 0.333"
             self.numericalSettings['snGradSchemes']['default'] = "limited corrected 0.333"
             if self.transient==False:
@@ -1095,55 +1349,60 @@ class numericalSettingsDialog(QDialog):
                 self.numericalSettings['divSchemes']['div(phi,nuTilda)'] = "bounded Gauss upwind"
 
         else:
-            self.setAdvancedMode()
-            #print("Advanced Mode")
+            self.current_mode = 3
+            # read the saved settings
+            #self.initAdvancedMode()
+            # Now show the advanced settings
+            self.window.frame.setVisible(True)
+            
+            self.readAdvancedModeSettings()
+        # finally, save the mode
+        self.numericalSettings["mode"] = self.current_mode
 
     """
     Advanced Mode will allow the user to select the numerical schemes manually.
     This function will set the initial numerical schemes.
     """
     def initAdvancedMode(self):
-        self.window.comboBoxTemporal.setCurrentText(value_to_key(self.temporal_schemes,self.numericalSettings['ddtSchemes']['default']))
-        self.window.comboBoxGradScheme.setCurrentText(value_to_key(self.grad_schemes,self.numericalSettings['gradSchemes']['default']))
-        self.window.comboBoxDivScheme.setCurrentText(value_to_key(self.div_schemes,self.numericalSettings['divSchemes']['default']))
-        self.window.comboBoxLaplacian.setCurrentText(value_to_key(self.laplacian_schemes,self.numericalSettings['laplacianSchemes']['default']))
-        if(self.numericalSettings['divSchemes']['div(phi,k)']=="Gauss Linear Limited"):
-            self.window.comboBoxDivTurb.setCurrentText("Gauss Linear Limited")
-        else:
-            self.window.comboBoxDivTurb.setCurrentText("Gauss Upwind")
-        #self.window.comboBoxDivTurb.setCurrentText("Gauss upwind")
-        
-    def setAdvancedMode(self):
+        temporal_sheme = value_to_key(self.temporal_schemes,self.numericalSettings['ddtSchemes']['default'])
+        grad_scheme = value_to_key(self.grad_schemes,self.numericalSettings['gradSchemes']['default'])
+        div_scheme = value_to_key(self.div_schemes,self.numericalSettings['divSchemes']['default'])
+        div_turb = value_to_key(self.div_schemes,self.numericalSettings['divSchemes']['div(phi,k)'])
+        lap_scheme = value_to_key(self.laplacian_schemes,self.numericalSettings['laplacianSchemes']['default'])
 
-        self.basicMode = False
-        self.numericalSettings['basicMode'] = False
-        #self.initAdvancedMode() # show current numerical schemes
-        self.numericalSettings['ddtSchemes']['default'] = self.temporal_schemes[self.window.comboBoxTemporal.currentText()]
+        # grad_scheme = self.temporal_schemes[self.numericalSettings['ddtSchemes']['default']]
+        # div_scheme = self.grad_schemes[self.numericalSettings['gradSchemes']['default']]
+        # div_turb = self.div_schemes[self.numericalSettings['divSchemes']['div(phi,k)']]
+        # lap_scheme = self.laplacian_schemes[self.numericalSettings['laplacianSchemes']['default']]
+        self.window.comboBoxTemporal.setCurrentText(temporal_sheme)
+        self.window.comboBoxGradScheme.setCurrentText(grad_scheme)
+        self.window.comboBoxDivScheme.setCurrentText(div_scheme)
+        self.window.comboBoxDivTurb.setCurrentText(div_turb)
+        self.window.comboBoxLaplacian.setCurrentText(lap_scheme)
+
+        # self.window.comboBoxDivScheme.setCurrentText(value_to_key(self.div_schemes,self.numericalSettings['divSchemes']['default']))
+        # self.window.comboBoxDivTurb.setCurrentText(value_to_key(self.div_schemes,self.numericalSettings['divSchemes']['div(phi,k)']))
+        # self.window.comboBoxLaplacian.setCurrentText(value_to_key(self.laplacian_schemes,self.numericalSettings['laplacianSchemes']['default']))
+        # #self.window.comboBoxSnGrad.setCurrentText(value_to_key(self.numericalSettings['snGradSchemes']['default']))
+
+    # In this mode, all the numerical settings are read from comboBoxes  
+    def readAdvancedModeSettings(self):
+        temp_sch = self.window.comboBoxTemporal.currentText()
         grad_sch = self.window.comboBoxGradScheme.currentText()
         div_sch = self.window.comboBoxDivScheme.currentText()
         lap_sch = self.window.comboBoxLaplacian.currentText()
         div_turb = self.window.comboBoxDivTurb.currentText()
-        #print("Current Mode: ",self.window.comboBoxMode.currentText())
-        #print(grad_sch,div_sch,lap_sch,div_turb)
-        # check whether the selected scheme is available in the grad_schemes dictionary
-        """
-        if grad_sch in self.grad_schemes.keys():
-            self.numericalSettings['gradSchemes']['default'] = self.grad_schemes[grad_sch]
-            self.numericalSettings['gradSchemes']['grad(U)'] = self.grad_schemes[grad_sch]
-        else:
-            self.numericalSettings['gradSchemes']['default'] = "Gauss linear"
-            self.numericalSettings['gradSchemes']['grad(U)'] = "cellLimited Gauss linear 1"
        
-        if div_sch in self.div_schemes.keys():
-            self.numericalSettings['divSchemes']['default'] = self.div_schemes[div_sch]
-        else:
-            self.numericalSettings['divSchemes']['default'] = "Gauss linear"
-        """
+        # check whether the selected scheme is available in the grad_schemes dictionary
+        self.numericalSettings['ddtSchemes']['default'] = self.temporal_schemes[temp_sch]
         self.numericalSettings['gradSchemes']['default'] = self.grad_schemes[grad_sch]
-        self.numericalSettings['divSchemes']['default'] = self.div_schemes[div_sch]
+        self.numericalSettings['gradSchemes']['grad(U)'] = self.grad_schemes[grad_sch]
+        
         if div_sch == "Gauss Linear" or div_sch == "Gauss Upwind":
             self.numericalSettings['divSchemes']['div(phi,U)'] = self.div_schemes[div_sch]
+            self.numericalSettings['divSchemes']['default'] = self.div_schemes[div_sch]
         else:
+            self.numericalSettings['divSchemes']['default'] = self.div_schemes["Gauss Linear"]
             self.numericalSettings['divSchemes']['div(phi,U)'] = self.div_schemes[div_sch]+" grad(U)"
         #self.numericalSettings['divSchemes']['div(phi,U)'] = self.div_schemes[div_sch]
         self.numericalSettings['divSchemes']['div(phi,k)'] = self.div_schemes[div_turb]
@@ -1151,31 +1410,18 @@ class numericalSettingsDialog(QDialog):
         self.numericalSettings['divSchemes']['div(phi,omega)'] = self.div_schemes[div_turb]
         self.numericalSettings['divSchemes']['div(phi,nuTilda)'] = self.div_schemes[div_turb]
         self.numericalSettings['laplacianSchemes']['default'] = self.laplacian_schemes[lap_sch] #"Gauss linear "+ self.window.comboBoxLaplacian.currentText()
-        self.numericalSettings['snGradSchemes']['default'] = self.window.comboBoxLaplacian.currentText()
-        #self.print_numerical_settings()
+        self.numericalSettings['snGradSchemes']['default'] = self.snGrad_schemes[lap_sch]
+        #self.numericalSettings['snGradSchemes']['default'] = self.window.comboBoxLaplacian.currentText()
+        self.print_numerical_settings()
     
-    def changeMode(self):
-        if(self.window.comboBoxMode.currentText()=="Advanced Mode"):
-            self.window.frame.setVisible(True)
-            self.initAdvancedMode()
-            self.setAdvancedMode()
-        else:
-            self.window.frame.setVisible(False) 
-            self.setBasicMode()
-
-    def assign_changes(self):
-        pass
-
-    def __del__(self):
-        pass
-
 class controlsDialog(QDialog):
-    def __init__(self,simulationSettings=None,parallelSettings=None,transient=False):
+    def __init__(self,simulationSettings=None,parallelSettings=None):
         super().__init__()
         self.OK_clicked = False
-        self.transient = transient
+        
         self.simulationSettings = simulationSettings
         self.parallelSettings = parallelSettings
+        self.transient = self.simulationSettings["transient"]
         #print(self.simulationSettings)
         #print(self.parallelSettings)
         self.load_ui()
@@ -1196,6 +1442,7 @@ class controlsDialog(QDialog):
         self.window.lineEditX.setValidator(QIntValidator())
         self.window.lineEditY.setValidator(QIntValidator())
         self.window.lineEditZ.setValidator(QIntValidator())
+        self.window.lineEditMaxCo.setValidator(QDoubleValidator())
 
 
     def change_parallel_settings(self):
@@ -1234,6 +1481,8 @@ class controlsDialog(QDialog):
         self.window.comboBoxWriteControl.setCurrentText(self.simulationSettings["writeControl"])
         self.window.comboBoxWriteFormat.setCurrentText(self.simulationSettings["writeFormat"])
         self.window.lineEditWritePrecision.setText(str(self.simulationSettings["writePrecision"]))
+        self.window.checkBoxAdjustTimeStep.setChecked(self.simulationSettings["adjustTimeStep"]=="yes")
+        self.window.lineEditMaxCo.setText(str(self.simulationSettings["maxCo"]))
 
     def fill_parallel_settings(self):
         if self.parallelSettings['parallel']==True:
@@ -1282,15 +1531,7 @@ class controlsDialog(QDialog):
         self.window.checkBoxParallel.stateChanged.connect(self.change_parallel_settings)
         self.window.comboBoxDecompositionMethod.currentIndexChanged.connect(self.change_parallel_settings)
     
-    def on_pushButtonOK_clicked(self):
-        self.on_pushButtonApply_clicked()
-        self.window.close()
-
-    def on_pushButtonCancel_clicked(self):
-        self.window.close()
-
-    def on_pushButtonApply_clicked(self):
-        self.OK_clicked = True
+    def read_values(self):
         self.simulationSettings["startTime"] = self.window.lineEditStartTime.text()
         self.simulationSettings["endTime"] = self.window.lineEditEndTime.text()
         self.simulationSettings["deltaT"] = self.window.lineEditTimeStep.text()
@@ -1298,6 +1539,11 @@ class controlsDialog(QDialog):
         self.simulationSettings["writeControl"] = self.window.comboBoxWriteControl.currentText()
         self.simulationSettings["writePrecision"] = self.window.lineEditWritePrecision.text()
         self.simulationSettings["writeFormat"] = self.window.comboBoxWriteFormat.currentText()
+        if self.window.checkBoxAdjustTimeStep.isChecked():
+            self.simulationSettings["adjustTimeStep"] = 'yes'
+        else:
+            self.simulationSettings["adjustTimeStep"] = 'no'
+        self.simulationSettings["maxCo"] = self.window.lineEditMaxCo.text()
         self.parallelSettings["parallel"] = self.window.checkBoxParallel.isChecked()
         self.parallelSettings["numberOfSubdomains"] = int(self.window.lineEdit_nProcs.text())
         self.parallelSettings["method"] = self.window.comboBoxDecompositionMethod.currentText()
@@ -1327,6 +1573,17 @@ class controlsDialog(QDialog):
             self.parallelSettings["x"] = 1
             self.parallelSettings["y"] = 1
             self.parallelSettings["z"] = 1
+
+    def on_pushButtonOK_clicked(self):
+        self.on_pushButtonApply_clicked()
+        self.window.close()
+
+    def on_pushButtonCancel_clicked(self):
+        self.window.close()
+
+    def on_pushButtonApply_clicked(self):
+        self.OK_clicked = True
+        self.read_values()
         
         #self.window.close()
 
@@ -1416,7 +1673,7 @@ class advancedMeshDialog(QDialog):
         self.window.lineEditFeatureIter.setValidator(QIntValidator())
         # layer controls
         self.window.lineEditExpansionRatio.setValidator(QDoubleValidator())
-        self.window.lineEditFirstLayer.setValidator(QDoubleValidator())
+        self.window.lineEditFinalLayer.setValidator(QDoubleValidator())
         self.window.lineEditLayerFeatureAngle.setValidator(QDoubleValidator())
         self.window.lineEditLayerIter.setValidator(QIntValidator())
         self.window.lineEditLayerOuterIter.setValidator(QIntValidator())
@@ -1439,7 +1696,7 @@ class advancedMeshDialog(QDialog):
         self.meshSettings['snapControls']["nFeatureSnapIter"] = int(self.window.lineEditFeatureIter.text())
 
         self.meshSettings['addLayersControls']["expansionRatio"] = float(self.window.lineEditExpansionRatio.text())
-        self.meshSettings['addLayersControls']["firstLayerThickness"] = float(self.window.lineEditFirstLayer.text())
+        self.meshSettings['addLayersControls']["finalLayerThickness"] = float(self.window.lineEditFinalLayer.text())
         self.meshSettings['addLayersControls']["featureAngle"] = float(self.window.lineEditLayerFeatureAngle.text())
         self.meshSettings['addLayersControls']["nLayerIter"] = int(self.window.lineEditLayerIter.text())
         self.meshSettings['addLayersControls']["nOuterIter"] = int(self.window.lineEditLayerOuterIter.text())
@@ -1450,6 +1707,10 @@ class advancedMeshDialog(QDialog):
         self.meshSettings['meshQualityControls']["maxConcave"] = float(self.window.lineEditConcave.text())
         self.meshSettings['meshQualityControls']["minDeterminant"] = float(self.window.lineEditDeterminant.text())
 
+        self.meshSettings['snappyHexSteps']['castellatedMesh'] = self.window.checkBoxCastellated.isChecked()
+        self.meshSettings['snappyHexSteps']['snap'] = self.window.checkBoxSnap.isChecked()
+        self.meshSettings['snappyHexSteps']['addLayers'] = self.window.checkBoxAddLayers.isChecked()
+
         if self.window.radioButtonImplicitSnap.isChecked():
             self.meshSettings['snapControls']["explicitFeatureSnap"] = False
             self.meshSettings['snapControls']["implicitFeatureSnap"] = True
@@ -1458,9 +1719,16 @@ class advancedMeshDialog(QDialog):
             self.meshSettings['snapControls']["implicitFeatureSnap"] = False
         self.meshSettings['addLayersControls']["relativeSizes"] = self.window.checkBoxRelativeSizes.isChecked()
 
+        # general mesh settings
+        self.meshSettings['maxCellSize'] = float(self.window.lineEditMeshSize.text())
+
 
     def assign_values(self,meshSettings):
         # to avoid unncessary changes to the original meshSettings dictionary, we will create a copy of it.
+        meshSettings['snappyHexSteps']['castellatedMesh'] = self.meshSettings['snappyHexSteps']['castellatedMesh']
+        meshSettings['snappyHexSteps']['snap'] = self.meshSettings['snappyHexSteps']['snap']
+        meshSettings['snappyHexSteps']['addLayers'] = self.meshSettings['snappyHexSteps']['addLayers']
+
         meshSettings['castellatedMeshControls']["maxLocalCells"] = self.meshSettings['castellatedMeshControls']["maxLocalCells"]
         meshSettings['castellatedMeshControls']["maxGlobalCells"] = self.meshSettings['castellatedMeshControls']["maxGlobalCells"]
         meshSettings['castellatedMeshControls']["nCellsBetweenLevels"] = self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"]
@@ -1470,7 +1738,7 @@ class advancedMeshDialog(QDialog):
         meshSettings['snapControls']["nRelaxIter"] = self.meshSettings['snapControls']["nRelaxIter"]
         meshSettings['snapControls']["nFeatureSnapIter"] = self.meshSettings['snapControls']["nFeatureSnapIter"]
         meshSettings['addLayersControls']["expansionRatio"] = self.meshSettings['addLayersControls']["expansionRatio"]
-        meshSettings['addLayersControls']["firstLayerThickness"] = self.meshSettings['addLayersControls']["firstLayerThickness"]
+        meshSettings['addLayersControls']["finalLayerThickness"] = self.meshSettings['addLayersControls']["finalLayerThickness"]
         meshSettings['addLayersControls']["featureAngle"] = self.meshSettings['addLayersControls']["featureAngle"]
         meshSettings['addLayersControls']["nLayerIter"] = self.meshSettings['addLayersControls']["nLayerIter"]
         meshSettings['addLayersControls']["nOuterIter"] = self.meshSettings['addLayersControls']["nOuterIter"]
@@ -1484,6 +1752,9 @@ class advancedMeshDialog(QDialog):
     # this is to set default values for the mesh settings
     def assign_default_values(self):    
         global meshSettings
+        self.meshSettings['snappyHexSteps']['castellatedMesh'] = meshSettings['snappyHexSteps']['castellatedMesh']
+        self.meshSettings['snappyHexSteps']['snap'] = meshSettings['snappyHexSteps']['snap']
+        self.meshSettings['snappyHexSteps']['addLayers'] = meshSettings['snappyHexSteps']['addLayers']
         self.meshSettings['castellatedMeshControls']["maxLocalCells"] = meshSettings['castellatedMeshControls']["maxLocalCells"]
         self.meshSettings['castellatedMeshControls']["maxGlobalCells"] = meshSettings['castellatedMeshControls']["maxGlobalCells"]
         self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"] = meshSettings['castellatedMeshControls']["nCellsBetweenLevels"]
@@ -1493,7 +1764,7 @@ class advancedMeshDialog(QDialog):
         self.meshSettings['snapControls']["nRelaxIter"] = meshSettings['snapControls']["nRelaxIter"]
         self.meshSettings['snapControls']["nFeatureSnapIter"] = meshSettings['snapControls']["nFeatureSnapIter"]
         self.meshSettings['addLayersControls']["expansionRatio"] = meshSettings['addLayersControls']["expansionRatio"]
-        self.meshSettings['addLayersControls']["firstLayerThickness"] = meshSettings['addLayersControls']["firstLayerThickness"]
+        self.meshSettings['addLayersControls']["finalLayerThickness"] = meshSettings['addLayersControls']["finalLayerThickness"]
         self.meshSettings['addLayersControls']["featureAngle"] = meshSettings['addLayersControls']["featureAngle"]
         self.meshSettings['addLayersControls']["nLayerIter"] = meshSettings['addLayersControls']["nLayerIter"]
         self.meshSettings['addLayersControls']["nOuterIter"] = meshSettings['addLayersControls']["nOuterIter"]
@@ -1530,6 +1801,10 @@ class advancedMeshDialog(QDialog):
 
     
     def initialize_values(self):
+        self.window.checkBoxCastellated.setChecked(self.meshSettings['snappyHexSteps']['castellatedMesh'])
+        self.window.checkBoxSnap.setChecked(self.meshSettings['snappyHexSteps']['snap'])
+        self.window.checkBoxAddLayers.setChecked(self.meshSettings['snappyHexSteps']['addLayers'])
+
         self.window.lineEditMaxLocalCells.setText(str(self.meshSettings['castellatedMeshControls']["maxLocalCells"]))
         self.window.lineEditMaxGlobalCells.setText(str(self.meshSettings['castellatedMeshControls']["maxGlobalCells"]))
         self.window.lineEditCellsBetweenLevels.setText(str(self.meshSettings['castellatedMeshControls']["nCellsBetweenLevels"]))
@@ -1541,7 +1816,7 @@ class advancedMeshDialog(QDialog):
         self.window.lineEditFeatureIter.setText(str(self.meshSettings['snapControls']["nFeatureSnapIter"]))
 
         self.window.lineEditExpansionRatio.setText(str(self.meshSettings['addLayersControls']["expansionRatio"]))
-        self.window.lineEditFirstLayer.setText(str(self.meshSettings['addLayersControls']["firstLayerThickness"]))
+        self.window.lineEditFinalLayer.setText(str(self.meshSettings['addLayersControls']["finalLayerThickness"]))
         self.window.lineEditLayerFeatureAngle.setText(str(self.meshSettings['addLayersControls']["featureAngle"]))
         self.window.lineEditLayerIter.setText(str(self.meshSettings['addLayersControls']["nLayerIter"]))
         self.window.lineEditLayerOuterIter.setText(str(self.meshSettings['addLayersControls']["nOuterIter"]))
@@ -1551,6 +1826,10 @@ class advancedMeshDialog(QDialog):
         self.window.lineEditInternalSkewness.setText(str(self.meshSettings['meshQualityControls']["maxInternalSkewness"]))
         self.window.lineEditConcave.setText(str(self.meshSettings['meshQualityControls']["maxConcave"]))
         self.window.lineEditDeterminant.setText(str(self.meshSettings['meshQualityControls']["minDeterminant"]))
+
+        # general settings
+        self.window.lineEditMeshSize.setText(str(self.meshSettings['maxCellSize']))
+        self.window.checkBoxHalfDomain.setChecked(self.meshSettings['halfModel'])
 
         if self.meshSettings['snapControls']["implicitFeatureSnap"]:
             self.window.radioButtonImplicitSnap.setChecked(True)
@@ -1619,6 +1898,7 @@ def boxDialogDriver():
         return None
     return (name,minx,miny,minz,maxx,maxy,maxz)
 
+
 def inputDialogDriver(prompt="Enter Input",input_type="string"):
     dialog = inputDialog(prompt=prompt,input_type=input_type)
     dialog.window.exec()
@@ -1675,9 +1955,9 @@ def physicalModelsDialogDriver(initialProperties=None):
     
     return (fluid,rho,nu,cp,)
 
-def boundaryConditionDialogDriver(boundary=None,external_boundary=False):
+def boundaryConditionDialogDriver(boundary=None):
     #print(boundary)
-    dialog = boundaryConditionDialog(boundary,external_boundary)
+    dialog = boundaryConditionDialog(boundary)
     dialog.window.exec()
     dialog.window.show()
     OK_clicked = dialog.OK_clicked
@@ -1698,8 +1978,8 @@ def numericsDialogDriver(current_mode=0,numericalSettings=None,turbulenceModel=N
     
     return dialog.current_mode,dialog.numericalSettings,dialog.turbulence_model
 
-def controlsDialogDriver(simulationSettings=None,parallelSettings=None,transient=False):
-    dialog = controlsDialog(simulationSettings,parallelSettings,transient=transient)
+def controlsDialogDriver(simulationSettings=None,parallelSettings=None):
+    dialog = controlsDialog(simulationSettings,parallelSettings)
     dialog.window.exec()
     dialog.window.show()
     return dialog.simulationSettings,dialog.parallelSettings

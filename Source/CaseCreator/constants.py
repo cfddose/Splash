@@ -58,9 +58,9 @@ meshSettings = {
 #         'bottom':   {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 2, 3]},
 #         'top':      {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [4, 5, 6, 7]},
 # },
-    'snappyHexSteps': {'castellatedMesh': 'true',
-                       'snap': 'true',
-                        'addLayers': 'true'},
+    'snappyHexSteps': {'castellatedMesh': True,
+                       'snap': True,
+                        'addLayers': True,},
 
     'geometry': [], #[{'name': 'stl1.stl','type':'triSurfaceMesh', 'refineMin': 1, 'refineMax': 3, 
                 #     'featureEdges':'true','featureLevel':3,'nLayers':3},
@@ -141,7 +141,7 @@ physicalProperties = {
 }
 
 numericalSettings = {
-    'basicMode': True,
+    'mode': 0,
     'ddtSchemes': {'default': 'steadyState',},
     'gradSchemes': {'default': 'cellLimited Gauss linear 0.5',
                     'grad(p)': 'Gauss linear',
@@ -272,6 +272,25 @@ boundaryConditions = {
      'epsilon_type': 'epsilonWallFunction','epsilon_value': '$internalField',
      'nut_type': 'nutkWallFunction','nut_value': '$internalField',
      'nutilda_type': 'fixedValue','nutilda_value':'$internalField'},
+    
+    'symmetry':
+    {'u_type': 'symmetry','u_value': [0, 0, 0],
+     'p_type': 'symmetry','p_value': 0,
+     'k_type': 'symmetry','k_value': '$internalField',
+     'omega_type': 'symmetry','omega_value': '$internalField',
+     'epsilon_type': 'symmetry','epsilon_value': '$internalField',
+     'nut_type': 'symmetry','nut_value': '$internalField',
+     'nutilda_type': 'symmetry','nutilda_value': '$internalField',},
+
+    'empty':
+    {'u_type': 'empty','u_value': [0, 0, 0],
+     'p_type': 'empty','p_value': 0,
+     'k_type': 'empty','k_value': 0,
+     'omega_type': 'empty','omega_value': 0,
+     'epsilon_type': 'empty','epsilon_value': 0,
+     'nut_type': 'empty','nut_value': 0,
+     'nutilda_type': 'empty','nutilda_value': 0,},
+
 }
 
 simulationSettings = {
@@ -282,7 +301,7 @@ simulationSettings = {
     'deltaT': 1,
     'startFrom': 'startTime',
     'stopAt': 'endTime',
-    'writeControl': 'runTime',
+    'writeControl': 'adjustableRunTime',
     'writeInterval': 100,
     'purgeWrite': 0,
     'writeFormat': 'binary',
@@ -292,7 +311,7 @@ simulationSettings = {
     'timePrecision': 8,
     'runTimeModifiable': 'true',
     'adjustTimeStep': 'no',
-    'maxCo': 0.5,
+    'maxCo': 0.9,
     'functions': [],
     'libs': [],
     'allowSystemOperations': 'true',

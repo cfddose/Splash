@@ -23,20 +23,31 @@
 This file contains the dictionaries connecting the GUI text to the OpenFOAM dictionary entries.
 
 """
-grad_schemes = {"Gauss Linear":"Gauss linear","Gauss Linear (Cell Limited)":"cellLimited Gauss Linear 1",
-                "Gauss Linear (Face Limited)":"faceLimited Gauss Linear 1","Gauss Linear (Cell MD Limited)":"cellMDLimited Gauss Linear 1",
-                "Gauss Linear (Face MD Limited)":"faceMDLimited Gauss Linear 1",
+grad_schemes = {"Gauss Linear":"Gauss linear","Gauss Linear (Cell Limited)":"cellLimited Gauss linear 0.5",
+                "Gauss Linear (Face Limited)":"faceLimited Gauss linear 1","Gauss Linear (Cell MD Limited)":"cellMDLimited Gauss linear 1",
+                "Gauss Linear (Face MD Limited)":"faceMDLimited Gauss linear 1",
                "Least Squares":"leastSquares"}
 
 div_schemes = {"Gauss Linear":"Gauss linear","Gauss Upwind":"Gauss upwind","Gauss Linear Upwind":"Gauss linearUpwind",
                "Gauss Limited Linear":"Gauss limitedLinear 1",}
-temporal_schemes = {"Euler":"Euler","Crank-Nicolson":"crankNicolson","Steady State":"steadyState"}
+temporal_schemes = {"Steady State":"steadyState","Euler":"Euler","Backward Euler (2nd Order)":"backward","Crank-Nicolson (Blended 2nd Order)":"crankNicolson 0.5","Crank-Nicolson (2nd Order)":"crankNicolson 1.0"}
 
 laplacian_schemes = {"corrected ":"Gauss linear limited corrected 1","limited 0.333":"Gauss linear limited corrected 0.333",
                      "limited 0.5":"Gauss linear limited corrected 0.5","uncorrected":"Gauss linear limited corrected 0",}
 
+snGrad_schemes = {"corrected ":"limited corrected 1","limited 0.333":"limited corrected 0.333",
+                     "limited 0.5":"limited corrected 0.5","uncorrected":"limited corrected 0",}
 
+boundary_conditions = {"Fixed Value":"fixedValue","Zero Gradient":"zeroGradient",
+                        "Inlet Outlet":"inletOutlet","Non-slip":"noSlip","Slip":"slip","Pressure Inlet Outlet":"pressureInletOutlet",
+                        "Pressure Inlet":"pressureInlet","Pressure Outlet":"pressureOutlet","Empty":"empty","Symmetry":"symmetry",
+                        "Cyclic":"cyclic","Cyclic AMI":"cyclicAMI","Cyclic GGI":"cyclicGGI","Direction Mixed":"directionMixed",
+                        "Moving Wall":"movingWall","Zero Gradient":"zeroGradient","Fixed Flux Pressure":"fixedFluxPressure",
+                        }
 
+# List of scalars available for boundary conditions
+boundary_conditions_scalars = ["k","epsilon","omega","nut","nuTilda","nutilda","p","T","rho","rhoE","alpha","alphat","p_rgh",]
+                          
 def value_to_key(dict,value):
     """
     This function returns the key of a dictionary given a value.

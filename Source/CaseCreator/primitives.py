@@ -24,14 +24,27 @@ import yaml
 import sys
 from tkinter import filedialog, Tk
 from headers import get_SplashCaseCreator_header
-try:
-    from PySide6.QtWidgets import QMessageBox
-    from dialogBoxes import sphereDialogDriver, inputDialogDriver, vectorInputDialogDriver
-except:
-    pass
+
+from PySide6.QtWidgets import QMessageBox
+from dialogBoxes import sphereDialogDriver, inputDialogDriver, vectorInputDialogDriver
+
 class SplashCaseCreatorPrimitives:
     def __init__(self):
         pass
+
+    @staticmethod
+    def move_item_up(lst, index):
+        if index == 0:
+            return -1
+        lst[index], lst[index-1] = lst[index-1], lst[index]
+        return 0
+    
+    @staticmethod
+    def move_item_down(lst, index):
+        if index == len(lst)-1:
+            return -1
+        lst[index], lst[index+1] = lst[index+1], lst[index]
+        return 0
 
     @staticmethod
     def bounds_to_str(bounds):

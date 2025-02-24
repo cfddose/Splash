@@ -34,20 +34,26 @@ from constants import solverSettings, boundaryConditions, simulationSettings
 from constants import simulationFlowSettings, parallelSettings, postProcessSettings
 from stlAnalysis import stlAnalysis
 from blockMeshGenerator import generate_blockMeshDict
-from decomposeParGenerator import createDecomposeParDict
+from decomposeParGenerator import generate_DecomposeParDict
 from snappyHexMeshGenerator import generate_snappyHexMeshDict
-from surfaceExtractor import create_surfaceFeatureExtractDict
+from surfaceExtractor import generate_surfaceFeatureExtractDict
 from transportAndTurbulence import create_transportPropertiesDict, create_turbulencePropertiesDict
-#from transportAndTurbulence import write_transportPropertiesDict, write_turbulencePropertiesDict
 from boundaryConditionsGenerator import create_boundary_conditions
 #from boundaryConditions import create_boundary_conditions
-from controlDictGenerator import createControlDict
-from numericalSettingsGenerator import create_fvSchemesDict, create_fvSolutionDict
+from controlDictGenerator import generate_ControlDict
+from numericalSettingsGenerator import generate_fvSchemesDict, generate_fvSolutionDict
+from changeDictGenerator import generate_ChangeDictionaryDict
 from scriptGenerator import ScriptGenerator
 from postProcess import postProcess
 from mod_project import mod_project
-
 import copy
+from stlPreparation import is_stl_binary, convert_binary_to_ascii
+from stlPreparation import separate_stl, is_multipatch_stl
+
+from dialogBoxes import yesNoCancelDialogDriver, yesNoDialogDriver
+
+# for boundary conditions management
+from boundaryConditions import assign_boundary_condition
 
 
 #from ../constants/constants import meshSettings
@@ -84,6 +90,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.stl_files = [] # list to store the settings for stl files
         self.stl_names = [] # list to store the names of the stl files
         self.geometries = [] # list to store the settings for non-STL geometries such as spheres, boxes, etc.
+        self.stl_paths = [] # list to store the paths of the stl files
         self.internalFlow = False # default is external flow
         self.onGround = False # default is off the ground
         self.halfModel = False # default is full model
@@ -152,6 +159,17 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         SplashCaseCreatorIO.printMessage(f"Background mesh size: {nx}x{ny}x{nz} cells",GUIMode=self.GUIMode,window=self.window)
         SplashCaseCreatorIO.printMessage(f"Background cell size: {self.meshSettings['maxCellSize']} m",GUIMode=self.GUIMode,window=self.window)
     
+    def print_numerical_settings(self):
+        print("\n----------------------Numerical Settings----------------------")
+        print("ddtScheme",self.numericalSettings['ddtSchemes']['default'])
+        print("grad",self.numericalSettings['gradSchemes']['default'])
+        print("gradU",self.numericalSettings['gradSchemes']['grad(U)'])
+        print("div",self.numericalSettings['divSchemes']['default'])
+        print("div, convection",self.numericalSettings['divSchemes']['div(phi,U)'])
+        print("div, k",self.numericalSettings['divSchemes']['div(phi,k)'])
+        print("laplacian",self.numericalSettings['laplacianSchemes']['default'])
+        print("snGrad",self.numericalSettings['snGradSchemes']['default'])
+        print("----------------------------------------------------------------")
     # --------------------------------------------------------------------
     # Core methods necessary for the project backend
     # --------------------------------------------------------------------
@@ -376,7 +394,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.stl_files = new_list
         self.meshSettings['geometry'] = SplashCaseCreatorPrimitives.remove_duplicate_dicts(self.meshSettings['geometry'])
         
-
     def change_stl_property(self,stl_file_name,property):
         for stl in self.meshSettings['geometry']:
             if stl['name'] == stl_file_name: 
@@ -416,6 +433,13 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 property = boundary['property']
                 bounds = None
                 return purpose,refMin,refMax,featureEdges,featureLevel,nLayers,property,bounds
+        return None
+    
+    # to access only the "property" part 
+    def get_boundary_property(self,boundary_name):
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                return boundary['property']
         return None
     
     def show_stl_properties(self,stl_file_name):
@@ -477,9 +501,34 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                     stl['property'] = refLevel
                 else:
                     stl['property'] = property
+                
+                # finally, assign initial boundary condition
+                self.boundaryConditions = assign_boundary_condition(boundaryConditions=self.boundaryConditions,
+                                                                    meshSettings=self.meshSettings,patchName=stl['name'],
+                                                                    purpose=stl['purpose'])
                 return 0
         return -1
     
+
+    # This group is to manage external flow boundary conditions automatically
+    def add_external_boundary_conditions(self):
+        for patch in self.meshSettings['patches']:
+            self.boundaryConditions = assign_boundary_condition(boundaryConditions=self.boundaryConditions,
+                                                                meshSettings=self.meshSettings,patchName=patch['name'],
+                                                                purpose=patch['purpose'])
+    
+    def remove_external_boundary_conditions(self):
+        for patch in self.meshSettings['patches']:
+            if patch['name'] in self.boundaryConditions:
+                self.boundaryConditions.pop(patch['name'])
+
+
+    def add_or_remove_external_boundary_conditions(self):
+        if self.internalFlow:
+            self.remove_external_boundary_conditions()
+        else:
+            self.add_external_boundary_conditions()
+
     def set_boundary_condition(self,stl_file_name,boundary_condition):
         for stl in self.meshSettings['geometry']:
             if stl['name'] == stl_file_name:
@@ -498,6 +547,24 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 return 0
         return -1
     
+    def set_boundary_purpose(self,patch_name,purpose="wall"):
+        boundary_type = "wall"
+        boundary_purpose = purpose
+        if boundary_purpose=="inlet" or boundary_purpose=="outlet":
+            boundary_type = "patch"
+        elif boundary_purpose=="wall":
+            boundary_type = "wall"
+        elif boundary_purpose=="symmetry" or boundary_purpose=="empty":
+            boundary_type = boundary_purpose
+        else:
+            pass #boundary_type = "wall"
+        for patch in self.meshSettings['patches']:
+            if patch['name'] == patch_name:
+                patch['purpose'] = boundary_purpose
+                patch['type'] = boundary_type
+                return 0
+        return -1
+    
     def set_boundary_properties(self,boundary_name,boundary_properties):
         refMin,refMax,refLevel,nLayers,usage,edgeRefine,ami,property = boundary_properties
         usageToPurpose = {'Wall':'wall', 'Inlet':'inlet','Outlet':'outlet','Refinement_Region':'refinementRegion',
@@ -507,11 +574,24 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
             if boundary['name'] == boundary_name:
                 boundary['purpose'] = usageToPurpose[usage]
                 boundary['property'] = property
+                # finally, assign initial boundary condition
+                self.boundaryConditions = assign_boundary_condition(boundaryConditions=self.boundaryConditions,
+                                                                    meshSettings=self.meshSettings,patchName=boundary['name'],
+                                                                    purpose=boundary['purpose'])
                 if usageToPurpose[usage] in ['wall','symmetry','cyclic','empty']:
                     boundary['type'] = usageToPurpose[usage]
                     boundary['property'] = None
 
                 
+                return 0
+        return -1
+    
+    # only to access the "property" part of the boundary
+    def set_boundary_property(self,patch_name,property):
+        boundary_name = patch_name
+        for boundary in self.meshSettings['patches']:
+            if boundary['name'] == boundary_name:
+                boundary['property'] = property
                 return 0
         return -1
     
@@ -551,7 +631,6 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.stl_files.append(geometry)
         return 0
             
-
     # To add predefined VTK objects to the project such as spheres or boxes
     # This object will be used for meshing and possibly for boundary conditions
     def add_vtk_object_to_project(self,obj_name="sphere1",obj_properties={},obj_type="sphere"):
@@ -587,14 +666,15 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         obj_properties = {'minx':box[0],'maxx':box[1],'miny':box[2],'maxy':box[3],'minz':box[4],'maxz':box[5],'refineMin':0,'refineMax':refLevel,'property':None}
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
     
-    def addFineBoxToMesh(self,stl_path,boxName='fineBox',refLevel=2):
+    def addFineBoxToMesh(self,stl_path,boxName='fineBox',refLevel=2,internalFlow=False):
+        if internalFlow:
+            return
         stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
         fineBox = stlAnalysis.getRefinementBoxClose(stlBoundingBox)
         obj_properties = {'minx':fineBox[0],'maxx':fineBox[1],'miny':fineBox[2],'maxy':fineBox[3],'minz':fineBox[4],'maxz':fineBox[5],'refineMin':0,'refineMax':refLevel,'property':None}
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box")
         
     # refinement box for the ground for external automotive flows
-    
     def addGroundRefinementBoxToMesh(self,stl_path,refLevel=2):
         #if(internalFlow):
         #    return meshSettings
@@ -607,15 +687,47 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         obj_properties = {'minx':box[0],'maxx':box[1],'miny':box[2],'maxy':box[3],'minz':box[4],'maxz':box[5],'refineMin':0,'refineMax':refLevel,'property':None}
         self.add_vtk_object_to_project(obj_name=boxName,obj_properties=obj_properties,obj_type="box") 
     
-    def add_stl_file(self,stl_file):
+    def add_multipatch_stl_file(self,stl_file):
+        # first, copy the file to the project directory
         if stl_file is None:
             SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
             return -1
-        print("Existing stl files")
-        print(self.stl_names)
+        stl_name = stl_file.split("/")[-1]
+        #print("Adding stl file:",stl_name)
+        if stl_name in self.stl_names:
+            SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        # create a temp directory to store the stl file
+        temp_dir = os.path.join(self.project_path,"temp")
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+        temp_stl_path = os.path.join(temp_dir,stl_name)
+        try:
+            shutil.copy(stl_file,temp_stl_path)
+            separate_stl(temp_stl_path)
+            # list all files in the temp directory
+            files = os.listdir(temp_dir)
+            for file in files:
+                if file.endswith(".stl"):
+                    #print(file)
+                    stl_path = os.path.join(temp_dir,file)
+                    if stl_path == temp_stl_path:
+                        continue
+                    self.add_single_stl_file(stl_path)
+        except OSError as error:
+            SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
+            return -1
+        return 3 # 3 means multiple STL files added
+        
+    def add_single_stl_file(self,stl_file):
+        if stl_file is None:
+            SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        #print("Existing stl files")
+        #print(self.stl_names)
         
         stl_name = stl_file.split("/")[-1]
-        print("Adding stl file:",stl_name)
+        #print("Adding stl file:",stl_name)
         if stl_name in self.stl_names:
             SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
             return -1
@@ -646,8 +758,66 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
             SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
             return -1
         self.current_stl_file = stl_path
+        self.stl_paths.append(stl_path)
+        # if everything is successful, finally, we can give a boundary condition
+        self.boundaryConditions = assign_boundary_condition(self.boundaryConditions,self.meshSettings,stl_name,purpose=purpose)
         return 0
-            
+        
+    # this is the main STL file addition function
+    def add_stl_file(self,stl_file):
+        if stl_file is None:
+            SplashCaseCreatorIO.printMessage("No file selected. Please select STL file if necessary.",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        #print("Existing stl files")
+        #print(self.stl_names)
+        
+        stl_name = stl_file.split("/")[-1]
+        #print("Adding stl file:",stl_name)
+        if stl_name in self.stl_names:
+            SplashCaseCreatorIO.printMessage(f"STL file {stl_name} already exists in the project",GUIMode=self.GUIMode,window=self.window)
+            return -1
+        
+        # check if the stl file is in binary format
+        if is_stl_binary(stl_file):
+            # create a temp directory in the project directory
+            temp_dir = os.path.join(self.project_path,"temp")
+            if not os.path.exists(temp_dir):
+                os.mkdir(temp_dir)
+            temp_stl_path = os.path.join(temp_dir,stl_name)
+            try:
+                shutil.copy(stl_file,temp_stl_path)
+            except OSError as error:
+                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
+                return -1
+            # convert the binary stl file to ascii format
+            ascii_stl_path = os.path.join(temp_dir,stl_name.split(".")[0]+".stl")
+            try:
+                convert_binary_to_ascii(input_file_path=temp_stl_path,output_file_path=ascii_stl_path)
+            except Exception as error:
+                SplashCaseCreatorIO.printError(error,GUIMode=self.GUIMode)
+                return -1
+            # add the ascii stl file to the project
+            status = self.add_single_stl_file(ascii_stl_path)
+            return status
+        else:
+            # check if the stl file is a multi-patch stl file
+            if is_multipatch_stl(stl_file):
+                # ask the user if they want to add all the patches separately or as a single solid
+                yesNo = yesNoDialogDriver("Multiple patches detected. Do you want to add all the patches separately?")
+                if yesNo:
+                    SplashCaseCreatorIO.printMessage("Adding multiple patches separately")
+                    status = self.add_multipatch_stl_file(stl_file)
+                    return status
+                else:
+                    SplashCaseCreatorIO.printMessage("Adding all patches as a single solid")
+                    status = self.add_single_stl_file(stl_file)
+                    return status
+                #status = self.add_multipatch_stl_file(stl_file)
+                #return status
+            else:
+                status = self.add_single_stl_file(stl_file)
+                return status
+                
     # this is a wrapper of the primitives 
     def list_stl_files(self):
         SplashCaseCreatorPrimitives.list_stl_files(self.stl_files,self.GUIMode,self.window)
@@ -661,7 +831,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         return stl_paths
     
     def remove_stl_file_by_name(self,stl_name):
-        print("Before removing")
+        #print("Before removing")
         self.list_stl_files()
         for stl in self.stl_files:
             if stl['name'] == stl_name:
@@ -682,6 +852,7 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.list_stl_files()
         return -1
     
+
     # check if the stl file is already in the project
     def check_stl_file(self,stl_name):
         stl_exists = False
@@ -739,11 +910,13 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         self.update_max_stl_length(stlBoundingBox)
         featureLevel = max(refLevel,1)
         self.meshSettings = stlAnalysis.set_mesh_settings(self.meshSettings, domain_size, nx, ny, nz, refLevel, featureLevel,nLayers=nLayers) 
+        # update the max cell size for reference and later use
+        self.meshSettings['maxCellSize'] = self.get_mesh_size()
         self.set_max_domain_size(domain_size,nx,ny,nz)
         self.meshSettings = stlAnalysis.set_mesh_location(self.meshSettings, stl_path,self.internalFlow)
         refinementBoxLevel = max(2,refLevel-3)
         self.addRefinementBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel,internalFlow=self.internalFlow)
-        self.addFineBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel)
+        self.addFineBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel,internalFlow=self.internalFlow)
         if(self.internalFlow==False and self.onGround==True):
             # if the flow is external and the geometry is on the ground, add a ground refinement box
             self.addGroundRefinementBoxToMesh(stl_path=stl_path,refLevel=refinementBoxLevel)
@@ -990,22 +1163,24 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         os.chdir("system")
         # create the controlDict file
         SplashCaseCreatorIO.printMessage("Creating the system files",GUIMode=self.GUIMode,window=self.window)
-        controlDict = createControlDict(self.simulationSettings)
+        controlDict = generate_ControlDict(self.simulationSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("controlDict", controlDict)
         blockMeshDict = generate_blockMeshDict(self.meshSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("blockMeshDict", blockMeshDict)
         snappyHexMeshDict = generate_snappyHexMeshDict(self.meshSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("snappyHexMeshDict", snappyHexMeshDict)
-        surfaceFeatureExtractDict = create_surfaceFeatureExtractDict(self.meshSettings)
+        surfaceFeatureExtractDict = generate_surfaceFeatureExtractDict(self.meshSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("surfaceFeatureExtractDict", surfaceFeatureExtractDict)
-        fvSchemesDict = create_fvSchemesDict(self.numericalSettings)
+        fvSchemesDict = generate_fvSchemesDict(self.numericalSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("fvSchemes", fvSchemesDict)
-        fvSolutionDict = create_fvSolutionDict(self.numericalSettings, self.solverSettings)
+        fvSolutionDict = generate_fvSolutionDict(self.numericalSettings, self.solverSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("fvSolution", fvSolutionDict)
-        decomposeParDict = createDecomposeParDict(self.parallelSettings)
+        decomposeParDict = generate_DecomposeParDict(self.parallelSettings)
         SplashCaseCreatorPrimitives.write_dict_to_file("decomposeParDict", decomposeParDict)
         FODict = postProcess.create_FOs(self.meshSettings,self.postProcessSettings,useFOs=self.useFOs)
         SplashCaseCreatorPrimitives.write_dict_to_file("FOs", FODict)
+        changeDictionaryDict = generate_ChangeDictionaryDict(self.meshSettings)
+        SplashCaseCreatorPrimitives.write_dict_to_file("changeDictionaryDict", changeDictionaryDict)
         # go back to the main directory
         os.chdir("..")
         # create mesh script
@@ -1122,6 +1297,34 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
         nz = self.meshSettings['domain']['nz']
         return minx,maxx,miny,maxy,minz,maxz,nx,ny,nz
     
+    def get_mesh_size(self):
+        dX = self.meshSettings['domain']['maxx'] - self.meshSettings['domain']['minx']
+        dY = self.meshSettings['domain']['maxy'] - self.meshSettings['domain']['miny']
+        dZ = self.meshSettings['domain']['maxz'] - self.meshSettings['domain']['minz']
+        dX = dX/self.meshSettings['domain']['nx']
+        dY = dY/self.meshSettings['domain']['ny']
+        dZ = dZ/self.meshSettings['domain']['nz']
+        return max(dX,dY,dZ)
+    
+    def set_mesh_size(self,dL=0.01):
+        minx,maxx,miny,maxy,minz,maxz,nx,ny,nz = self.get_domain_size()
+        dX = maxx - minx
+        dY = maxy - miny
+        dZ = maxz - minz
+        nx = int(dX/dL)
+        ny = int(dY/dL)
+        nz = int(dZ/dL)
+        # make sure the number of cells is at least 1 in every direction
+        nx = max(nx,1)
+        ny = max(ny,1)
+        nz = max(nz,1)
+        self.meshSettings['domain']['nx'] = nx
+        self.meshSettings['domain']['ny'] = ny
+        self.meshSettings['domain']['nz'] = nz
+
+    def update_mesh_size(self,dL=0.01):
+        self.meshSettings['maxCellSize'] = dL
+        self.set_mesh_size(dL)
     
     def update_max_lengths(self):
         minx,maxx,miny,maxy,minz,maxz,nx,ny,nz = self.get_domain_size()
@@ -1231,10 +1434,22 @@ class SplashCaseCreatorProject: # SplashCaseCreatorProject class to handle the p
                 #self.simulationSettings['deltaT'] = SplashCaseCreatorIO.get_input_float("Time step: ")
             self.simulationSettings['adjustTimeStep'] = 'no'
             self.simulationSettings['maxCo'] = 0.9
-            self.numericalSettings['ddtSchemes']['default'] = 'Euler'
+            self.simulationSettings['endTime'] = 10.0
+            self.simulationSettings['writeInterval'] = 0.1
+            self.simulationSettings['deltaT'] = 0.01
+            #self.numericalSettings['ddtSchemes']['default'] = 'Euler'
             # if steady state, SIMPLEC is used. If transient, PIMPLE is used
             # for PIMPLE, the relaxation factors are set to 0.7 and p = 0.3
             self.numericalSettings['relaxationFactors']['p'] = 0.3
+        else:  
+            self.simulationSettings['transient'] = False
+            self.simulationSettings['application'] = 'simpleFoam'
+            self.simulationFlowSettings['solver'] = 'simpleFoam'
+            self.simulationSettings['endTime'] = 1000
+            self.simulationSettings['writeInterval'] = 100
+            self.simulationSettings['deltaT'] = 1
+            self.simulationSettings['adjustTimeStep'] = 'no'
+            self.simulationSettings['maxCo'] = 0.9
             
 
     def ask_ground_type(self):

@@ -286,7 +286,8 @@ class mainWindow(QMainWindow):
         self.window = loader.load(ui_file, None)
         ui_file.close()
         self.setCentralWidget(self.window)
-        self.setGeometry(100, 100, 1400, 880)
+        # Increased the window height
+        self.setGeometry(100, 100, 1550, 930)
         self.setWindowTitle("Splash Case Creator")
         
         # Add timer label programmatically
@@ -335,8 +336,7 @@ class mainWindow(QMainWindow):
         
         # Connect theme toggle
         self.window.themeToggle.stateChanged.connect(self.toggle_theme)
-        
-        
+              
     def launch_splash(self):
         """Launch Splash.py in a separate thread."""
         self.splash_thread = SplashLauncherThread()
@@ -372,17 +372,18 @@ class mainWindow(QMainWindow):
             self.window.tableViewProperties.horizontalHeader().setStyleSheet("color: black")
         
     # FLAG! For that purpose is this?    
-    def __del__(self):
-        pass
+    # def __del__(self):
+    #     pass
 
-    def openCADDialog(self):
-        fname,ftype = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', 
-        'c:\\',"CAD files (*.brep *.igs *.iges)")
-        if(fname==""):
-            return -1 # CAD file not loaded
-        else:
-            #print("Current CAD File: ",fname)
-            return fname
+    # This is not used at all. So, commented out.
+    # def openCADDialog(self):
+    #     fname,ftype = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', 
+    #     'c:\\',"CAD files (*.brep *.igs *.iges)")
+    #     if(fname==""):
+    #         return -1 # CAD file not loaded
+    #     else:
+    #         #print("Current CAD File: ",fname)
+    #         return fname
                        
     # manage sub windows
     def prepare_subWindows(self):
@@ -394,6 +395,7 @@ class mainWindow(QMainWindow):
             #print(f"Adding to list: {stl['name']}")
             self.window.listWidgetObjList.addItem(stl['name'])
         for idx, geometry in enumerate(self.project.geometries):
+            print(f"GEO: {geometry}")
             print(f"Adding to list: {geometry['name']}")
             self.window.listWidgetObjList.addItem(geometry['name'])
 
@@ -454,7 +456,7 @@ class mainWindow(QMainWindow):
             purpose, refMin, refMax, featureEdges, featureLevel, nLayers, property, bounds = stl_properties
             
             self.window.tableViewProperties.clearContents()
-            self.window.tableViewProperties.setRowCount(4)
+            self.window.tableViewProperties.setRowCount(5)
             self.window.tableViewProperties.setColumnCount(2)
 
             # Setting headers (if not already set elsewhere)
@@ -468,9 +470,11 @@ class mainWindow(QMainWindow):
             self.window.tableViewProperties.setItem(2, 1, QtWidgets.QTableWidgetItem(str(featureEdges)))
             self.window.tableViewProperties.setItem(3, 0, QtWidgets.QTableWidgetItem("Feature Level"))
             self.window.tableViewProperties.setItem(3, 1, QtWidgets.QTableWidgetItem(str(featureLevel)))
+            self.window.tableViewProperties.setItem(4, 0, QtWidgets.QTableWidgetItem("Purpose"))
+            self.window.tableViewProperties.setItem(4, 1, QtWidgets.QTableWidgetItem(str(purpose)))
             
             # Additional rows for other properties
-            additional_row = 4
+            additional_row = 5
             self.window.tableViewProperties.setRowCount(additional_row + 8)
             self.window.tableViewProperties.setItem(additional_row, 0, QtWidgets.QTableWidgetItem("nLayers"))
             self.window.tableViewProperties.setItem(additional_row, 1, QtWidgets.QTableWidgetItem(str(nLayers)))
@@ -486,6 +490,7 @@ class mainWindow(QMainWindow):
             self.window.tableViewProperties.setItem(additional_row + 5, 1, QtWidgets.QTableWidgetItem(f"{bounds[4]:.2f}"))
             self.window.tableViewProperties.setItem(additional_row + 6, 0, QtWidgets.QTableWidgetItem("Max Z")) 
             self.window.tableViewProperties.setItem(additional_row + 6, 1, QtWidgets.QTableWidgetItem(f"{bounds[5]:.2f}"))
+            
         else:
             # Unpack boundary properties
             #print(f"Boundary Properties: {boundary_properties}")
@@ -594,6 +599,8 @@ class mainWindow(QMainWindow):
         self.window.pushButtonAddSTL.clicked.connect(self.importSTL)
         self.window.pushButtonRemoveSTL.clicked.connect(self.removeSTL)
         self.window.pushButtonMeshPoint.clicked.connect(self.setMeshPoint)
+        self.window.pushButtonUpList.clicked.connect(self.moveUpSTL)
+        self.window.pushButtonDownList.clicked.connect(self.moveDownSTL)
 
         # Toggle axes on the main render window
         self.window.axesCheckBox.stateChanged.connect(self.toggle_axes_with_vtk_manager) 
@@ -755,7 +762,11 @@ class mainWindow(QMainWindow):
             return
         #self.project.add_stl_to_project()
         #print(f"Project STL Files: {self.project.stl_files}")
-        self.vtk_manager.render_stl(self.project.current_stl_file)
+        if stl_status == 0:
+            self.vtk_manager.render_stl(self.project.current_stl_file)
+        elif stl_status == 3: # this is a special condition for multiple patch STL file
+            for stl in self.project.stl_paths:
+                self.vtk_manager.render_stl(stl)
         self.update_list()
         self.updateStatusBar("STL imported successfully.")
         return 
@@ -804,6 +815,37 @@ class mainWindow(QMainWindow):
         stl = item.text()
         self.project.remove_stl_file_by_name(stl)
         self.vtk_manager.remove_stl(stl)
+        self.update_list()
+        self.readyStatusBar()
+
+    def moveUpSTL(self):
+        
+        item = self.window.listWidgetObjList.currentItem()
+        #print(f"Moving up STL {item.text()}")
+        
+        if item.text() not in self.project.stl_names:
+            return
+        if item==None or item.text()=="":
+            return
+        idx = self.project.get_stl_index(item.text())
+        if idx==0:
+            return
+        SplashCaseCreatorPrimitives.move_item_up(self.project.stl_files,idx)
+        self.update_list()
+        self.readyStatusBar()
+
+    def moveDownSTL(self):
+        
+        item = self.window.listWidgetObjList.currentItem()
+        #print(f"Moving down STL {item.text()}")
+        if item.text() not in self.project.stl_names:
+            return
+        if item==None or item.text()=="":
+            return
+        idx = self.project.get_stl_index(item.text())
+        if idx==len(self.project.stl_files)-1:
+            return
+        SplashCaseCreatorPrimitives.move_item_down(self.project.stl_files,idx)
         self.update_list()
         self.readyStatusBar()
 
@@ -956,7 +998,6 @@ class mainWindow(QMainWindow):
             if item not in currentItems:
                 self.window.listWidgetObjList.addItem(item)
         
-
     def removeExternalBoundaries(self):
         # remove inlet, outlet, front, back, top, bottom from the list object
         #self.updateStatusBar("Removing External Boundaries")
@@ -996,7 +1037,7 @@ class mainWindow(QMainWindow):
             #VTKManager.add_x_grid(self.ren,self.project.meshSettings['minX'],self.project.meshSettings['maxX'],self.project.meshSettings['nX'])
             self.addBoundaryGrids()
             #self.readyStatusBar()
-        
+
     def chooseInternalFlow(self):
         self.project.internalFlow = True
         self.project.meshSettings['internalFlow'] = True
@@ -1004,6 +1045,7 @@ class mainWindow(QMainWindow):
         self.window.checkBoxOnGround.setEnabled(False)
         self.window.radioButtonInternal.setChecked(True)
         self.addOrRemoveExternalBoundaries()
+        self.project.add_or_remove_external_boundary_conditions()
         self.updateStatusBar("Choosing Internal Flow")
         #sleep(0.001)
         self.readyStatusBar()
@@ -1015,6 +1057,7 @@ class mainWindow(QMainWindow):
         self.project.meshSettings['onGround'] = self.window.checkBoxOnGround.isChecked()
         self.project.onGround = self.window.checkBoxOnGround.isChecked()
         self.addOrRemoveExternalBoundaries()
+        self.project.add_external_boundary_conditions()
         #self.vtk_manager.add_boundary_grid()
         self.updateStatusBar("Choosing External Flow")
         #sleep(0.001)
@@ -1213,6 +1256,14 @@ class mainWindow(QMainWindow):
             self.window.checkBoxOnGround.setChecked(self.project.onGround)
             self.chooseExternalFlow()
 
+        
+        if self.project.transient:
+            self.window.checkBoxSteadyTransient.setText("Transient")
+            self.window.checkBoxSteadyTransient.setChecked(True)
+        else:
+            self.window.checkBoxSteadyTransient.setText("Steady-State")
+            self.window.checkBoxSteadyTransient.setChecked(False)
+
         # Update window title and status
         self.project_opened = True
         self.setWindowTitle(f"Case Creator: {self.project.project_name}")
@@ -1266,10 +1317,16 @@ class mainWindow(QMainWindow):
         self.project.meshSettings['onGround'] = onGround
         self.project.onGround = onGround
 
-        # If object is on the ground, the bottom boundary condition is wall
+        # If object is on the ground, the bottom boundary condition is a moving wall
         if onGround:
+            inlet_velocity = self.project.get_boundary_property("inlet")
             self.project.set_external_boundary_condition(patch_name="bottom",boundary_condition="wall")
-            self.project.set_boundary_type(patch_name="bottom",boundary_type="wall")
+            self.project.set_boundary_purpose(patch_name="bottom",purpose="wall")
+            self.project.set_boundary_property(patch_name="bottom",property=inlet_velocity)
+        else:
+            self.project.set_external_boundary_condition(patch_name="bottom",boundary_condition="symmetry")
+            self.project.set_boundary_purpose(patch_name="bottom",purpose="symmetry")
+            self.project.set_boundary_property(patch_name="bottom",property=None)
         if len(self.project.stl_files)==0:
             self.updateTerminal("No STL files loaded")
             self.readyStatusBar()
@@ -1388,6 +1445,37 @@ class mainWindow(QMainWindow):
         self.project.physicalProperties['Cp'] = cp
         #self.project.physicalProperties['turbulenceModel'] = turbulence_model
 
+    def boundaryConditionDialog_org(self):
+        stl = self.project.get_stl(self.current_obj)
+        patch_names = [patch['name'] for patch in self.project.meshSettings['patches']]
+        if stl==None:
+            # May be this is a predefined external boundary
+            if self.current_obj in patch_names:
+                boundary = None 
+                for patch in self.project.meshSettings['patches']:
+                    if patch['name']==self.current_obj:
+                        boundary = patch
+                        break
+                #boundary['name'] = self.current_obj
+                boundaryConditions = boundaryConditionDialogDriver(boundary)
+                self.project.set_external_boundary_condition(self.current_obj,boundaryConditions)
+                self.listClicked()
+                self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")
+                self.readyStatusBar()
+                return
+            else:
+                SplashCaseCreatorIO.printError("Patch not found",GUIMode=True)
+                return
+        
+        boundaryConditions = boundaryConditionDialogDriver(stl)
+        if boundaryConditions==None:
+            return
+        # update the boundary conditions
+        self.project.set_boundary_condition(self.current_obj,boundaryConditions)
+        self.listClicked()
+        self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")
+        self.readyStatusBar()
+
     def boundaryConditionDialog(self):
         stl = self.project.get_stl(self.current_obj)
         patch_names = [patch['name'] for patch in self.project.meshSettings['patches']]
@@ -1400,7 +1488,7 @@ class mainWindow(QMainWindow):
                         boundary = patch
                         break
                 #boundary['name'] = self.current_obj
-                boundaryConditions = boundaryConditionDialogDriver(boundary,external_boundary=True)
+                boundaryConditions = boundaryConditionDialogDriver(boundary)
                 self.project.set_external_boundary_condition(self.current_obj,boundaryConditions)
                 self.listClicked()
                 self.updateTerminal(f"{self.current_obj} Boundary Conditions Updated")
@@ -1425,12 +1513,19 @@ class mainWindow(QMainWindow):
                                                                                                  self.project.physicalProperties['turbulenceModel'],
                                                                                                  transient=self.project.transient)  
         self.project.physicalProperties['turbulenceModel'] = turbulence_model
+        #self.project.print_numerical_settings()
 
     def controlsDialog(self):
-        self.project.simulationSettings,self.project.parallelSettings = controlsDialogDriver(self.project.simulationSettings,self.project.parallelSettings,self.project.transient)
+        self.project.simulationSettings,self.project.parallelSettings = controlsDialogDriver(self.project.simulationSettings,self.project.parallelSettings)
 
     def advancedMeshDialog(self):
+        meshSize = self.project.meshSettings['maxCellSize']
         self.project.meshSettings = advancedMeshDialogDriver(self.project.meshSettings)
+        if meshSize!=self.project.meshSettings['maxCellSize']:
+            self.project.update_mesh_size(self.project.meshSettings['maxCellSize'])
+            self.prepareDomainView()
+        if self.project.meshSettings['halfModel']:
+            self.project.halfModel = True
 
     
     def postProcessDialog(self):

@@ -141,6 +141,20 @@ def create_u_file(meshSettings,boundaryConditions):
         value uniform {tuple_to_string(boundaryConditions['pressureOutlet']['u_value'])};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                U_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                U_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass         
     U_file += """
@@ -229,6 +243,20 @@ def create_p_file(meshSettings,boundaryConditions):
     {{
         type {boundaryConditions['pressureOutlet']['p_type']};
         value uniform {boundaryConditions['pressureOutlet']['p_value']};
+    }}
+    """
+            elif(patch['purpose'] == 'symmetry'):
+                p_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                p_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
     }}
     """
             else:
@@ -330,6 +358,20 @@ def create_k_file(meshSettings,boundaryConditions,nu=1.0e-5):
      {{
         type {boundaryConditions['pressureOutlet']['k_type']};
         value uniform {boundaryConditions['pressureOutlet']['k_value']};
+    }}
+    """
+            elif(patch['purpose'] == 'symmetry'):
+                k_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                k_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
     }}
     """
             else:
@@ -439,6 +481,20 @@ def create_omega_file(meshSettings,boundaryConditions,nu=1.0e-5):
         value uniform {boundaryConditions['pressureOutlet']['omega_value']};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                omega_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'): 
+                omega_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass 
 
@@ -544,6 +600,20 @@ def create_epsilon_file(meshSettings,boundaryConditions,nu=1.0e-5):
     {{
         type {boundaryConditions['pressureOutlet']['epsilon_type']};
         value uniform {boundaryConditions['pressureOutlet']['epsilon_value']};
+    }}
+    """
+            elif(patch['purpose'] == 'symmetry'):
+                epsilon_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                epsilon_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
     }}
     """
             else:
@@ -656,6 +726,20 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
         value {boundaryConditions['pressureOutlet']['nutilda_value']};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                nutilda_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                nutilda_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass 
         
@@ -737,6 +821,20 @@ def create_nut_file(meshSettings,boundaryConditions):
     {{
         type {boundaryConditions['velocityInlet']['nut_type']};
         value uniform {boundaryConditions['velocityInlet']['nut_value']};
+    }}
+    """
+            elif(patch['purpose'] == 'symmetry'):
+                nut_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                nut_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
     }}
     """
             else:
