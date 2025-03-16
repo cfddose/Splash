@@ -1,9 +1,12 @@
 #!/bin/bash
+
+# Author: Mohamed Aly Sayed (muhammmedaly@gmail.com) 
+# Version: v0.2
 # Script to install the required CFD-related packages on Arch Linux
 
 echo "_________________________________________________________________________________"
 echo "                                                                                 "
-echo "__________________ SplashFOAM Pre-Installation Script ____  07.11.2024 | MS  ____"
+echo "__________________ Splash Pre-Installation Script ____  07.11.2024 | MS  ____"
 echo "                      Minimum Equipment List (MEL)                               "
 echo "_________________________________________________________________________________"
 echo "                                                                                 "

@@ -1,19 +1,21 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
@@ -23,7 +25,7 @@ import numpy as np
 import math
 from stlToOpenFOAM import find_inside_point, is_point_inside, read_stl_file
 from stlToOpenFOAM import extract_curvature_data, compute_curvature
-from primitives import ampersandIO
+from primitives import SplashCaseCreatorIO
 
 class stlAnalysis:
     def __init__(self):
@@ -52,12 +54,12 @@ class stlAnalysis:
         maxZ = stlMaxZ + 2.0*characLength*sizeFactor
         
         if(internalFlow):
-            minX = stlMinX - 0.1*bbX*sizeFactor
-            maxX = stlMaxX + 0.1*bbX*sizeFactor
-            minY = stlMinY - 0.1*bbY*sizeFactor
-            maxY = stlMaxY + 0.1*bbY*sizeFactor
-            minZ = stlMinZ - 0.1*bbZ*sizeFactor
-            maxZ = stlMaxZ + 0.1*bbZ*sizeFactor
+            minX = stlMinX - 0.05*bbX*sizeFactor
+            maxX = stlMaxX + 0.05*bbX*sizeFactor
+            minY = stlMinY - 0.05*bbY*sizeFactor
+            maxY = stlMaxY + 0.05*bbY*sizeFactor
+            minZ = stlMinZ - 0.05*bbZ*sizeFactor
+            maxZ = stlMaxZ + 0.05*bbZ*sizeFactor
         """
         if(bbX > 0.1 and bbY > 0.1 and bbZ > 0.1):
             (minX,maxX,minY,maxY,minZ,maxZ) = (np.around(minX,decimals=1),
@@ -129,40 +131,6 @@ class stlAnalysis:
         boxMaxZ = stlMaxZ + 0.45*bbZ
         return (boxMinX,boxMaxX,boxMinY,boxMaxY,boxMinZ,boxMaxZ)
     
-    # to add refinement box to mesh settings
-    @staticmethod
-    def addRefinementBoxToMesh(meshSettings,stl_path,boxName='refinementBox',refLevel=2,internalFlow=False):
-        if(internalFlow):
-            return meshSettings
-        stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
-        box = stlAnalysis.getRefinementBox(stlBoundingBox)
-        meshSettings['geometry'].append({'name': boxName,'type':'searchableBox', 'purpose':'refinement',
-                                         'min': [box[0], box[2], box[4]], 'max': [box[1], box[3], box[5]],
-                                         'refineMax': refLevel-1})
-        
-        fineBox = stlAnalysis.getRefinementBoxClose(stlBoundingBox)
-        meshSettings['geometry'].append({'name': 'fineBox','type':'searchableBox', 'purpose':'refinement',
-                                         'min': [fineBox[0], fineBox[2], fineBox[4]], 'max': [fineBox[1], fineBox[3], fineBox[5]],
-                                         'refineMax': refLevel})
-        
-        return meshSettings
-    
-    # refinement box for the ground for external automotive flows
-    @staticmethod
-    def addGroundRefinementBoxToMesh(meshSettings,stl_path,refLevel=2):
-        #if(internalFlow):
-        #    return meshSettings
-        boxName = 'groundBox'
-        stlBoundingBox = stlAnalysis.compute_bounding_box(stl_path)
-        xmin, xmax, ymin, ymax, zmin, zmax = stlBoundingBox
-        z = meshSettings['domain']['minz']
-        z_delta = 0.2*(zmax-zmin)
-        box = [-1000.0,1000.,-1000,1000,z-z_delta,z+z_delta]
-        meshSettings['geometry'].append({'name': boxName,'type':'searchableBox', 'purpose':'refinement',
-                                         'min': [box[0], box[2], box[4]], 'max': [box[1], box[3], box[5]],
-                                         'refineMax': refLevel})
-        return meshSettings
-
     # to calculate nearest wall thickness for a target yPlus value
     @staticmethod
     def calc_y(nu=1e-6,rho=1000.,L=1.0,u=1.0,target_yPlus=200):
@@ -420,22 +388,22 @@ class stlAnalysis:
        
         #minVolumeSize = backgroundCellSize**3/(8.**refLevel*20.)
         # print the summary of results
-        ampersandIO.printMessage("\n-----------------Mesh Settings-----------------",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Domain size: x({domain_size[0]:6.3f}~{domain_size[1]:6.3f}) y({domain_size[2]:6.3f}~{domain_size[3]:6.3f}) z({domain_size[4]:6.3f}~{domain_size[5]:6.3f})",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Nx Ny Nz: {nx},{ny},{nz}",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Max cell size: {backgroundCellSize}",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Min cell size: {targetCellSize}",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Refinement Level:{refLevel}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage("\n-----------------Mesh Settings-----------------",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Domain size: x({domain_size[0]:6.3f}~{domain_size[1]:6.3f}) y({domain_size[2]:6.3f}~{domain_size[3]:6.3f}) z({domain_size[4]:6.3f}~{domain_size[5]:6.3f})",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Nx Ny Nz: {nx},{ny},{nz}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Max cell size: {backgroundCellSize}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Min cell size: {targetCellSize}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Refinement Level:{refLevel}",GUIMode=GUI,window=window)
         
-        ampersandIO.printMessage("\n-----------------Turbulence-----------------",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Target yPlus:{target_yPlus}",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f'Reynolds number:{U*L/nu}',GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Boundary layer thickness:{delta}",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"First layer thickness:{adjustedNearWallThickness}",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"Final layer thickness:{finalLayerThickness}",GUIMode=GUI,window=window)
-        ampersandIO.printMessage(f"YPlus:{adjustedYPlus}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage("\n-----------------Turbulence-----------------",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Target yPlus:{target_yPlus}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f'Reynolds number:{U*L/nu}',GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Boundary layer thickness:{delta}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"First layer thickness:{adjustedNearWallThickness}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Final layer thickness:{finalLayerThickness}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"YPlus:{adjustedYPlus}",GUIMode=GUI,window=window)
         
-        ampersandIO.printMessage(f"Number of layers:{nLayers}",GUIMode=GUI,window=window)
+        SplashCaseCreatorIO.printMessage(f"Number of layers:{nLayers}",GUIMode=GUI,window=window)
         return domain_size, nx, ny, nz, refLevel,finalLayerThickness,nLayers
     
     @staticmethod
@@ -502,7 +470,7 @@ class stlAnalysis:
     
     @staticmethod
     def set_stl_solid_name(stl_file='input.stl'):
-        ampersandIO.printMessage(f"Setting solid name for {stl_file}")
+        SplashCaseCreatorIO.printMessage(f"Setting solid name for {stl_file}")
         # if the file does not exist, return -1
         if not os.path.exists(stl_file):
             print(f"File not found: {stl_file}")
@@ -541,7 +509,7 @@ class stlAnalysis:
         return 0
 
 def main():
-    stl_file = r"C:/Users/Ridwa/Desktop/CFD/ampersandTests\ahmed2\constant\triSurface\ahmed.stl"
+    stl_file = r"C:/Users/Ridwa/Desktop/CFD/SplashCaseCreatorTests\ahmed2\constant\triSurface\ahmed.stl"
     minCurv = stlAnalysis.calc_smallest_curvature(stl_file)
     print(minCurv)
 

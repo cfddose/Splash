@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>223</width>
-    <height>106</height>
+    <width>288</width>
+    <height>148</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QLineEdit" name="lineEditSphereX">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>10</y>
+     <x>100</x>
+     <y>50</y>
      <width>31</width>
      <height>22</height>
     </rect>
@@ -29,8 +29,8 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>10</y>
+     <x>40</x>
+     <y>50</y>
      <width>49</width>
      <height>16</height>
     </rect>
@@ -42,8 +42,8 @@
   <widget class="QLineEdit" name="lineEditSphereY">
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>10</y>
+     <x>140</x>
+     <y>50</y>
      <width>31</width>
      <height>22</height>
     </rect>
@@ -55,8 +55,8 @@
   <widget class="QLineEdit" name="lineEditSphereZ">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>10</y>
+     <x>180</x>
+     <y>50</y>
      <width>31</width>
      <height>22</height>
     </rect>
@@ -68,8 +68,8 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>40</y>
+     <x>40</x>
+     <y>80</y>
      <width>49</width>
      <height>16</height>
     </rect>
@@ -81,8 +81,8 @@
   <widget class="QLineEdit" name="lineEditSphereRadius">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>40</y>
+     <x>100</x>
+     <y>80</y>
      <width>71</width>
      <height>22</height>
     </rect>
@@ -94,8 +94,8 @@
   <widget class="QPushButton" name="pushButtonOK">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>70</y>
+     <x>40</x>
+     <y>110</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -107,14 +107,40 @@
   <widget class="QPushButton" name="pushButtonCancel">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>70</y>
+     <x>130</x>
+     <y>110</y>
      <width>75</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
     <string>Cancel</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>20</y>
+     <width>41</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Name</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditSphereName">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>20</y>
+     <width>113</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>sphere1</string>
    </property>
   </widget>
  </widget>

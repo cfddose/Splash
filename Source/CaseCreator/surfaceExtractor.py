@@ -1,28 +1,30 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
 import yaml
-from primitives import ampersandPrimitives
+from primitives import SplashCaseCreatorPrimitives
 from constants import meshSettings
 
-def create_surfaceFeatureExtractDict(meshSettings):
-    header = ampersandPrimitives.createFoamHeader(className="dictionary", objectName="surfaceFeatureExtractDict")
+def generate_surfaceFeatureExtractDict(meshSettings):
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="surfaceFeatureExtractDict")
     surfaceFeatureExtractDict = f""+header
     for anEntry in meshSettings['geometry']:
         if anEntry['type'] == 'triSurfaceMesh':
@@ -45,7 +47,7 @@ def create_surfaceFeatureExtractDict(meshSettings):
 
 
 if __name__ == "__main__":
-    meshSettings = ampersandPrimitives.yaml_to_dict('meshSettings.yaml')
+    meshSettings = SplashCaseCreatorPrimitives.yaml_to_dict('meshSettings.yaml')
     surfaceFeatureExtractDict = create_surfaceFeatureExtractDict(meshSettings)
     #print(surfaceFeatureExtractDict)
     with open('surfaceFeatureExtractDict', 'w') as file:

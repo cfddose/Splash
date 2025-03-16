@@ -1,0 +1,504 @@
+meshSettings:
+  name: meshSettings
+  scale: 1.0
+  domain:
+    minx: -7.0
+    maxx: 19.0
+    miny: -5.0
+    maxy: 5.0
+    minz: -1.0
+    maxz: 9.0
+    nx: 40
+    ny: 16
+    nz: 16
+  maxCellSize: 0.65
+  fineLevel: 0
+  internalFlow: false
+  onGround: false
+  halfModel: false
+  patches:
+  - name: inlet
+    type: patch
+    faces:
+    - 0
+    - 4
+    - 7
+    - 3
+  - name: outlet
+    type: patch
+    faces:
+    - 1
+    - 5
+    - 6
+    - 2
+  - name: front
+    type: symmetry
+    faces:
+    - 0
+    - 1
+    - 5
+    - 4
+  - name: back
+    type: symmetry
+    faces:
+    - 2
+    - 3
+    - 7
+    - 6
+  - name: bottom
+    type: symmetry
+    faces:
+    - 0
+    - 1
+    - 2
+    - 3
+  - name: top
+    type: symmetry
+    faces:
+    - 4
+    - 5
+    - 6
+    - 7
+  bcPatches:
+    inlet:
+      type: patch
+      purpose: inlet
+      property:
+      - 1
+      - 0
+      - 0
+    outlet:
+      type: patch
+      purpose: outlet
+      property: null
+    front:
+      type: symmetry
+      purpose: symmetry
+      property: null
+    back:
+      type: symmetry
+      purpose: symmetry
+      property: null
+    bottom:
+      type: symmetry
+      purpose: symmetry
+      property: null
+    top:
+      type: symmetry
+      purpose: symmetry
+      property: null
+  snappyHexSteps:
+    castellatedMesh: 'true'
+    snap: 'true'
+    addLayers: 'true'
+  geometry:
+  - name: geom.stl
+    type: triSurfaceMesh
+    purpose: wall
+    refineMin: 2
+    refineMax: 2
+    featureEdges: true
+    featureLevel: 2
+    nLayers: 12
+    property: null
+    bounds:
+    - -1.0
+    - 1.0
+    - -1.0
+    - 1.0
+    - -1.0
+    - 1.0
+  - name: refinementBox
+    type: searchableBox
+    purpose: refinement
+    min:
+    - -2.4
+    - -3.0
+    - -3.0
+    max:
+    - 31.0
+    - 3.0
+    - 3.0
+    refineMax: 1
+  - name: fineBox
+    type: searchableBox
+    purpose: refinement
+    min:
+    - -1.4
+    - -1.9
+    - -1.9
+    max:
+    - 7.0
+    - 1.9
+    - 1.9
+    refineMax: 2
+  - name: refinementBox
+    type: searchableBox
+    purpose: refinement
+    min:
+    - -2.4
+    - -3.0
+    - -3.0
+    max:
+    - 31.0
+    - 3.0
+    - 3.0
+    refineMax: 1
+  - name: fineBox
+    type: searchableBox
+    purpose: refinement
+    min:
+    - -1.4
+    - -1.9
+    - -1.9
+    max:
+    - 7.0
+    - 1.9
+    - 1.9
+    refineMax: 2
+  - name: groundBox
+    type: searchableBox
+    purpose: refinement
+    min:
+    - -1000.0
+    - -1000
+    - -1.4
+    max:
+    - 1000.0
+    - 1000
+    - -0.6
+    refineMax: 2
+  castellatedMeshControls:
+    maxLocalCells: 10000000
+    maxGlobalCells: 50000000
+    minRefinementCells: 10
+    maxLoadUnbalance: 0.1
+    nCellsBetweenLevels: 5
+    features: []
+    refinementSurfaces: []
+    resolveFeatureAngle: 25
+    refinementRegions: []
+    locationInMesh:
+    - 0.0
+    - 0.0
+    - 0.0
+    allowFreeStandingZoneFaces: 'false'
+  snapControls:
+    nSmoothPatch: 3
+    tolerance: 2.0
+    nSolveIter: 50
+    nRelaxIter: 5
+    nFeatureSnapIter: 10
+    implicitFeatureSnap: 'false'
+    explicitFeatureSnap: 'true'
+    multiRegionFeatureSnap: 'false'
+  addLayersControls:
+    relativeSizes: 'true'
+    expansionRatio: 1.25
+    finalLayerThickness: 0.5
+    firstLayerThickness: 0.001
+    minThickness: 0.005
+    nGrow: 0
+    featureAngle: 180
+    slipFeatureAngle: 30
+    nRelaxIter: 3
+    nSmoothSurfaceNormals: 1
+    nSmoothNormals: 3
+    nSmoothThickness: 10
+    maxFaceThicknessRatio: 0.5
+    maxThicknessToMedialRatio: 0.3
+    minMedianAxisAngle: 90
+    nBufferCellsNoExtrude: 0
+    nLayerIter: 50
+  meshQualityControls:
+    maxNonOrtho: 70
+    maxBoundarySkewness: 20
+    maxInternalSkewness: 4
+    maxConcave: 80
+    minTetQuality: 1.0e-30
+    minVol: 1.0e-30
+    minArea: 1.0e-30
+    minTwist: 0.001
+    minDeterminant: 0.001
+    minFaceWeight: 0.001
+    minVolRatio: 0.001
+    minTriangleTwist: -1
+    nSmoothScale: 4
+    errorReduction: 0.75
+  mergeTolerance: 1.0e-06
+  debug: 0
+physicalProperties:
+  name: physicalProperties
+  fluid: Air
+  rho: 1.0
+  nu: 1.0e-06
+  g:
+  - 0
+  - 0
+  - -9.81
+  pRef: 0
+  Cp: 1000
+  thermo: hPolynomial
+  Pr: 0.7
+  TRef: 300
+  turbulenceModel: kOmegaSST
+numericalSettings:
+  ddtSchemes:
+    default: steadyState
+  gradSchemes:
+    default: Gauss linear
+    grad(p): Gauss linear
+    grad(U): cellLimited Gauss linear 1
+  divSchemes:
+    default: Gauss linear
+    div(phi,U): Gauss linearUpwind grad(U)
+    div(phi,k): Gauss upwind
+    div(phi,omega): Gauss upwind
+    div(phi,epsilon): Gauss upwind
+    div(phi,nuTilda): Gauss upwind
+    div(phi,nut): Gauss upwind
+    div(nuEff*dev(T(grad(U)))): Gauss linear
+  laplacianSchemes:
+    default: Gauss linear limited 0.667
+  interpolationSchemes:
+    default: linear
+  snGradSchemes:
+    default: limited 0.667
+  fluxRequired:
+    default: 'no'
+  wallDist: meshWave
+  pimpleDict:
+    nOuterCorrectors: 20
+    nCorrectors: 1
+    nNonOrthogonalCorrectors: 1
+    pRefCell: 0
+    pRefValue: 0
+    residualControl:
+      p: 0.001
+      U: 0.001
+      k: 0.001
+      omega: 0.001
+      epsilon: 0.001
+      nuTilda: 0.001
+      nut: 0.001
+  relaxationFactors:
+    U: 0.7
+    k: 0.7
+    omega: 0.7
+    epsilon: 0.7
+    nut: 0.7
+    nuTilda: 0.7
+    p: 0.3
+  simpleDict:
+    nNonOrthogonalCorrectors: 2
+    consistent: 'false'
+    residualControl:
+      U: 0.0001
+      p: 0.0001
+      k: 0.0001
+      omega: 0.0001
+      epsilon: 0.0001
+      nut: 0.0001
+      nuTilda: 0.0001
+  potentialFlowDict:
+    nonOrthogonalCorrectors: 10
+inletValues:
+  U:
+  - 1
+  - 0
+  - 0
+  p: 0
+  k: 0.1
+  omega: 1
+  epsilon: 0.1
+  nut: 1.0e-06
+boundaryConditions:
+  velocityInlet:
+    u_type: fixedValue
+    u_value:
+    - 1
+    - 0
+    - 0
+    p_type: zeroGradient
+    p_value: 0
+    k_type: fixedValue
+    k_value: 0.1
+    omega_type: fixedValue
+    omega_value: 1
+    epsilon_type: fixedValue
+    epsilon_value: 0.1
+    nut_type: calculated
+    nut_value: 1.0e-06
+    nutilda_type: fixedValue
+    nutilda_value: 3.0e-06
+  pressureOutlet:
+    u_type: inletOutlet
+    u_value:
+    - 0
+    - 0
+    - 0
+    p_type: fixedValue
+    p_value: 0
+    k_type: zeroGradient
+    k_value: 1.0e-06
+    omega_type: zeroGradient
+    omega_value: 1.0e-06
+    epsilon_type: zeroGradient
+    epsilon_value: 1.0e-06
+    nut_type: calculated
+    nut_value: 0
+    nutilda_type: zeroGradient
+    nutilda_value: $internalField
+  wall:
+    u_type: fixedValue
+    u_value:
+    - 0
+    - 0
+    - 0
+    p_type: zeroGradient
+    p_value: 0
+    k_type: kqRWallFunction
+    k_value: $internalField
+    omega_type: omegaWallFunction
+    omega_value: $internalField
+    epsilon_type: epsilonWallFunction
+    epsilon_value: $internalField
+    nut_type: nutkWallFunction
+    nut_value: $internalField
+    nutilda_type: fixedValue
+    nutilda_value: $internalField
+  movingWall:
+    u_type: movingWallVelocity
+    u_value:
+    - 0
+    - 0
+    - 0
+    p_type: zeroGradient
+    p_value: 0
+    k_type: kqRWallFunction
+    k_value: $internalField
+    omega_type: omegaWallFunction
+    omega_value: $internalField
+    epsilon_type: epsilonWallFunction
+    epsilon_value: $internalField
+    nut_type: nutkWallFunction
+    nut_value: $internalField
+    nutilda_type: fixedValue
+    nutilda_value: $internalField
+solverSettings:
+  U:
+    type: smoothSolver
+    smoother: GaussSeidel
+    tolerance: 1.0e-08
+    relTol: 0.1
+  p:
+    type: GAMG
+    smoother: GaussSeidel
+    tolerance: 1.0e-07
+    relTol: 0.01
+    maxIter: 100
+    agglomerator: faceAreaPair
+    nCellsInCoarsestLevel: 10
+    mergeLevels: 1
+    cacheAgglomeration: 'true'
+    nSweeps: 1
+    nPreSweeps: 0
+    nPostSweeps: 0
+  k:
+    type: smoothSolver
+    smoother: GaussSeidel
+    tolerance: 1.0e-08
+    relTol: 0.1
+  omega:
+    type: smoothSolver
+    smoother: GaussSeidel
+    tolerance: 1.0e-08
+    relTol: 0.1
+  epsilon:
+    type: smoothSolver
+    smoother: GaussSeidel
+    tolerance: 1.0e-08
+    relTol: 0.1
+  nuTilda:
+    type: smoothSolver
+    smoother: GaussSeidel
+    tolerance: 1.0e-08
+    relTol: 0.1
+  nut:
+    type: smoothSolver
+    smoother: GaussSeidel
+    tolerance: 1.0e-08
+    relTol: 0.1
+  Phi:
+    type: GAMG
+    smoother: GaussSeidel
+    tolerance: 1.0e-08
+    relTol: 0.01
+    maxIter: 100
+    agglomerator: faceAreaPair
+    nCellsInCoarsestLevel: 10
+    mergeLevels: 1
+    cacheAgglomeration: 'true'
+    nSweeps: 1
+    nPreSweeps: 0
+    nPostSweeps: 0
+simulationSettings:
+  transient: false
+  application: simpleFoam
+  startTime: 0
+  endTime: 1000
+  deltaT: 1
+  startFrom: startTime
+  stopAt: endTime
+  writeControl: runTime
+  writeInterval: 100
+  purgeWrite: 0
+  writeFormat: binary
+  writePrecision: 6
+  writeCompression: 'off'
+  timeFormat: general
+  timePrecision: 6
+  runTimeModifiable: 'true'
+  adjustTimeStep: 'no'
+  maxCo: 0.5
+  functions: []
+  libs: []
+  allowSystemOperations: 'true'
+  runTimeControl: adjustableRunTime
+parallelSettings:
+  parallel: true
+  numberOfSubdomains: 4
+  method: scotch
+simulationFlowSettings:
+  parallel: true
+  snappyHexMesh: true
+  initialize: true
+  potentialFoam: true
+  solver: simpleFoam
+  postProc: true
+  functionObjects: []
+postProcessSettings:
+  FOs: true
+  minMax: true
+  massFlow: true
+  yPlus: true
+  forces: true
+  probeLocations:
+  - - 0
+    - 0
+    - 0
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.0

@@ -1,12 +1,12 @@
 #!/bin/sh
 #========
 
-rm -rf SplashFOAM build dist SplashFOAM.spec 
+rm -rf Splash build dist Splash.spec 
 
 pyinstaller --noconfirm --onefile \
 --add-data "Resources:Resources" \
 --add-data "Meshing:Meshing" \
 --add-data "CaseCreator:CaseCreator" \  # Add the CaseCreator directory
---name SplashFOAM Source/SplashFOAM.py
+--name Splash Source/Splash.py
 
-cp dist/SplashFOAM Source/
+cp dist/Splash Source/

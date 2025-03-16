@@ -48,14 +48,30 @@ def view_toolbar():
 # TERMINAL APP 
 #______________           
 
-class SplashFOAM:  
+class Splash:  
     def __init__(self, root):
         self.root = root
         self.root.config(background="white")
-        self.root.title("SplashFOAM - v0.2")
+        self.root.title("Splash - v0.2")
         
+        # Get the absolute path of the script directory
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Convert relative path to absolute path
+        icon_path = os.path.join(base_path, "../Resources/Logos/simulitica_icon_logo.png")
+
+        # Ensure the path is absolute
+        icon_path = os.path.abspath(icon_path)
+
+        # Load the icon
+        if os.path.exists(icon_path):  # Check if the file exists before loading
+            icon_image = tk.PhotoImage(file=icon_path)
+            self.root.tk.call('wm', 'iconphoto', self.root._w, icon_image)
+        else:
+            print(f"Error: Icon file not found at {icon_path}")
+    
         # Set the window icon using a PhotoImage
-        icon_path = "../Resources/Logos/simulitica_icon_logo.png"  # Replace with the actual path to your icon file
+        #icon_path = "../Resources/Logos/simulitica_icon_logo.png"  # Replace with the actual path to your icon file
         icon_image = tk.PhotoImage(file=icon_path)
         self.root.tk.call('wm', 'iconphoto', self.root._w, icon_image)
         
@@ -93,7 +109,7 @@ class SplashFOAM:
         help_menu.add_command(label="Manual", command=self.splash_online_manual, background="black", foreground="cyan")
         help_menu.add_command(label="Splash-GPT", command=self.splash_GPT_page, background="black", foreground="pink")
         help_menu.add_command(label="Report an issue", command=self.open_contact_page, background="black", foreground="red")
-        help_menu.add_command(label="Support SplashFOAM", command=self.support_SplashFOAM, background="black", foreground="lightgreen")
+        help_menu.add_command(label="Support Splash", command=self.support_Splash, background="black", foreground="lightgreen")
         help_menu.add_command(label="Cloud HPC", command=self.cloud_HPC, background="black", foreground="white")
         menubar.add_cascade(label="Help", menu=help_menu)
         
@@ -339,7 +355,7 @@ class SplashFOAM:
         
         # Create a label for status messages
         self.status_label_title = ttk.Label(self.root, text="")
-        status_title = "SplashFOAM v0.2"
+        status_title = "Splash v0.2"
         self.status_label_title.grid(row=14, column=1, columnspan=1, pady=1, padx=10, sticky="nsew")  # Changed to sticky="nsew" for dynamic resizing
         self.status_label_title.config(text=status_title, font=("Helvetica", 14, "bold"), background="white", foreground="grey")
         
@@ -381,7 +397,7 @@ class SplashFOAM:
           =========                 |
           \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
            \\\\    /   O peration     | Website:  https://openfoam.org
-            \\\\  /    A nd           | Version:  SplashFOAM v0.2
+            \\\\  /    A nd           | Version:  Splash v0.2
              \\\\/     M anipulation  |
         \\*---------------------------------------------------------------------------*/\n"""
         
@@ -411,8 +427,8 @@ class SplashFOAM:
     
     def case_creator(self):
         """Launch the Case Creator GUI built with PySide."""
-        # Script path for ampersand_gui.py
-        script_path = os.path.abspath(os.path.join("CaseCreator", "ampersand_gui.py"))
+        # Script path for SplashCaseCreator
+        script_path = os.path.abspath(os.path.join("CaseCreator", "SplashCaseCreator_gui.py"))
 
         try:
             print(f"Launching Case Creator at: {script_path}")
@@ -443,8 +459,13 @@ class SplashFOAM:
     def add_logos(self):
     
         # Create PhotoImage objects directly from image files
-        self.logo_openfoam = tk.PhotoImage(file="../Resources/Logos/openfoam_logo.png")
-        self.logo_simulitica = tk.PhotoImage(file="../Resources/Logos/simulitica_logo.png")
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+        self.logo_openfoam = tk.PhotoImage(file=os.path.abspath(os.path.join(base_path, "../Resources/Logos/openfoam_logo.png")))
+        self.logo_simulitica = tk.PhotoImage(file=os.path.abspath(os.path.join(base_path, "../Resources/Logos/simulitica_logo.png")))
+
+        #self.logo_openfoam = tk.PhotoImage(file="../Resources/Logos/openfoam_logo.png")
+        #self.logo_simulitica = tk.PhotoImage(file="../Resources/Logos/simulitica_logo.png")
     
         # Resize images if needed
         self.logo_openfoam = self.logo_openfoam.subsample(3, 3)  # Adjust the subsample as needed
@@ -618,7 +639,7 @@ class SplashFOAM:
     def show_welcome_message(self):
         welcome_message = (
             "\n"
-            "Welcome to SplashFOAM!\n\n"
+            "Welcome to Splash!\n\n"
             "Your interactive OpenFOAM simulation platform.\n"
             "_____________________________________________________________________________\n"
             "\n"
@@ -635,7 +656,9 @@ class SplashFOAM:
         welcome_label.grid(row=0, column=0, columnspan=5, rowspan=10, pady=1, padx=10, sticky="nsew")
 
         # Create a PhotoImage object and set it to the Label
-        welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        welcome_image = tk.PhotoImage(file=os.path.abspath(os.path.join(base_path, "../Resources/Images/racing-car.png")))
+        #welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")
         welcome_image = welcome_image.subsample(9, 9)
         welcome_label.config(image=welcome_image, compound="top")
 
@@ -647,7 +670,7 @@ class SplashFOAM:
     def show_about_message(self):
         about_message = (
             "\n"
-            "Welcome to SplashFOAM!\n\n"
+            "Welcome to Splash!\n\n"
             "Your interactive OpenFOAM simulation platform.\n"
             "_____________________________________________________________________________\n"
             "\n"
@@ -661,7 +684,7 @@ class SplashFOAM:
 
         # Create a Toplevel window for the welcome message
         popup = tk.Toplevel(self.root)
-        popup.title("SplashFOAM v0.2")
+        popup.title("Splash v0.2")
         popup.geometry("750x700")  # Adjust the size as needed
 
         # Create a Label in the Toplevel window to display the welcome message
@@ -669,7 +692,9 @@ class SplashFOAM:
         welcome_label.pack(padx=10, pady=10)
 
         # Create a PhotoImage object and set it to the Label
-        welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")  # Adjust the path as needed
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        welcome_image = tk.PhotoImage(file=os.path.join(base_path, "../Resources/Images/racing-car.png"))
+        #welcome_image = tk.PhotoImage(file="../Resources/Images/racing-car.png")  # Adjust the path as needed
         welcome_image = welcome_image.subsample(4, 4)  # Adjust subsampling as needed
         welcome_label.config(image=welcome_image, compound="top")
         welcome_label.image = welcome_image  # Keep a reference
@@ -731,7 +756,10 @@ class SplashFOAM:
 
     def add_bgImage(self):
         # Specify the image path
-        image_path = "../Resources/Images/racing-car.png"
+        
+        #image_path = "../Resources/Images/racing-car.png"
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.abspath(os.path.join(base_path, "../Resources/Images/racing-car.png"))
 
         # Create a tk.PhotoImage object directly from the file
         self.splash_bgImage = tk.PhotoImage(file=image_path)
@@ -1257,61 +1285,142 @@ _____________________________________________________
 \n"""
         return pattern + run
         
+    # # Loading an existing OpenFOAM case
+    # def load_case(self):
+    #     self.selected_directory = filedialog.askdirectory()
+    #     if self.selected_directory:
+    #         # Check if the selected directory contains the necessary OpenFOAM folders
+    #         base_folders = ["constant", "system"]
+    #         time_folders = ["0", "0.orig"]  # Check for either '0' or '0.orig'
 
-    # Loading an existing OpenFOAM case
+    #         # Check if 'constant' and 'system' folders exist
+    #         base_folders_exist = all(os.path.isdir(os.path.join(self.selected_directory, d)) for d in base_folders)
+    #         # Check if either '0' or '0.orig' exists
+    #         time_folder_exists = any(os.path.isdir(os.path.join(self.selected_directory, t)) for t in time_folders)
+
+    #         if base_folders_exist and time_folder_exists:
+    #             self.selected_file_path = self.selected_directory
+    #             self.status_label.config(text=f"Case directory identified: {self.selected_directory}", foreground="darkblue")
+    #             self.run_simulation_button["state"] = tk.NORMAL  # Enable the "Run Simulation" button
+    #             self.initialize_simulation_button["state"] = tk.NORMAL  
+    #             self.configure_simulation_button["state"] = tk.NORMAL  
+    #             self.stop_simulation_button["state"] = tk.NORMAL 
+                
+    #             # Create a dummy 'splash.foam' file in the selected directory
+    #             try:
+    #                 dummy_file_path = os.path.join(self.selected_directory, "splash.foam")
+    #                 with open(dummy_file_path, 'w') as dummy_file:
+    #                     dummy_file.write('')  # Write an empty string to create an empty file
+    #             except Exception as e:
+    #                 self.status_label.config(text=f"Error creating 'splash.foam': {e}", foreground="red")
+                    
+    #             # Check for constant/polyMesh directory
+    #             polyMesh_path = os.path.join(self.selected_directory, "constant", "polyMesh")
+    #             if os.path.isdir(polyMesh_path):
+    #                 # Prompt the user
+    #                 response = messagebox.askyesno("Mesh Confirmation", "This case seems to have a mesh, do you want to load it?")
+    #                 if response:
+    #                     self.paraview_application()  # Call the function to load the mesh
+
+    #             # Additional OpenFOAM-related checks can be added here
+                
+    #         else:
+    #             messagebox.showerror("Invalid OpenFOAM Case", "The selected folder does not represent a valid OpenFOAM case. ")
+    #             self.status_label.config(text="Invalid OpenFOAM case selected!", foreground="red")
+    #             self.run_simulation_button["state"] = tk.DISABLED  # Disable the "Run Simulation" button
+    #             self.initialize_simulation_button["state"] = tk.DISABLED  
+    #             self.configure_simulation_button["state"] = tk.DISABLED  
+    #             self.stop_simulation_button["state"] = tk.DISABLED  
+    #     else:
+    #         self.status_label.config(text="No case directory selected!", foreground="darkblue")
+    #         self.run_simulation_button["state"] = tk.DISABLED  # Disable the "Run Simulation" button
+    #         self.initialize_simulation_button["state"] = tk.DISABLED  
+    #         self.configure_simulation_button["state"] = tk.DISABLED  
+    #         self.stop_simulation_button["state"] = tk.DISABLED  
+
     def load_case(self):
         self.selected_directory = filedialog.askdirectory()
+        
         if self.selected_directory:
             # Check if the selected directory contains the necessary OpenFOAM folders
             base_folders = ["constant", "system"]
             time_folders = ["0", "0.orig"]  # Check for either '0' or '0.orig'
 
-            # Check if 'constant' and 'system' folders exist
+            # Validate OpenFOAM case structure
             base_folders_exist = all(os.path.isdir(os.path.join(self.selected_directory, d)) for d in base_folders)
-            # Check if either '0' or '0.orig' exists
             time_folder_exists = any(os.path.isdir(os.path.join(self.selected_directory, t)) for t in time_folders)
 
             if base_folders_exist and time_folder_exists:
                 self.selected_file_path = self.selected_directory
                 self.status_label.config(text=f"Case directory identified: {self.selected_directory}", foreground="darkblue")
-                self.run_simulation_button["state"] = tk.NORMAL  # Enable the "Run Simulation" button
+                self.run_simulation_button["state"] = tk.NORMAL  
                 self.initialize_simulation_button["state"] = tk.NORMAL  
                 self.configure_simulation_button["state"] = tk.NORMAL  
-                self.stop_simulation_button["state"] = tk.NORMAL 
-                
-                # Create a dummy 'splash.foam' file in the selected directory
+                self.stop_simulation_button["state"] = tk.NORMAL  
+
+                # Check for 'mesh' or 'Allmesh' files and execute them
+                mesh_script_path = None
+                for script_name in ["mesh", "Allmesh"]:
+                    script_path = os.path.join(self.selected_directory, script_name)
+                    if os.path.isfile(script_path) and os.access(script_path, os.X_OK):  # Ensure it's executable
+                        mesh_script_path = script_path
+                        break  # Stop searching after the first match
+
+                if mesh_script_path:
+                    # Run the meshing script
+                    self.status_label.config(text="Executing meshing script, please wait...", foreground="orange")
+                    self.text_box.update_idletasks()  # Update_idletasks() 
+                    
+                    try:
+                        subprocess.run(mesh_script_path, shell=True, check=True, cwd=self.selected_directory)
+                        self.status_label.config(text="Meshing completed successfully!", foreground="green")
+                    except subprocess.CalledProcessError as e:
+                        self.status_label.config(text=f"Error executing meshing script: {e}", foreground="red")
+                        return  # Stop execution if meshing fails
+
+                # Create a dummy 'splash.foam' file
                 try:
                     dummy_file_path = os.path.join(self.selected_directory, "splash.foam")
                     with open(dummy_file_path, 'w') as dummy_file:
-                        dummy_file.write('')  # Write an empty string to create an empty file
+                        dummy_file.write('')  # Create an empty file
                 except Exception as e:
                     self.status_label.config(text=f"Error creating 'splash.foam': {e}", foreground="red")
-                    
-                # Check for constant/polyMesh directory
+                    return
+
+                # Check for existing mesh
                 polyMesh_path = os.path.join(self.selected_directory, "constant", "polyMesh")
                 if os.path.isdir(polyMesh_path):
-                    # Prompt the user
-                    response = messagebox.askyesno("Mesh Confirmation", "This case seems to have a mesh, do you want to load it?")
+                    response = messagebox.askyesno("Mesh Confirmation", "This case has a mesh. Do you want to visualize it in ParaView?")
                     if response:
-                        self.paraview_application()  # Call the function to load the mesh
+                        self.launch_paraview_with_case()  # Open ParaView with the case file
 
-                # Additional OpenFOAM-related checks can be added here
-                
             else:
-                messagebox.showerror("Invalid OpenFOAM Case", "The selected folder does not represent a valid OpenFOAM case. ")
+                messagebox.showerror("Invalid OpenFOAM Case", "The selected folder does not represent a valid OpenFOAM case.")
                 self.status_label.config(text="Invalid OpenFOAM case selected!", foreground="red")
-                self.run_simulation_button["state"] = tk.DISABLED  # Disable the "Run Simulation" button
+                self.run_simulation_button["state"] = tk.DISABLED  
                 self.initialize_simulation_button["state"] = tk.DISABLED  
                 self.configure_simulation_button["state"] = tk.DISABLED  
                 self.stop_simulation_button["state"] = tk.DISABLED  
         else:
             self.status_label.config(text="No case directory selected!", foreground="darkblue")
-            self.run_simulation_button["state"] = tk.DISABLED  # Disable the "Run Simulation" button
+            self.run_simulation_button["state"] = tk.DISABLED  
             self.initialize_simulation_button["state"] = tk.DISABLED  
             self.configure_simulation_button["state"] = tk.DISABLED  
             self.stop_simulation_button["state"] = tk.DISABLED  
- 
-                
+
+    # Function to launch ParaView with splash.foam
+    def launch_paraview_with_case(self):
+        splash_foam_path = os.path.join(self.selected_directory, "splash.foam")
+
+        if os.path.exists(splash_foam_path):
+            self.status_label.config(text="Launching ParaView...", foreground="blue")
+            try:
+                subprocess.Popen(["paraview", splash_foam_path], cwd=self.selected_directory)
+            except Exception as e:
+                self.status_label.config(text=f"Error launching ParaView: {e}", foreground="red")
+        else:
+            messagebox.showerror("File Not Found", "The splash.foam file could not be found.")
+
     def initialize_simulation(self):
         if self.selected_file_path is None:
             tk.messagebox.showerror("Error", "No case was identified. Please make sure your case is loaded properly.")
@@ -1951,7 +2060,6 @@ _____________________________________________________
 
         if errors:
             error_message = errors.decode()
-            #messagebox.showerror("Error Sourcing OpenFOAM", f"Failed to source OpenFOAM version {version}:\n{error_message}")
             messagebox.showerror("Error Sourcing OpenFOAM", f"Failed to source OpenFOAM version {version}. Please make sure the chosen version is pre-installed on your system!")
             self.openfoam_sourced = False
             popup.destroy()
@@ -2027,10 +2135,10 @@ _____________________________________________________
              
     def open_contact_page(self, event=None):
         webbrowser.open_new("https://www.simulitica.com/contact")
-    def support_SplashFOAM(self, event=None):
+    def support_Splash(self, event=None):
         webbrowser.open_new("https://www.buymeacoffee.com/simulitica")
     def splash_online_manual(self, event=None):
-        webbrowser.open_new("https://github.com/mohamedalysayed/SplashFOAM/tree/main")
+        webbrowser.open_new("https://github.com/mohamedalysayed/Splash/tree/main")
     def splash_GPT_page(self, event=None):
         webbrowser.open_new("https://chat.openai.com/g/g-RGYvE3TsL-splash-gpt")
     def cloud_HPC(self, event=None):
@@ -2107,7 +2215,7 @@ _____________________________________________________
 
             # Create a Toplevel window for the message
             popup = tk.Toplevel(self.root)
-            popup.title("SplashFOAM v0.2")
+            popup.title("Splash v0.2")
             popup.geometry("800x600")  # Adjust the size as needed
 
             # Create a Label in the Toplevel window to display the message
@@ -2115,7 +2223,9 @@ _____________________________________________________
             license_message_label.pack(padx=10, pady=10)
 
             # Create a PhotoImage object and set it to the Label
-            welcome_image = tk.PhotoImage(file="../Resources/Logos/simulitica_icon_logo.png")  # Adjust the path as needed
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            welcome_image = tk.PhotoImage(file=os.path.join(base_path, "../Resources/Logos/simulitica_icon_logo.png"))
+            #welcome_image = tk.PhotoImage(file="../Resources/Logos/simulitica_icon_logo.png")  
             welcome_image = welcome_image.subsample(4, 4)  # Adjust subsampling as needed
             license_message_label.config(image=welcome_image, compound="top")
             license_message_label.image = welcome_image  # Keep a reference
@@ -2130,7 +2240,6 @@ _____________________________________________________
 # https://www.buymeacoffee.com/simulitica # poor simulitica :( 
 # https://www.udemy.com/course/t-flows-crash-course-cfd/ -> T-Flows on Udemy
 # ---------------------------------------------------------------------------<
-
     def load_last_recorded_time(self):
         if os.path.exists(self.elapsed_time_file):
             with open(self.elapsed_time_file, "r") as file:
@@ -2159,7 +2268,7 @@ _____________________________________________________
 if __name__ == "__main__":
     root = tk.Tk()
     root.option_add('*tearOff', False)  # Disable menu tear-off
-    root.title("SplashFOAM v0.2")
-    root.wm_title("SplashFOAM v0.2")  # Window manager title
-    app = SplashFOAM(root)
+    root.title("Splash v0.2")
+    root.wm_title("Splash v0.2")  # Window manager title
+    app = Splash(root)
     root.mainloop()

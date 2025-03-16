@@ -1,27 +1,29 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
 #from constants import parallelSettings
-from primitives import ampersandPrimitives
+from primitives import SplashCaseCreatorPrimitives
 
-def createDecomposeParDict(parallelSettings):
-    decomposeParDict = ampersandPrimitives.createFoamHeader(className='dictionary', objectName='decomposeParDict')
+def generate_DecomposeParDict(parallelSettings):
+    decomposeParDict = SplashCaseCreatorPrimitives.createFoamHeader(className='dictionary', objectName='decomposeParDict')
     decomposeParDict += f"""
 numberOfSubdomains {parallelSettings['numberOfSubdomains']};
 method {parallelSettings['method']};
