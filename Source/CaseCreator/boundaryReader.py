@@ -1,31 +1,33 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
 # This file reads the boundary file and extracts the boundary patches
 
-from primitives import ampersandIO
+from primitives import SplashCaseCreatorIO
 import os
 
 def check_boundary_file(boundary_file="constant/polyMesh/boundary"):
     # check if the boundary file exists
     if not os.path.exists(boundary_file):
-        ampersandIO.printError(f"Boundary file {boundary_file} does not exist")
+        SplashCaseCreatorIO.printError(f"Boundary file {boundary_file} does not exist")
         return False
     return True
 
@@ -75,10 +77,10 @@ def read_boundary(boundary_file="constant/polyMesh/boundary"):
 
 def list_patches(boundary_patches):
     patchNames = boundary_patches.keys()
-    ampersandIO.printMessage("Patch name\tType")
-    ampersandIO.printMessage("---------\t----")
+    SplashCaseCreatorIO.printMessage("Patch name\tType")
+    SplashCaseCreatorIO.printMessage("---------\t----")
     for patch in patchNames:
-        ampersandIO.printMessage(f"{patch}\t\t{boundary_patches[patch]}")
+        SplashCaseCreatorIO.printMessage(f"{patch}\t\t{boundary_patches[patch]}")
 
 if __name__ == '__main__':
     boundary_file = "boundary"

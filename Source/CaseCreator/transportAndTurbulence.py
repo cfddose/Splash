@@ -1,28 +1,30 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
 import yaml
-from primitives import ampersandPrimitives
+from primitives import SplashCaseCreatorPrimitives
 from constants import meshSettings, physicalProperties
 
 def create_transportPropertiesDict(transportProperties):
-    header = ampersandPrimitives.createFoamHeader(className="dictionary", objectName="transportProperties")
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="transportProperties")
     transportPropertiesDict = f""+header
     transportProperties_ = f"""
 transportModel  Newtonian;
@@ -32,7 +34,7 @@ nu              nu [ 0 2 -1 0 0 0 0 ] {transportProperties['nu']};
     return transportPropertiesDict
 
 def create_turbulencePropertiesDict(turbulenceProperties):
-    header = ampersandPrimitives.createFoamHeader(className="dictionary", objectName="turbulenceProperties")
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="turbulenceProperties")
     turbulenceModel = turbulenceProperties['turbulenceModel']
     if turbulenceModel == "laminar":
         turbulencePropertiesDict = f""+header

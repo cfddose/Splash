@@ -104,10 +104,6 @@ Import Geometry enables the user to view their CAD in one of five options:
 
 ![CAD-Viewers](https://github.com/user-attachments/assets/884eecd2-6f6e-4787-9851-b6c07bafc655)
 
-![image](https://github.com/user-attachments/assets/cb32fcb5-291d-4f66-a0c1-f384154f67c1)
-![Screenshot from 2024-10-23 23-36-41](https://github.com/user-attachments/assets/0e3c72f3-6224-419f-8c2c-9b45f402c4ed)
-
-
 ## Meshing Tools
 SplashFOAM offers a range of meshing capabilities:
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>380</width>
-    <height>279</height>
+    <width>441</width>
+    <height>455</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>20</y>
+     <x>60</x>
+     <y>130</y>
      <width>71</width>
      <height>16</height>
     </rect>
@@ -29,8 +29,8 @@
   <widget class="QComboBox" name="comboBoxStartFrom">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>20</y>
+     <x>133</x>
+     <y>130</y>
      <width>261</width>
      <height>22</height>
     </rect>
@@ -39,9 +39,9 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>50</y>
-     <width>71</width>
+     <x>60</x>
+     <y>160</y>
+     <width>61</width>
      <height>16</height>
     </rect>
    </property>
@@ -52,8 +52,8 @@
   <widget class="QLineEdit" name="lineEditStartTime">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>50</y>
+     <x>133</x>
+     <y>160</y>
      <width>261</width>
      <height>22</height>
     </rect>
@@ -62,9 +62,9 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>80</y>
-     <width>71</width>
+     <x>60</x>
+     <y>190</y>
+     <width>61</width>
      <height>16</height>
     </rect>
    </property>
@@ -75,8 +75,8 @@
   <widget class="QLineEdit" name="lineEditEndTime">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>80</y>
+     <x>133</x>
+     <y>190</y>
      <width>261</width>
      <height>22</height>
     </rect>
@@ -85,9 +85,9 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>110</y>
-     <width>71</width>
+     <x>60</x>
+     <y>220</y>
+     <width>61</width>
      <height>16</height>
     </rect>
    </property>
@@ -98,8 +98,8 @@
   <widget class="QLineEdit" name="lineEditTimeStep">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>110</y>
+     <x>133</x>
+     <y>220</y>
      <width>261</width>
      <height>22</height>
     </rect>
@@ -108,21 +108,21 @@
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>140</y>
+     <x>40</x>
+     <y>250</y>
      <width>81</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>Write Outputs</string>
+    <string>Write Control</string>
    </property>
   </widget>
   <widget class="QComboBox" name="comboBoxWriteControl">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>140</y>
+     <x>133</x>
+     <y>250</y>
      <width>261</width>
      <height>22</height>
     </rect>
@@ -131,8 +131,8 @@
   <widget class="QLabel" name="label_6">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>170</y>
+     <x>30</x>
+     <y>310</y>
      <width>91</width>
      <height>20</height>
     </rect>
@@ -144,8 +144,8 @@
   <widget class="QLineEdit" name="lineEditOutputInterval">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>170</y>
+     <x>133</x>
+     <y>310</y>
      <width>261</width>
      <height>22</height>
     </rect>
@@ -154,8 +154,8 @@
   <widget class="QPushButton" name="pushButtonOK">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>240</y>
+     <x>60</x>
+     <y>420</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -167,8 +167,8 @@
   <widget class="QPushButton" name="pushButtonApply">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>240</y>
+     <x>220</x>
+     <y>420</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -180,8 +180,8 @@
   <widget class="QPushButton" name="pushButtonCancel">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>240</y>
+     <x>140</x>
+     <y>420</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -193,8 +193,8 @@
   <widget class="QPushButton" name="pushButtonDefault">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>240</y>
+     <x>300</x>
+     <y>420</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -206,8 +206,8 @@
   <widget class="QLabel" name="label_7">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>200</y>
+     <x>30</x>
+     <y>340</y>
      <width>91</width>
      <height>20</height>
     </rect>
@@ -219,10 +219,210 @@
   <widget class="QLineEdit" name="lineEditWritePrecision">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>200</y>
+     <x>133</x>
+     <y>340</y>
      <width>261</width>
      <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="Line" name="line">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>110</y>
+     <width>371</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Orientation::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxParallel">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>20</y>
+     <width>141</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Parallel Processing</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEdit_nProcs">
+   <property name="geometry">
+    <rect>
+     <x>310</x>
+     <y>20</y>
+     <width>71</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_8">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>20</y>
+     <width>61</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Processes</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboBoxDecompositionMethod">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>50</y>
+     <width>161</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_9">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>50</y>
+     <width>141</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Decomposition method</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditX">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>80</y>
+     <width>51</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_10">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>80</y>
+     <width>21</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>x</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditY">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>80</y>
+     <width>51</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_11">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>80</y>
+     <width>21</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>y</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditZ">
+   <property name="geometry">
+    <rect>
+     <x>310</x>
+     <y>80</y>
+     <width>51</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_12">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>80</y>
+     <width>21</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>z</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_13">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>280</y>
+     <width>81</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Write Format</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboBoxWriteFormat">
+   <property name="geometry">
+    <rect>
+     <x>133</x>
+     <y>280</y>
+     <width>261</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxAdjustTimeStep">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>380</y>
+     <width>161</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Adjustable Time Step</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_14">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>380</y>
+     <width>58</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Max Co</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditMaxCo">
+   <property name="geometry">
+    <rect>
+     <x>302</x>
+     <y>380</y>
+     <width>91</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>

@@ -1,9 +1,12 @@
 #!/bin/bash
+ 
+# Author: Mohamed Aly Sayed (muhammmedaly@gmail.com) 
+# Version: v0.01
 # Script to install the required CFD-related packages on Ubuntu
 
 echo "_________________________________________________________________________________"
 echo "                                                                                 "
-echo "__________________ SplashFOAM Pre-Installation Script ________16.10.2024___MS____"
+echo "__________________ Splash Pre-Installation Script ________16.10.2024___MS____"
 echo "                      Minimum Equipment List (MEL)                               "
 echo "_________________________________________________________________________________"
 echo "                                                                                 "

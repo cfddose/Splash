@@ -1,23 +1,26 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
-# Default values for the constants used in the ampersandCFD library
+
+# Default values for the constants used in the SplashCaseCreatorCFD library
 meshSettings = {
     'name': 'meshSettings',
     'scale': 1.0,
@@ -37,25 +40,27 @@ meshSettings = {
     'halfModel': False,
     # patches are for the construction of the blockMeshDict
     'patches': [
-        {'name': 'inlet', 'type': 'patch','faces': [0, 4, 7, 3]},
-        {'name': 'outlet', 'type': 'patch','faces': [1, 5, 6, 2]},
-        {'name': 'front', 'type': 'symmetry','faces': [0, 1, 5, 4]},
-        {'name': 'back', 'type': 'symmetry','faces': [2, 3, 7, 6]},
-        {'name': 'bottom', 'type': 'symmetry','faces': [0, 1, 2, 3]},
-        {'name': 'top', 'type': 'symmetry','faces': [4, 5, 6, 7]},
+        {'name': 'inlet', 'type': 'patch','faces': [0, 4, 7, 3],'purpose': 'inlet','property': (1,0,0)},
+        {'name': 'outlet', 'type': 'patch','faces': [1, 5, 6, 2],'purpose': 'outlet','property': None},
+        {'name': 'front', 'type': 'symmetry','faces': [0, 1, 5, 4],'purpose': 'symmetry','property': None},
+        {'name': 'back', 'type': 'symmetry','faces': [2, 3, 7, 6],'purpose': 'symmetry','property': None},
+        {'name': 'bottom', 'type': 'symmetry','faces': [0, 1, 2, 3],'purpose': 'symmetry','property': None},
+        {'name': 'top', 'type': 'symmetry','faces': [4, 5, 6, 7],'purpose': 'symmetry','property': None},
     ],
     # bcPatches are for the boundary conditions and may be changed based on the case
-    'bcPatches': {
-        'inlet':    {'type': 'patch','purpose': 'inlet','property': (1,0,0)},
-        'outlet':   {'type': 'patch','purpose': 'outlet','property': None},
-        'front':    {'type': 'symmetry','purpose': 'symmetry','property': None},
-        'back':     {'type': 'symmetry','purpose': 'symmetry','property': None},
-        'bottom':   {'type': 'symmetry','purpose': 'symmetry','property': None},
-        'top':      {'type': 'symmetry','purpose': 'symmetry','property': None},
-},
-    'snappyHexSteps': {'castellatedMesh': 'true',
-                       'snap': 'true',
-                        'addLayers': 'true'},
+    # 2025/1/23: added faces to the bcPatches 
+    # 2025/2/7: bcPatches are completely removed from the meshSettings. Now everything uses patches instead.
+#     'bcPatches': {
+#         'inlet':    {'type': 'patch','purpose': 'inlet','property': (1,0,0),'faces': [0, 4, 7, 3]},
+#         'outlet':   {'type': 'patch','purpose': 'outlet','property': None,'faces': [1, 5, 6, 2]},
+#         'front':    {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 5, 4]},
+#         'back':     {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [2, 3, 7, 6]},
+#         'bottom':   {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [0, 1, 2, 3]},
+#         'top':      {'type': 'symmetry','purpose': 'symmetry','property': None,'faces': [4, 5, 6, 7]},
+# },
+    'snappyHexSteps': {'castellatedMesh': True,
+                       'snap': True,
+                        'addLayers': True,},
 
     'geometry': [], #[{'name': 'stl1.stl','type':'triSurfaceMesh', 'refineMin': 1, 'refineMax': 3, 
                 #     'featureEdges':'true','featureLevel':3,'nLayers':3},
@@ -78,17 +83,17 @@ meshSettings = {
                         'nSolveIter': 50,
                         'nRelaxIter': 5,
                         'nFeatureSnapIter': 10,
-                        'implicitFeatureSnap': 'false',
-                        'explicitFeatureSnap': 'true',
-                        'multiRegionFeatureSnap': 'false'},
+                        'implicitFeatureSnap': False,
+                        'explicitFeatureSnap': True,
+                        'multiRegionFeatureSnap': False,},
 
-    'addLayersControls': {'relativeSizes': 'true',
-                            'expansionRatio': 1.25,
-                            'finalLayerThickness': 0.4,
+    'addLayersControls': {'relativeSizes': True,
+                            'expansionRatio': 1.2,
+                            'finalLayerThickness': 0.5,
                             'firstLayerThickness': 0.001,
                             'minThickness': 1e-7,
                             'nGrow': 0,
-                            'featureAngle': 180,
+                            'featureAngle': 130,
                             'slipFeatureAngle': 30,
                             'nRelaxIter': 3,
                             'nSmoothSurfaceNormals': 1,
@@ -99,6 +104,7 @@ meshSettings = {
                             'minMedianAxisAngle': 90,
                             'nBufferCellsNoExtrude': 0,
                             'nLayerIter': 50,
+                            'nOuterIter': 1,
                             },
 
     'meshQualityControls': {'maxNonOrtho': 70,
@@ -135,10 +141,11 @@ physicalProperties = {
 }
 
 numericalSettings = {
+    'mode': 0,
     'ddtSchemes': {'default': 'steadyState',},
-    'gradSchemes': {'default': 'Gauss linear',
+    'gradSchemes': {'default': 'cellLimited Gauss linear 0.5',
                     'grad(p)': 'Gauss linear',
-                    'grad(U)': 'cellLimited Gauss linear 1',},
+                    'grad(U)': 'cellLimited Gauss linear 0.5',},
     'divSchemes': {'default': 'Gauss linear',
                    'div(phi,U)': 'Gauss linearUpwind grad(U)',
                    'div(phi,k)': 'Gauss upwind',
@@ -148,9 +155,9 @@ numericalSettings = {
                    'div(phi,nut)': 'Gauss upwind',
                    'div(nuEff*dev(T(grad(U))))': 'Gauss linear',
                    },
-    'laplacianSchemes': {'default': 'Gauss linear limited 0.667',},
+    'laplacianSchemes': {'default': 'Gauss linear limited corrected 0.5',},
     'interpolationSchemes': {'default': 'linear'},
-    'snGradSchemes': {'default': 'limited 0.667',},
+    'snGradSchemes': {'default': 'limited corrected 0.5',},
     'fluxRequired': {'default': 'no'},
     'wallDist': 'meshWave',
     'pimpleDict': {'nOuterCorrectors': 20, 'nCorrectors': 1, 
@@ -163,7 +170,8 @@ numericalSettings = {
                    },
 
     'relaxationFactors': {'U': 0.7, 'k': 0.7, 'omega': 0.7, 'epsilon': 0.7, 'nut': 0.7, 'nuTilda':0.7, 'p': 0.3}, 
-    'simpleDict':{'nNonOrthogonalCorrectors': 2, 'consistent': 'false', 'residualControl': {'U': 1e-4, 'p': 1e-4, 'k': 1e-4, 'omega': 1e-4, 'epsilon': 1e-4, 'nut': 1e-4, 'nuTilda': 1e-4}},
+    'simpleDict':{'nNonOrthogonalCorrectors': 2, 'consistent': 'false','pRefCell': 0, 'pRefValue': 0,
+                   'residualControl': {'U': 1e-4, 'p': 1e-3, 'k': 1e-4, 'omega': 1e-4, 'epsilon': 1e-4, 'nut': 1e-4, 'nuTilda': 1e-4}},
     'potentialFlowDict':{'nonOrthogonalCorrectors': 10},
 }
 
@@ -264,6 +272,25 @@ boundaryConditions = {
      'epsilon_type': 'epsilonWallFunction','epsilon_value': '$internalField',
      'nut_type': 'nutkWallFunction','nut_value': '$internalField',
      'nutilda_type': 'fixedValue','nutilda_value':'$internalField'},
+    
+    'symmetry':
+    {'u_type': 'symmetry','u_value': [0, 0, 0],
+     'p_type': 'symmetry','p_value': 0,
+     'k_type': 'symmetry','k_value': '$internalField',
+     'omega_type': 'symmetry','omega_value': '$internalField',
+     'epsilon_type': 'symmetry','epsilon_value': '$internalField',
+     'nut_type': 'symmetry','nut_value': '$internalField',
+     'nutilda_type': 'symmetry','nutilda_value': '$internalField',},
+
+    'empty':
+    {'u_type': 'empty','u_value': [0, 0, 0],
+     'p_type': 'empty','p_value': 0,
+     'k_type': 'empty','k_value': 0,
+     'omega_type': 'empty','omega_value': 0,
+     'epsilon_type': 'empty','epsilon_value': 0,
+     'nut_type': 'empty','nut_value': 0,
+     'nutilda_type': 'empty','nutilda_value': 0,},
+
 }
 
 simulationSettings = {
@@ -274,17 +301,17 @@ simulationSettings = {
     'deltaT': 1,
     'startFrom': 'startTime',
     'stopAt': 'endTime',
-    'writeControl': 'runTime',
+    'writeControl': 'adjustableRunTime',
     'writeInterval': 100,
     'purgeWrite': 0,
     'writeFormat': 'binary',
-    'writePrecision': 6,
+    'writePrecision': 8,
     'writeCompression': 'off',
     'timeFormat': 'general',
-    'timePrecision': 6,
+    'timePrecision': 8,
     'runTimeModifiable': 'true',
     'adjustTimeStep': 'no',
-    'maxCo': 0.5,
+    'maxCo': 0.9,
     'functions': [],
     'libs': [],
     'allowSystemOperations': 'true',
@@ -295,6 +322,9 @@ parallelSettings = {
     'parallel': True,
     'numberOfSubdomains': 4,
     'method': 'scotch',
+    'x': 2,
+    'y': 2,
+    'z': 1,
     
 }
 

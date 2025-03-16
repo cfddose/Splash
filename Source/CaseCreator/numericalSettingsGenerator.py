@@ -1,27 +1,29 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
 from constants import numericalSettings, solverSettings
-from primitives import ampersandPrimitives
+from primitives import SplashCaseCreatorPrimitives
 
 def create_algorithmDict(numericalSettings):
-    #header = ampersandPrimitives.createFoamHeader(className="dictionary", objectName="pimpleDict")
+    #header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="pimpleDict")
     algorithmDict = f""
     algorithmDict += f"""
 PIMPLE
@@ -33,7 +35,7 @@ PIMPLE
     pRefValue {numericalSettings['pimpleDict']['pRefValue']};
     residualControl
     {{
-        "(U|k|omega|epsilon|nuTilda|nut)" 
+        "(U|k|omega|epsilon|nuTilda)" 
         {{
             tolerance {numericalSettings['pimpleDict']['residualControl']['U']};
             relTol 0;
@@ -49,6 +51,8 @@ SIMPLE
 {{
     nNonOrthogonalCorrectors {numericalSettings['simpleDict']['nNonOrthogonalCorrectors']};
     consistent {numericalSettings['simpleDict']['consistent']};
+    pRefCell {numericalSettings['pimpleDict']['pRefCell']};
+    pRefValue {numericalSettings['pimpleDict']['pRefValue']};
     residualControl
     {{
         U {numericalSettings['simpleDict']['residualControl']['U']};
@@ -56,7 +60,6 @@ SIMPLE
         k {numericalSettings['simpleDict']['residualControl']['k']};
         omega {numericalSettings['simpleDict']['residualControl']['omega']};
         epsilon {numericalSettings['simpleDict']['residualControl']['epsilon']};
-        nut {numericalSettings['simpleDict']['residualControl']['nut']};
         nuTilda {numericalSettings['simpleDict']['residualControl']['nuTilda']};
     }}
 }}
@@ -74,7 +77,6 @@ relaxationFactors
         omega {numericalSettings['relaxationFactors']['omega']};
         epsilon {numericalSettings['relaxationFactors']['epsilon']};
         nuTilda {numericalSettings['relaxationFactors']['nuTilda']};
-        nut {numericalSettings['relaxationFactors']['nut']};
     }}
     fields
     {{
@@ -131,8 +133,8 @@ def create_solverFinalDict(solverSettings,solverName="U"):
 """
     return solverDict
 
-def create_fvSolutionDict(numericalSettings,solverSettings):
-    header = ampersandPrimitives.createFoamHeader(className="dictionary", objectName="fvSolution")
+def generate_fvSolutionDict(numericalSettings,solverSettings):
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="fvSolution")
     fvSolutionDict = f""+header
     fvSolutionDict += f"""
 solvers
@@ -147,8 +149,8 @@ solvers
     fvSolutionDict += create_algorithmDict(numericalSettings)
     return fvSolutionDict
 
-def create_fvSchemesDict(numericalSettings):
-    header = ampersandPrimitives.createFoamHeader(className="dictionary", objectName="fvSchemes")
+def generate_fvSchemesDict(numericalSettings):
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="fvSchemes")
     fvSchemesDict = f""+header
     fvSchemesDict += f"""
 ddtSchemes
@@ -169,7 +171,6 @@ divSchemes
     div(phi,omega) {numericalSettings['divSchemes']['div(phi,omega)']};
     div(phi,epsilon) {numericalSettings['divSchemes']['div(phi,epsilon)']};
     div(phi,nuTilda) {numericalSettings['divSchemes']['div(phi,nuTilda)']};
-    div(phi,nut) {numericalSettings['divSchemes']['div(phi,nut)']};
     div(nuEff*dev(T(grad(U)))) {numericalSettings['divSchemes']['div(nuEff*dev(T(grad(U))))']};
 }}
 laplacianSchemes

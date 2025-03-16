@@ -8,7 +8,7 @@
 *     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
 *     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is a minimalist streamlined OpenFOAM generation tool.
  * Copyright (c) 2024 THAW TAR
  * All rights reserved.
  *
@@ -18,10 +18,10 @@
 """
 
 # this is the starting point of the application
-from ampersandCFD.src.gui_core import ampersand
+from SplashCaseCreatorCFD.src.gui_core import SplashCaseCreator
 
 def main(server=None, **kwargs):
-    app = ampersand(server)
+    app = SplashCaseCreator(server)
     app.server.start(**kwargs)
 
 if __name__ == "__main__":

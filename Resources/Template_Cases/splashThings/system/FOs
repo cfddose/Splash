@@ -1,0 +1,95 @@
+
+minMax
+{
+    type        fieldMinMax;
+    libs        ("fieldFunctionObjects");
+    writeControl timeStep;
+    ;
+    fields
+    (
+        U
+        p
+    );
+}
+yPlus1
+{
+    // Mandatory entries
+    type            yPlus;
+    libs            (fieldFunctionObjects);
+    writeControl    outputTime;
+	writeInterval   1;
+	writeFields     true;
+    log             true;
+}
+
+forces
+{
+    type            forces;
+    libs            (forces);
+    writeControl    timeStep;
+    timeInterval    1;
+    patches         (wall);
+    rho             rhoInf;      // Indicates incompressible
+    rhoInf          1;           // Required when rho = rhoInf
+    CofR            (0 0 0);  // Centre of rotation, used for moment calculation
+    pitchAxis       (0 1 0);  // Pitch axis
+}
+
+inlet_massFlow
+{
+    type            surfaceFieldValue;
+    libs            ("libfieldFunctionObjects.so");
+    writeControl    timeStep;
+    timeInterval    1;
+    log             true;
+    writeFields     false;
+    regionType      patch;
+    name            inlet;
+    operation       sum;
+    fields
+    (
+        phi
+    );
+}
+
+outlet_massFlow
+{
+    type            surfaceFieldValue;
+    libs            ("libfieldFunctionObjects.so");
+    writeControl    timeStep;
+    timeInterval    1;
+    log             true;
+    writeFields     false;
+    regionType      patch;
+    name            outlet;
+    operation       sum;
+    fields
+    (
+        phi
+    );
+}
+
+probe
+{
+    type            probes;
+    libs            ("libfieldFunctionObjects.so");
+    enabled         true;
+    writeControl    timeStep;
+    timeInterval    1;
+    log				true;
+    probeLocations
+    (
+        (0 0 0)
+        (0.0 0.0 0.0)
+        (0.0 0.0 0.0)
+        (0.0 0.0 0.0)
+        (0.0 0.0 0.0)
+        (0.0 0.0 0.0)
+        (0.0 0.0 0.0)
+    );
+    fields
+    (
+        U
+        p
+    );
+}
