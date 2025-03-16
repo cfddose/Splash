@@ -9,11 +9,9 @@ A modular GUI for streamlined CFD workflows across all OpenFOAM versions.
 - [Features](#features)
   - [Geometry Import](#geometry-import)
   - [Meshing Tools](#meshing-tools)
-  - [Case Creator](#case-creator)
   - [Simulation Setup](#simulation-setup)
   - [Run Simulation](#run-simulation)
   - [Post-Processing](#post-processing)
-  - [Splash Cloud](#splash-cloud)
 - [Documentation](#documentation)
 - [Code Developers](#code-developers)
 - [Feedback](#feedback)
@@ -141,21 +139,6 @@ Splash Mesher offers the option to add refinement objects to the domain. As show
 
 ![Screenshot from 2024-11-13 03-27-19](https://github.com/user-attachments/assets/4ff61616-0f20-47f7-ac4a-2fcf01214ead)
 
-
-## Case Creator 
-
-SplashFOAM’s Case Creator streamlines the generation of OpenFOAM cases for both internal and external flow scenarios. Accessible from the main window under File > Create Case, this tool now comes with enhanced functionality and visualization capabilities:
-
-- Built-In VTK Viewer: The Case Creator integrates a VTK-based geometry viewer, allowing users to:
-- Visualize imported geometries with real-time rendering.
-- Build and display a bounding box around the geometry to verify domain boundaries.
-- Define probes (mesh points) at critical locations for debugging problematic cases.
-- Enhanced Workflow: Quickly create cases with intuitive tools to set up boundary conditions, fluid properties, and simulation parameters, with a focus on efficiency and accuracy.
-- Guided Input Assistance: Case Creator provides a guided interface to ensure that input files are correctly set up for various OpenFOAM solvers, minimizing the risk of configuration errors.
-
-![image](https://github.com/user-attachments/assets/da91bf47-1348-4ac1-8fd4-2d24fc20c30e)
-
-
 ## Simulation Setup
 
 SplashFOAM simplifies the setup of OpenFOAM cases by providing:
@@ -172,7 +155,7 @@ SplashFOAM simplifies the setup of OpenFOAM cases by providing:
   - Solution reports to monitor progress and convergence.
   - Function objects for calculating derived quantities and other post-processing tasks.
 - **Initialization and Execution**: Directly initialize and run simulations from within the SplashFOAM environment. These set the simulation to its initial state and set up the necessary parameters to launch the case.
-Note: SplashFOAM does not allow direct changes in boundary condition (BC) files. If BC changes are needed, users may set up the case in **_Case Creator_** and then load the case again in SplashFOAM for further processing.
+Note: SplashFOAM does not allow direct boundary condition (BC) file changes. 
 
 ## Run Simulation
 SplashFOAM can launch a simulation locally or on a remote HPC cluster (Cloud HPC):
@@ -192,19 +175,6 @@ SplashFOAM integrates with popular post-processing tools to streamline analysis:
   ![Screenshot from 2023-10-31 17-05-51](https://github.com/user-attachments/assets/f33aecd2-8bbb-4213-8626-686fde97b557)
   
   ![Grace-Example](https://github.com/user-attachments/assets/a89c6591-12f6-4d8c-9c42-4c4adf68f338)
-
-## Splash Cloud
-[**Splash-Cloud**](https://splash-foam-cloud-9h9d.vercel.app/) is an innovative web-based application [_currently under development_](https://github.com/mohamedalysayed/SplashFOAM-Cloud) to bring CFD workflows to your browser. Designed to complement SplashFOAM, this tool enables users to interact with their geometries directly online, offering an intuitive way to inspect, modify, and prepare geometries for simulation and exports seamless OpenFOAM cases.
-
-![SplashCloud-ii](https://github.com/user-attachments/assets/65097e71-2bce-44e2-8ee3-b9dcef17e00b)
-![SplashCloud-i](https://github.com/user-attachments/assets/4d2c65b1-5e99-4a75-9b7c-07e00fab187f)
-
-### Key Features
-- **Browser-Based Geometry Manipulation**: Load, rotate, scale, and inspect geometries (STL, OBJ, STEP) right from your web browser.
-- **Advanced 3D Rendering**: Experience glossy, interactive 3D rendering for geometries in formats like STL, OBJ, and STEP, with seamless camera control and enhanced lighting for precision inspections.
-- **Seamless Integration with SplashFOAM**: Prepare OpenFOAM-ready cases effortlessly, as Splash-Cloud outputs configurations that are fully compatible with SplashFOAM.
-- **No Installation Required**: Accessible on any device with an internet connection—eliminating setup hassle.
-- **Collaboration Made Easy**: Share geometries and configurations in real-time with teammates.
 
 ## Documentation
 The manual is currently under development. In the meantime, please check the repository for updates or contact the [CFD Dose](https://cfddose.substack.com/) community for help.
