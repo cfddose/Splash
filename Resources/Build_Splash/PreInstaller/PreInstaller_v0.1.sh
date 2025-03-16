@@ -1,10 +1,13 @@
 #!/bin/bash
+
+# Author: Mohamed Aly Sayed (muhammmedaly@gmail.com) 
+# Version: v0.1
 # Interactive installation script using Zenity ...
 # It installs the required CFD-related packages on Ubuntu!
 
 echo "_________________________________________________________________________________"
 echo "                                                                                 "
-echo "__________________ SplashFOAM Pre-Installation Script ________16.10.2024___MS____"
+echo "__________________ Splash Pre-Installation Script ________16.10.2024___MS____"
 echo "                      Minimum Equipment List (MEL)                               "
 echo "_________________________________________________________________________________"
 echo "                                                                                 "
@@ -33,7 +36,7 @@ show_selection_dialog() {
     --checklist \
     --height=800 \
     --width=1000 \
-    --title="SplashFOAM Pre-Installer" \
+    --title="Splash Pre-Installer" \
     --text="Select the applications to install (Note! Required packages are checked and must remain selected):" \
     --column="Install" --column="Application" --column="Description" \
     TRUE "curl" "Command-line tool for data transfer (required)" \

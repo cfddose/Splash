@@ -1,19 +1,21 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
@@ -22,7 +24,7 @@
 # This is an early version of the script and will be updated in the future.
 # Brute force writing is used instead of a more elegant solution.
 #import yaml
-from primitives import ampersandPrimitives
+from primitives import SplashCaseCreatorPrimitives
 from constants import meshSettings, boundaryConditions, inletValues
 from stlAnalysis import stlAnalysis
 
@@ -31,9 +33,9 @@ def tuple_to_string(t):
     return f"({t[0]} {t[1]} {t[2]})"
 
 def create_u_file(meshSettings,boundaryConditions):
-    header = ampersandPrimitives.createFoamHeader(className="volVectorField", objectName="U")
-    dims = ampersandPrimitives.createDimensions(M=0,L=1,T=-1)
-    internalField = ampersandPrimitives.createInternalFieldVector(type="uniform", value=boundaryConditions['velocityInlet']['u_value'])
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volVectorField", objectName="U")
+    dims = SplashCaseCreatorPrimitives.createDimensions(M=0,L=1,T=-1)
+    internalField = SplashCaseCreatorPrimitives.createInternalFieldVector(type="uniform", value=boundaryConditions['velocityInlet']['u_value'])
     U_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {
     #includeEtc "caseDicts/setConstraintTypes"
@@ -45,13 +47,27 @@ def create_u_file(meshSettings,boundaryConditions):
         for patch in meshSettings['patches']:
             U_file += f"""
     {patch['name']}"""
+
             if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
+                u_value = patch.get('property', None)  # Check if 'property' exists
+                if u_value is None:
+                    print(f"Warning: Patch '{patch['name']}' does not have a 'property' field! Using default value (0,0,0).")
+                    u_value = (0.0, 0.0, 0.0)  # Default fallback
+                
                 U_file += f"""
     {{
         type {boundaryConditions['velocityInlet']['u_type']};
-        value uniform {tuple_to_string(boundaryConditions['velocityInlet']['u_value'])};
+        value uniform {tuple_to_string(u_value)};
     }}
     """
+    # This was intentional. If the location of if statements are changed, these would not work well.
+    #         if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
+    #             U_file += f"""
+    # {{
+    #     type {boundaryConditions['velocityInlet']['u_type']};
+    #     value uniform {tuple_to_string(patch['property'])};
+    # }}
+    # """
             if(patch['type'] == 'patch' and patch['name'] == 'outlet'):
                 U_file += f"""
     {{
@@ -125,6 +141,20 @@ def create_u_file(meshSettings,boundaryConditions):
         value uniform {tuple_to_string(boundaryConditions['pressureOutlet']['u_value'])};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                U_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                U_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass         
     U_file += """
@@ -132,9 +162,9 @@ def create_u_file(meshSettings,boundaryConditions):
     return U_file
 
 def create_p_file(meshSettings,boundaryConditions):
-    header = ampersandPrimitives.createFoamHeader(className="volScalarField", objectName="p")
-    dims = ampersandPrimitives.createDimensions(M=0,L=2,T=-2)
-    internalField = ampersandPrimitives.createInternalFieldScalar(type="uniform", value=0)
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName="p")
+    dims = SplashCaseCreatorPrimitives.createDimensions(M=0,L=2,T=-2)
+    internalField = SplashCaseCreatorPrimitives.createInternalFieldScalar(type="uniform", value=0)
     p_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {
     #includeEtc "caseDicts/setConstraintTypes"
@@ -215,6 +245,20 @@ def create_p_file(meshSettings,boundaryConditions):
         value uniform {boundaryConditions['pressureOutlet']['p_value']};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                p_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                p_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass 
     p_file += """
@@ -222,9 +266,9 @@ def create_p_file(meshSettings,boundaryConditions):
     return p_file
 
 def create_k_file(meshSettings,boundaryConditions,nu=1.0e-5):
-    header = ampersandPrimitives.createFoamHeader(className="volScalarField", objectName="k")
-    dims = ampersandPrimitives.createDimensions(M=0,L=2,T=-2)
-    internalField = ampersandPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName="k")
+    dims = SplashCaseCreatorPrimitives.createDimensions(M=0,L=2,T=-2)
+    internalField = SplashCaseCreatorPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
     k_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {
     #includeEtc "caseDicts/setConstraintTypes"
@@ -236,7 +280,7 @@ def create_k_file(meshSettings,boundaryConditions,nu=1.0e-5):
             k_file += f"""
     {patch['name']}"""
             if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
-                Umag = ampersandPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
+                Umag = SplashCaseCreatorPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
                 I = 0.05 # turbulence intensity in %
                 k = 1.5*(Umag*I)**2
                 k_file += f"""
@@ -296,7 +340,7 @@ def create_k_file(meshSettings,boundaryConditions,nu=1.0e-5):
                 if(patch['bounds'] != None):
                     charLen = stlAnalysis.getMaxSTLDim(patch['bounds'])
                     l = 0.07*charLen # turbulent length scale
-                    Umag = ampersandPrimitives.calc_Umag(patch['property'])
+                    Umag = SplashCaseCreatorPrimitives.calc_Umag(patch['property'])
                     I = 0.01 # turbulence intensity in %
                     k = 1.5*(Umag*I)**2
                 else:
@@ -316,6 +360,20 @@ def create_k_file(meshSettings,boundaryConditions,nu=1.0e-5):
         value uniform {boundaryConditions['pressureOutlet']['k_value']};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                k_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                k_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass 
 
@@ -324,9 +382,9 @@ def create_k_file(meshSettings,boundaryConditions,nu=1.0e-5):
     return k_file
 
 def create_omega_file(meshSettings,boundaryConditions,nu=1.0e-5):
-    header = ampersandPrimitives.createFoamHeader(className="volScalarField", objectName="omega")
-    dims = ampersandPrimitives.createDimensions(M=0,L=0,T=-1)
-    internalField = ampersandPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName="omega")
+    dims = SplashCaseCreatorPrimitives.createDimensions(M=0,L=0,T=-1)
+    internalField = SplashCaseCreatorPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
     omega_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {
     #includeEtc "caseDicts/setConstraintTypes"
@@ -338,7 +396,7 @@ def create_omega_file(meshSettings,boundaryConditions,nu=1.0e-5):
             omega_file += f"""
     {patch['name']}"""
             if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
-                Umag = ampersandPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
+                Umag = SplashCaseCreatorPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
                 I = 0.05 # turbulence intensity in %
                 k = 1.5*(Umag*I)**2
                 nut = 100.*nu
@@ -402,7 +460,7 @@ def create_omega_file(meshSettings,boundaryConditions,nu=1.0e-5):
                 if(patch['bounds'] != None):
                     charLen = stlAnalysis.getMaxSTLDim(patch['bounds'])
                     l = 0.07*charLen # turbulent length scale
-                    Umag = ampersandPrimitives.calc_Umag(patch['property'])
+                    Umag = SplashCaseCreatorPrimitives.calc_Umag(patch['property'])
                     I = 0.01 # turbulence intensity in %
                     k = 1.5*(Umag*I)**2
                     omega = 0.09**(-1./4.)*k**0.5/l
@@ -423,6 +481,20 @@ def create_omega_file(meshSettings,boundaryConditions,nu=1.0e-5):
         value uniform {boundaryConditions['pressureOutlet']['omega_value']};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                omega_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'): 
+                omega_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass 
 
@@ -431,9 +503,9 @@ def create_omega_file(meshSettings,boundaryConditions,nu=1.0e-5):
     return omega_file
 
 def create_epsilon_file(meshSettings,boundaryConditions,nu=1.0e-5):
-    header = ampersandPrimitives.createFoamHeader(className="volScalarField", objectName="epsilon")
-    dims = ampersandPrimitives.createDimensions(M=0,L=2,T=-3)
-    internalField = ampersandPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName="epsilon")
+    dims = SplashCaseCreatorPrimitives.createDimensions(M=0,L=2,T=-3)
+    internalField = SplashCaseCreatorPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
     epsilon_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {
     #includeEtc "caseDicts/setConstraintTypes"
@@ -445,7 +517,7 @@ def create_epsilon_file(meshSettings,boundaryConditions,nu=1.0e-5):
             epsilon_file += f"""
     {patch['name']}"""
             if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
-                Umag = ampersandPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
+                Umag = SplashCaseCreatorPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
                 I = 0.05 # turbulence intensity in %
                 k = 1.5*(Umag*I)**2
                 nut = 100.*nu
@@ -509,7 +581,7 @@ def create_epsilon_file(meshSettings,boundaryConditions,nu=1.0e-5):
                 if(patch['bounds'] != None):
                     charLen = stlAnalysis.getMaxSTLDim(patch['bounds'])
                     l = 0.07*charLen # turbulent length scale
-                    Umag = ampersandPrimitives.calc_Umag(patch['property'])
+                    Umag = SplashCaseCreatorPrimitives.calc_Umag(patch['property'])
                     I = 0.01 # turbulence intensity in %
                     k = 1.5*(Umag*I)**2
                     epsilon = 0.09**(3./4.)*k**(3./2.)/l
@@ -530,6 +602,20 @@ def create_epsilon_file(meshSettings,boundaryConditions,nu=1.0e-5):
         value uniform {boundaryConditions['pressureOutlet']['epsilon_value']};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                epsilon_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                epsilon_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass 
         
@@ -538,9 +624,9 @@ def create_epsilon_file(meshSettings,boundaryConditions,nu=1.0e-5):
     return epsilon_file
 
 def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
-    header = ampersandPrimitives.createFoamHeader(className="volScalarField", objectName="nuTilda")
-    dims = ampersandPrimitives.createDimensions(M=0,L=2,T=-1)
-    internalField = ampersandPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName="nuTilda")
+    dims = SplashCaseCreatorPrimitives.createDimensions(M=0,L=2,T=-1)
+    internalField = SplashCaseCreatorPrimitives.createInternalFieldScalar(type="uniform", value=1.0e-6)
     nutilda_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {
     #includeEtc "caseDicts/setConstraintTypes"
@@ -552,7 +638,7 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
             nutilda_file += f"""
     {patch['name']}"""
             if(patch['type'] == 'patch' and patch['name'] == 'inlet'):
-                Umag = ampersandPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
+                Umag = SplashCaseCreatorPrimitives.calc_Umag(boundaryConditions['velocityInlet']['u_value'])
                 I = 0.05 # turbulence intensity in %
                 k = 1.5*(Umag*I)**2
                 nut = 100.*nu
@@ -569,21 +655,21 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
                 nutilda_file += f"""
     {{
         type {boundaryConditions['pressureOutlet']['nutilda_type']};
-        value uniform {boundaryConditions['pressureOutlet']['nutilda_value']};
+        value {boundaryConditions['pressureOutlet']['nutilda_value']};
     }}
     """
             if(patch['type'] == 'wall'):
                 nutilda_file += f"""
     {{
         type {boundaryConditions['wall']['nutilda_type']};
-        value uniform {boundaryConditions['wall']['nutilda_value']};
+        value  {boundaryConditions['wall']['nutilda_value']};
     }}
     """
             if(patch['type'] == 'movingWall'):
                 nutilda_file += f"""
     {{
         type {boundaryConditions['movingWall']['nutilda_type']};
-        value uniform {boundaryConditions['movingWall']['nutilda_value']};
+        value  {boundaryConditions['movingWall']['nutilda_value']};
     }}
     """
             if(patch['type'] == 'symmetry'):
@@ -617,7 +703,7 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
                 if(patch['bounds'] != None):
                     charLen = stlAnalysis.getMaxSTLDim(patch['bounds'])
                     l = 0.07*charLen # turbulent length scale
-                    Umag = ampersandPrimitives.calc_Umag(patch['property'])
+                    Umag = SplashCaseCreatorPrimitives.calc_Umag(patch['property'])
                     I = 0.01 # turbulence intensity in %
                     k = 1.5*(Umag*I)**2
                     epsilon = 0.09**(3./4.)*k**(3./2.)/l
@@ -637,7 +723,21 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
     "{patch['name'][:-4]}.*"
     {{
         type {boundaryConditions['pressureOutlet']['nutilda_type']};
-        value uniform {boundaryConditions['pressureOutlet']['nutilda_value']};
+        value {boundaryConditions['pressureOutlet']['nutilda_value']};
+    }}
+    """
+            elif(patch['purpose'] == 'symmetry'):
+                nutilda_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                nutilda_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
     }}
     """
             else:
@@ -648,9 +748,9 @@ def create_nutilda_file(meshSettings,boundaryConditions,nu=1.0e-5):
     return nutilda_file
 
 def create_nut_file(meshSettings,boundaryConditions):
-    header = ampersandPrimitives.createFoamHeader(className="volScalarField", objectName="nut")
-    dims = ampersandPrimitives.createDimensions(M=0,L=2,T=-1)
-    internalField = ampersandPrimitives.createInternalFieldScalar(type="uniform", value=0)
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="volScalarField", objectName="nut")
+    dims = SplashCaseCreatorPrimitives.createDimensions(M=0,L=2,T=-1)
+    internalField = SplashCaseCreatorPrimitives.createInternalFieldScalar(type="uniform", value=0)
     nut_file = f""+header+dims+internalField+"\n"+"""\nboundaryField 
 {
     #includeEtc "caseDicts/setConstraintTypes"
@@ -723,6 +823,20 @@ def create_nut_file(meshSettings,boundaryConditions):
         value uniform {boundaryConditions['velocityInlet']['nut_value']};
     }}
     """
+            elif(patch['purpose'] == 'symmetry'):
+                nut_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type symmetry;
+    }}
+    """
+            elif(patch['purpose'] == 'empty'):
+                nut_file += f"""
+    "{patch['name'][:-4]}.*"
+    {{
+        type empty;
+    }}
+    """
             else:
                 pass 
         
@@ -766,24 +880,24 @@ def create_boundary_conditions(meshSettings, boundaryConditions, nu=1.e-5):
     #print(p_file)
     #print(u_file)
     print("Creating boundary conditions files")
-    ampersandPrimitives.write_to_file("U", u_file)
+    SplashCaseCreatorPrimitives.write_to_file("U", u_file)
    
-    ampersandPrimitives.write_to_file("p", p_file)
+    SplashCaseCreatorPrimitives.write_to_file("p", p_file)
     
-    ampersandPrimitives.write_to_file("k", k_file)
+    SplashCaseCreatorPrimitives.write_to_file("k", k_file)
    
-    ampersandPrimitives.write_to_file("omega", omega_file)
+    SplashCaseCreatorPrimitives.write_to_file("omega", omega_file)
 
-    ampersandPrimitives.write_to_file("epsilon", epsilon_file)
+    SplashCaseCreatorPrimitives.write_to_file("epsilon", epsilon_file)
 
-    ampersandPrimitives.write_to_file("nut", nut_file)
+    SplashCaseCreatorPrimitives.write_to_file("nut", nut_file)
 
-    ampersandPrimitives.write_to_file("nuTilda", nutilda_file)
+    SplashCaseCreatorPrimitives.write_to_file("nuTilda", nutilda_file)
 
 
 
 if __name__ == '__main__':
-    meshSettings = ampersandPrimitives.yaml_to_dict("meshSettings.yaml")
+    meshSettings = SplashCaseCreatorPrimitives.yaml_to_dict("meshSettings.yaml")
     create_boundary_conditions(meshSettings, boundaryConditions)
 
 

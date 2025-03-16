@@ -1,19 +1,21 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
@@ -21,13 +23,34 @@ import os
 import yaml
 import sys
 from tkinter import filedialog, Tk
-from headers import get_ampersand_header
+from headers import get_SplashCaseCreator_header
+
 from PySide6.QtWidgets import QMessageBox
 from dialogBoxes import sphereDialogDriver, inputDialogDriver, vectorInputDialogDriver
 
-class ampersandPrimitives:
+class SplashCaseCreatorPrimitives:
     def __init__(self):
         pass
+
+    @staticmethod
+    def move_item_up(lst, index):
+        if index == 0:
+            return -1
+        lst[index], lst[index-1] = lst[index-1], lst[index]
+        return 0
+    
+    @staticmethod
+    def move_item_down(lst, index):
+        if index == len(lst)-1:
+            return -1
+        lst[index], lst[index+1] = lst[index+1], lst[index]
+        return 0
+
+    @staticmethod
+    def bounds_to_str(bounds):
+        bounds_str = f"({bounds[0]:.2f} {bounds[1]:.2f} {bounds[2]:.2f})"
+        bounds_str += f"\n({bounds[3]:.2f} {bounds[4]:.2f} {bounds[5]:.2f})"
+        return bounds_str
     
     @staticmethod
     def list_stl_files(stl_files, GUIMode=False, window=None):
@@ -36,13 +59,13 @@ class ampersandPrimitives:
             stl_names = [stl_file['name'] for stl_file in stl_files]
             #window.listWidgetObjList.clear()
             for i in range(len(stl_names)):
-                ampersandIO.printMessage(f"{i+1}. {stl_names[i]}",GUIMode=GUIMode,window=window) 
+                SplashCaseCreatorIO.printMessage(f"{i+1}. {stl_names[i]}",GUIMode=GUIMode,window=window) 
             return 0
         """
         i = 1
-        ampersandIO.show_title("STL Files",GUIMode=GUIMode,window=window)
+        SplashCaseCreatorIO.show_title("STL Files",GUIMode=GUIMode,window=window)
         
-        ampersandIO.printMessage(f"{'No.':<5}{'Name':<20}{'Purpose':<20}{'RefineMent':<15}{'Property':<15}",GUIMode=GUIMode,window=window)
+        SplashCaseCreatorIO.printMessage(f"{'No.':<5}{'Name':<20}{'Purpose':<20}{'RefineMent':<15}{'Property':<15}",GUIMode=GUIMode,window=window)
         for stl_file in stl_files:
             if(stl_file['property']==None):
                 stl_property = "None"
@@ -61,21 +84,22 @@ class ampersandPrimitives:
                 #stl_property = f"[{stl_file['property'][0]} {stl_file['property'][1]} {stl_file['property'][2]}]"
             else:
                 stl_property = stl_file['property']
-            ampersandIO.printMessage(f"{i:<5}{stl_file['name']:<20}{stl_file['purpose']:<20}({stl_file['refineMin']} {stl_file['refineMax']}{')':<11}{stl_property:<15}",GUIMode=GUIMode,window=window)
+            SplashCaseCreatorIO.printMessage(f"{i:<5}{stl_file['name']:<20}{stl_file['purpose']:<20}({stl_file['refineMin']} {stl_file['refineMax']}{')':<11}{stl_property:<15}",GUIMode=GUIMode,window=window)
             i += 1
-        ampersandIO.show_line(GUIMode=GUIMode,window=window)
+        SplashCaseCreatorIO.show_line(GUIMode=GUIMode,window=window)
         return 0
 
     @staticmethod
     def list_boundary_conditions(meshSettings):
         i = 1
         boundaries = []
-        ampersandIO.show_title("Boundary Conditions")
-        ampersandIO.printMessage(f"{'No.':<5}{'Name':<20}{'Purpose':<20}{'Value':<15}")
+        SplashCaseCreatorIO.show_title("Boundary Conditions")
+        SplashCaseCreatorIO.printMessage(f"{'No.':<5}{'Name':<20}{'Purpose':<20}{'Value':<15}")
         # for external flows, show the boundary conditions for domain first
         if meshSettings['internalFlow'] == False:
-            for patchName in meshSettings['bcPatches'].keys():
-                patch = meshSettings['bcPatches'][patchName]
+            for patch in meshSettings['patches']:
+                patchName = patch['name']
+                
                 if patch['property'] == None:
                     property = "None"
                 elif isinstance(patch['property'], list):
@@ -84,13 +108,13 @@ class ampersandPrimitives:
                     property = f"[{patch['property'][0]} {patch['property'][1]} {patch['property'][2]}]"
                 else:
                     property = patch['property']
-                #ampersandIO.printMessage(f"{patch['name']}: {patch['purpose']}\t{patch['property']}")
-                ampersandIO.printMessage(f"{i:<5}{patchName:<20}{patch['purpose']:<20}{property:<15}")
+                #SplashCaseCreatorIO.printMessage(f"{patch['name']}: {patch['purpose']}\t{patch['property']}")
+                SplashCaseCreatorIO.printMessage(f"{i:<5}{patchName:<20}{patch['purpose']:<20}{property:<15}")
                 i += 1
                 boundaries.append(patchName)
         for patch in meshSettings['geometry']:
             if patch['purpose'] != 'refinementRegion' and patch['purpose'] != 'refinementSurface':
-                #ampersandIO.printMessage(patch)
+                #SplashCaseCreatorIO.printMessage(patch)
                 if patch['property'] == None:
                     property = "None"
                 elif isinstance(patch['property'], list):
@@ -99,12 +123,11 @@ class ampersandPrimitives:
                     property = f"[{patch['property'][0]} {patch['property'][1]} {patch['property'][2]}]"
                 else:
                     property = "None"
-                ampersandIO.printMessage(f"{i:<5}{patch['name']:<20}{patch['purpose']:<20}{property:<15}")
+                SplashCaseCreatorIO.printMessage(f"{i:<5}{patch['name']:<20}{patch['purpose']:<20}{property:<15}")
                 i += 1
                 boundaries.append(patch['name'])
         return boundaries # return the number of boundarys
-            #ampersandIO.printMessage(f"{patch['name']}: {patch['purpose']}\t{patch['property']}")
-
+            #SplashCaseCreatorIO.printMessage(f"{patch['name']}: {patch['purpose']}\t{patch['property']}")
     
     @staticmethod
     def change_patch_type(patches, patch_name, new_type='patch'):
@@ -124,30 +147,46 @@ class ampersandPrimitives:
         if isinstance(data, tuple):
             return list(data)
         elif isinstance(data, dict):
-            return {k: ampersandPrimitives.sanitize_yaml(v) for k, v in data.items()}
+            return {k: SplashCaseCreatorPrimitives.sanitize_yaml(v) for k, v in data.items()}
         elif isinstance(data, list):
-            return [ampersandPrimitives.sanitize_yaml(item) for item in data]
+            return [SplashCaseCreatorPrimitives.sanitize_yaml(item) for item in data]
         else:
             return data
         
     # Function to remove duplicates in a YAML file  
+    # @staticmethod
+    # def remove_duplicate_dicts_org(dict_list):
+    #     seen = set()
+    #     unique_dicts = []
+    #     for d in dict_list:
+    #         # Convert dictionary to a frozenset of its items to make it hashable
+    #         #print(d)
+    #         dict_tuple = frozenset(d.items())
+    #         if dict_tuple not in seen:
+    #             seen.add(dict_tuple)
+    #             unique_dicts.append(d)
+    #     return unique_dicts
+    
     @staticmethod
     def remove_duplicate_dicts(dict_list):
+        #print(dict_list)
         seen = set()
         unique_dicts = []
         for d in dict_list:
             # Convert dictionary to a frozenset of its items to make it hashable
             #print(d)
-            dict_tuple = frozenset(d.items())
-            if dict_tuple not in seen:
-                seen.add(dict_tuple)
+            assert "name" in d.keys(), "The dictionary does not have a 'name' key."
+            item_name = d['name']
+            if item_name not in seen:
+                seen.add(item_name)
                 unique_dicts.append(d)
+        #print("Unique Dicts: ",unique_dicts)
         return unique_dicts
     
     @staticmethod
     def treat_bounds(geometry):
         for anObject in geometry:
-            ampersandPrimitives.list_to_tuple_dict(anObject)
+            SplashCaseCreatorPrimitives.list_to_tuple_dict(anObject)
             #print(anObject)
         return geometry
     
@@ -156,7 +195,7 @@ class ampersandPrimitives:
     def list_to_tuple_dict(data):
         for key, value in data.items():
             if isinstance(value, dict):
-                ampersandPrimitives.list_to_tuple_dict(value)
+                SplashCaseCreatorPrimitives.list_to_tuple_dict(value)
             elif isinstance(value, list):
                 data[key] = tuple(value)
         return data
@@ -174,28 +213,32 @@ class ampersandPrimitives:
 
     @staticmethod
     def ask_for_directory(qt=False):
-        if qt:
-            from PySide6.QtWidgets import QFileDialog
-            directory = QFileDialog.getExistingDirectory(None, "Select Project Directory")
-            return directory if directory else None
-        else:
-            root = Tk()
-            root.withdraw()  # Hide the main window
-            directory = filedialog.askdirectory(title="Select Project Directory")
-            return directory if directory else None
-    
+        try:
+            if qt:
+                from PySide6.QtWidgets import QFileDialog
+                directory = QFileDialog.getExistingDirectory(None, "Select Project Directory")
+                return directory if directory else None
+            else:
+                root = Tk()
+                root.withdraw()  # Hide the main window
+                directory = filedialog.askdirectory(title="Select Project Directory")
+                return directory if directory else None
+        except:
+            return SplashCaseCreatorIO.get_input("Select Project Directory: ")    
     @staticmethod
     def ask_for_file(filetypes=[("STL Geometry", "*.stl")], qt=False):
-        if qt:
-            from PySide6.QtWidgets import QFileDialog
-            file = QFileDialog.getOpenFileName(None, "Select File", filter="STL Geometry (*.stl)")
-            return file[0] if file[0] else None
-        else:
-            root = Tk()
-            root.withdraw()
-            file = filedialog.askopenfilename(title="Select File", filetypes=filetypes)
-            return file if file else None
-    
+        try:
+            if qt:
+                from PySide6.QtWidgets import QFileDialog
+                file = QFileDialog.getOpenFileName(None, "Select File", filter="STL Geometry (*.stl)")
+                return file[0] if file[0] else None
+            else:
+                root = Tk()
+                root.withdraw()
+                file = filedialog.askopenfilename(title="Select File", filetypes=filetypes)
+                return file if file else None
+        except:
+            return SplashCaseCreatorIO.get_input("Select file: ")    
     @staticmethod
     def check_dict(dict_):
         # check every elements of the dictionary and whether there are tuples
@@ -205,7 +248,7 @@ class ampersandPrimitives:
         and converts tuples to lists."""
         for key, value in dict_.items():
             if isinstance(value, dict):
-                ampersandPrimitives.check_dict(value)
+                SplashCaseCreatorPrimitives.check_dict(value)
             elif isinstance(value, tuple):
                 dict_[key] = list(value)
         return dict_
@@ -219,8 +262,8 @@ class ampersandPrimitives:
         - data (dict): The dictionary to be converted.
         - output_file (str): The name of the output YAML file.
         """
-        #data = ampersandPrimitives.check_dict(data)
-        data = ampersandPrimitives.sanitize_yaml(data)
+        #data = SplashCaseCreatorPrimitives.check_dict(data)
+        data = SplashCaseCreatorPrimitives.sanitize_yaml(data)
         with open(output_file, 'w') as file:
             yaml.dump(data, file, default_flow_style=False, sort_keys=False)
         #print(f"YAML file '{output_file}' has been created.")
@@ -243,7 +286,7 @@ class ampersandPrimitives:
             return data
         except Exception as e:
             print(f"Error reading YAML file: {e}")
-            yN = ampersandIO.get_input_bool("Continue y/N?")
+            yN = SplashCaseCreatorIO.get_input_bool("Continue y/N?")
             if yN:
                 return None
             else:
@@ -254,10 +297,10 @@ class ampersandPrimitives:
     @staticmethod
     # This file contains the basic primitives used in the generation of OpenFOAM casefiles
     def createFoamHeader(className="dictionary",objectName="blockMeshDict"):
-        header = get_ampersand_header()
+        header = get_SplashCaseCreator_header()
         header = f"""/*--------------------------------*- C++ -*----------------------------------*\\
 {header}
-This file is part of OpenFOAM casefiles automatically generated by AmpersandCFD*/
+This file is part of OpenFOAM casefiles automatically generated by SplashCaseCreator*/
 
 FoamFile
 {{
@@ -331,7 +374,7 @@ FoamFile
     def calc_Umag(U):
         return sum([u**2 for u in U])**0.5
 
-class ampersandIO:
+class SplashCaseCreatorIO:
     def __init__(self):
         pass
 
@@ -348,7 +391,7 @@ class ampersandIO:
     @staticmethod
     def printWarning(*args, GUIMode=False):
         if GUIMode:
-            #ampersandIO.printMessage(*args)
+            #SplashCaseCreatorIO.printMessage(*args)
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Warning)
             msg.setText("Warning")
@@ -361,7 +404,7 @@ class ampersandIO:
     @staticmethod
     def printError(*args, GUIMode=False):
         if GUIMode:
-            #ampersandIO.printMessage(*args)
+            #SplashCaseCreatorIO.printMessage(*args)
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setText("Error")
@@ -391,8 +434,8 @@ class ampersandIO:
             try:
                 return int(input(prompt))
             except:
-                ampersandIO.printError("Invalid input. Please enter an integer.")
-                return ampersandIO.get_input_int(prompt)
+                SplashCaseCreatorIO.printError("Invalid input. Please enter an integer.")
+                return SplashCaseCreatorIO.get_input_int(prompt)
     
     @staticmethod  
     def get_input_float(prompt, GUIMode=False):
@@ -402,14 +445,14 @@ class ampersandIO:
             try:
                 return float(input(prompt))
             except:
-                ampersandIO.printError("Invalid input. Please enter a number.")
-                return ampersandIO.get_input_float(prompt)
+                SplashCaseCreatorIO.printError("Invalid input. Please enter a number.")
+                return SplashCaseCreatorIO.get_input_float(prompt)
         
     @staticmethod
     def show_list(lst):
         i = 1
         for item in lst:
-            ampersandIO.printMessage(f"{i}. {item}")
+            SplashCaseCreatorIO.printMessage(f"{i}. {item}")
     
     @staticmethod
     def print_numbered_list(lst):
@@ -427,14 +470,14 @@ class ampersandIO:
             try:
                 vec = list(map(float, inp))
                 if len(vec)!=3:
-                    ampersandIO.printError("Invalid input. Please enter 3 numbers.")
+                    SplashCaseCreatorIO.printError("Invalid input. Please enter 3 numbers.")
                     # Recursively call the function until a valid input is given
-                    return ampersandIO.get_input_vector(prompt)
+                    return SplashCaseCreatorIO.get_input_vector(prompt)
                 return vec
             except:
-                ampersandIO.printError("Invalid input. Please enter a list of numbers.")
+                SplashCaseCreatorIO.printError("Invalid input. Please enter a list of numbers.")
                 # Recursively call the function until a valid input is given
-                return ampersandIO.get_input_vector(prompt)
+                return SplashCaseCreatorIO.get_input_vector(prompt)
         #return list(map(float, input(prompt).split()))
 
     
@@ -444,18 +487,18 @@ class ampersandIO:
         try:
             return input(prompt).lower() in ['y', 'yes', 'true', '1']
         except:
-            ampersandIO.printError("Invalid input. Please enter a boolean value.")
-            return ampersandIO.get_input_bool(prompt)
+            SplashCaseCreatorIO.printError("Invalid input. Please enter a boolean value.")
+            return SplashCaseCreatorIO.get_input_bool(prompt)
        
     @staticmethod
     def get_option_choice(prompt, options,title=None):
         if title:
-            ampersandIO.printMessage(title)
-        ampersandIO.print_numbered_list(options)
-        choice = ampersandIO.get_input_int(prompt)
+            SplashCaseCreatorIO.printMessage(title)
+        SplashCaseCreatorIO.print_numbered_list(options)
+        choice = SplashCaseCreatorIO.get_input_int(prompt)
         if choice>len(options) or choice<=0:
-            ampersandIO.printError("Invalid choice. Please choose from the given options.")
-            return ampersandIO.get_option_choice(prompt, options)
+            SplashCaseCreatorIO.printError("Invalid choice. Please choose from the given options.")
+            return SplashCaseCreatorIO.get_option_choice(prompt, options)
         return choice-1
     
     @staticmethod
@@ -463,11 +506,11 @@ class ampersandIO:
         total_len = 60
         half_len = (total_len - len(title))//2
         title = "-"*half_len + title + "-"*half_len
-        ampersandIO.printMessage("\n" + title, GUIMode=GUIMode, window=window)
+        SplashCaseCreatorIO.printMessage("\n" + title, GUIMode=GUIMode, window=window)
 
     @staticmethod
     def show_line(GUIMode=False, window=None):
-        ampersandIO.printMessage("-"*60,GUIMode=GUIMode,window=window)
+        SplashCaseCreatorIO.printMessage("-"*60,GUIMode=GUIMode,window=window)
 
     @staticmethod
     def printFormat(item_name, item_value, GUIMode=False, window=None):
@@ -477,7 +520,7 @@ class ampersandIO:
             print(f"{item_name:12}\t{item_value}")
 
 
-class ampersandDataInput:
+class SplashCaseCreatorDataInput:
     def __init__(self):
         pass
 
@@ -487,24 +530,24 @@ class ampersandDataInput:
             U = vectorInputDialogDriver("Enter the velocity vector at the inlet (m/s): ")
             return U
         else:
-            U = ampersandIO.get_input_vector("Enter the velocity vector at the inlet (m/s): ")
+            U = SplashCaseCreatorIO.get_input_vector("Enter the velocity vector at the inlet (m/s): ")
         return U
     
     @staticmethod
     def get_physical_properties():
-        rho = ampersandIO.get_input_float("Enter the density of the fluid (kg/m^3): ")
-        nu = ampersandIO.get_input_float("Enter the kinematic viscosity of the fluid (m^2/s): ")
+        rho = SplashCaseCreatorIO.get_input_float("Enter the density of the fluid (kg/m^3): ")
+        nu = SplashCaseCreatorIO.get_input_float("Enter the kinematic viscosity of the fluid (m^2/s): ")
         return rho, nu
     
     @staticmethod
     def get_turbulence_model():
         turbulence_models = ['kOmegaSST', 'kEpsilon', ]
-        ampersandIO.show_title("Turbulence models")
+        SplashCaseCreatorIO.show_title("Turbulence models")
         for i in range(len(turbulence_models)):
-            ampersandIO.printMessage(f"{i+1}. {turbulence_models[i]}")
-        turbulence_model = ampersandIO.get_input_int("Choose the turbulence model: ")
+            SplashCaseCreatorIO.printMessage(f"{i+1}. {turbulence_models[i]}")
+        turbulence_model = SplashCaseCreatorIO.get_input_int("Choose the turbulence model: ")
         if turbulence_model>len(turbulence_models) or turbulence_model<=0:
-            ampersandIO.printError("Invalid turbulence model. Defaulting to kOmegaSST.")
+            SplashCaseCreatorIO.printError("Invalid turbulence model. Defaulting to kOmegaSST.")
             turbulence_model = 1
         return turbulence_models[turbulence_model-1]
     
@@ -512,33 +555,33 @@ class ampersandDataInput:
     def choose_fluid_properties():
         fluids = {"Air":{'rho':1.225, 'nu':1.5e-5}, "Water":{'rho':1000, 'nu':1e-6}, }
         fluid_names = list(fluids.keys())
-        ampersandIO.printMessage("Fluid properties")
-        ampersandIO.printMessage("0. Enter fluid properties manually")
+        SplashCaseCreatorIO.printMessage("Fluid properties")
+        SplashCaseCreatorIO.printMessage("0. Enter fluid properties manually")
         for i in range(len(fluid_names)):
-            ampersandIO.printMessage(f"{i+1}. {fluid_names[i]}")
-        fluid_name = ampersandIO.get_input_int("Choose the fluid properties:" )
+            SplashCaseCreatorIO.printMessage(f"{i+1}. {fluid_names[i]}")
+        fluid_name = SplashCaseCreatorIO.get_input_int("Choose the fluid properties:" )
         
         if(fluid_name>len(fluids) or fluid_name<=0):
-            ampersandIO.printMessage("Please input fluid properties manually.")
-            rho, nu = ampersandDataInput.get_physical_properties()
+            SplashCaseCreatorIO.printMessage("Please input fluid properties manually.")
+            rho, nu = SplashCaseCreatorDataInput.get_physical_properties()
             return {'rho':rho, 'nu':nu}
         fluid = fluids[fluid_names[fluid_name-1]]
         return fluid
     
     @staticmethod
     def get_mesh_refinement_level():
-        refLevel = ampersandIO.get_input_int("Enter the mesh refinement (0: coarse, 1: medium, 2: fine): ")
+        refLevel = SplashCaseCreatorIO.get_input_int("Enter the mesh refinement (0: coarse, 1: medium, 2: fine): ")
         if refLevel not in [0,1,2]:
-            ampersandIO.printMessage("Invalid mesh refinement level. Defaulting to medium.")
+            SplashCaseCreatorIO.printMessage("Invalid mesh refinement level. Defaulting to medium.")
             refLevel = 1
         return refLevel
 
 if __name__ == "__main__":
-    print(ampersandPrimitives.createFoamHeader(className="dictionary",objectName="snappyHexMeshDict"))
-    print(ampersandPrimitives.createDimensions(M=1,L=1,T=1))
-    print(ampersandPrimitives.createScalarFixedValue(patch_name="inlet",value=0))
-    print(ampersandPrimitives.createScalarZeroGradient(patch_name="inlet"))
-    print(ampersandPrimitives.createVectorFixedValue(patch_name="inlet",value=[0,0,0]))
+    print(SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary",objectName="snappyHexMeshDict"))
+    print(SplashCaseCreatorPrimitives.createDimensions(M=1,L=1,T=1))
+    print(SplashCaseCreatorPrimitives.createScalarFixedValue(patch_name="inlet",value=0))
+    print(SplashCaseCreatorPrimitives.createScalarZeroGradient(patch_name="inlet"))
+    print(SplashCaseCreatorPrimitives.createVectorFixedValue(patch_name="inlet",value=[0,0,0]))
 
 
 

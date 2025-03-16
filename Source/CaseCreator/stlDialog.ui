@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Mesh Refimenent</string>
+   <string>Patch Properties</string>
   </property>
   <widget class="QComboBox" name="comboBoxUsage">
    <property name="geometry">

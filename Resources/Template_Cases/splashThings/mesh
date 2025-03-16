@@ -1,0 +1,17 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+#-----------------------------------------------------
+
+foamCleanTutorials
+#cp -r 0 0.orig
+rm -rf log.*
+runApplication blockMesh
+touch case.foam
+runApplication surfaceFeatureExtract
+runApplication decomposePar -force
+runParallel snappyHexMesh -overwrite
+runApplication reconstructParMesh -constant -latestTime
+#rm -rf processor*
+#rm log.decomposePar
+#runApplication decomposePar -force

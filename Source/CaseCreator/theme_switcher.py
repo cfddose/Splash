@@ -1,3 +1,24 @@
+"""
+/*--------------------------------*- C++ -*----------------------------------*\
+-------------------------------------------------------------------------------
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
+-------------------------------------------------------------------------------
+ * SplashCaseCreator is part of Splash CFD automation tool.
+ * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
+ * All rights reserved.
+ *
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
+ */
+"""
+
 def apply_theme(window, vtk_manager, dark_mode):
     """
     Apply the selected theme to the specified UI elements and VTK widget.
@@ -112,6 +133,21 @@ def apply_theme_dialog_boxes(window, dark_mode):
             color: #ECEFF4;
             border: 1px solid #4C566A;
         }
+        QTabWidget {
+            background-color: #3B4252;
+            color: #000000;  
+            border: 1px solid #4C566A;
+        }
+        QTabWidget::pane {
+            background-color: #3B4252;
+            color: #ECEFF4;
+            border: #4C566A;
+        }
+        QTabBar::tab {
+            background-color: #3B4252;
+            color: #000000; 
+            #border: 3px solid #000000;
+        }
         """
         window.setStyleSheet(dark_stylesheet)
 
@@ -138,6 +174,11 @@ def apply_theme_dialog_boxes(window, dark_mode):
             border: 1px solid #CCCCCC;
         }
         QListWidget {
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #CCCCCC;
+        }
+        QTabWidget {
             background-color: #FFFFFF;
             color: #000000;
             border: 1px solid #CCCCCC;

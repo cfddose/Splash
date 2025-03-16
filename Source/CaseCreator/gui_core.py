@@ -8,7 +8,7 @@
 *     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
 *     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is a minimalist streamlined OpenFOAM generation tool.
  * Copyright (c) 2024 THAW TAR
  * All rights reserved.
  *
@@ -17,7 +17,7 @@
  */
 """
 
-# Description: This file contains the main class for the Ampersand CFD application. The class is decorated with the TrameApp decorator, which is used to create a Trame application. The class contains methods to handle the opening of a file, adding a box, adding a sphere, showing a wireframe, showing a surface, and showing a surface with edges. The class also contains a method to build the user interface of the application. The user interface contains a toolbar with three buttons, a drawer with buttons to open a file, add a box, and add a sphere, and a main content area with a VtkLocalView widget to display the 3D object. The class also contains a method to update the VtkLocalView widget with the new 3D object.
+# Description: This file contains the main class for the SplashCaseCreator CFD application. The class is decorated with the TrameApp decorator, which is used to create a Trame application. The class contains methods to handle the opening of a file, adding a box, adding a sphere, showing a wireframe, showing a surface, and showing a surface with edges. The class also contains a method to build the user interface of the application. The user interface contains a toolbar with three buttons, a drawer with buttons to open a file, add a box, and add a sphere, and a main content area with a VtkLocalView widget to display the 3D object. The class also contains a method to update the VtkLocalView widget with the new 3D object.
 from trame.app import get_server
 from trame.decorators import TrameApp, change, controller
 from trame.ui.vuetify import SinglePageWithDrawerLayout
@@ -58,7 +58,7 @@ from tkinter import filedialog
 # ---------------------------------------------------------
 
 @TrameApp()
-class ampersand:
+class SplashCaseCreator:
     def __init__(self, server=None):
         self.server = get_server(server, client_type="vue2")
         self.stl_file = "cad.stl"
@@ -68,7 +68,7 @@ class ampersand:
         self.ui = self._build_ui()
 
         # Set state variable
-        self.state.trame__title = "AmpersandCFD"
+        self.state.trame__title = "SplashCaseCreator"
         self.state.resolution = 6
         
     def click_open(self):
@@ -145,8 +145,8 @@ class ampersand:
         self.state.menu_items = ["one", "two", "three"]
         with SinglePageWithDrawerLayout(self.server) as layout:
             # Toolbar
-            layout.title.set_text("AmpersandCFD")
-            layout.icon.set_text("<img src='/Users/thawtar/Desktop/CFD_Monkey/ampersandCFD/src/ampersandCFD/components/logo.svg' alt='icon' width='24' height='24'>")
+            layout.title.set_text("SplashCaseCreator")
+            layout.icon.set_text("<img src='/Users/thawtar/Desktop/CFD_Monkey/SplashCaseCreatorCFD/src/SplashCaseCreatorCFD/components/logo.svg' alt='icon' width='24' height='24'>")
             layout.footer.set_text("Developed by CFD Monkey")
             with layout.toolbar:
                 vuetify.VSpacer()

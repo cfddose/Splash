@@ -243,10 +243,10 @@ class InstallationWorker(QThread):
 # ----------------------
 # Splash Installer Class
 # ---------------------- 
-class SplashFOAMInstaller(QDialog):
+class SplashInstaller(QDialog):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("SplashFOAM Pre-Installer v0.2")
+        self.setWindowTitle("Splash Pre-Installer v0.2")
         self.setGeometry(100, 100, 800, 1200) # last 2 entries to resize
 
         self.include_openfoam = True
@@ -268,12 +268,12 @@ class SplashFOAMInstaller(QDialog):
         if not pixmap.isNull():
             logo_label.setPixmap(pixmap.scaled(200, 100, Qt.KeepAspectRatio))
         else:
-            logo_label.setText("SplashFOAM Logo Placeholder")
+            logo_label.setText("Splash Logo Placeholder")
             logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(logo_label, alignment=Qt.AlignCenter)
 
         # Title Label 
-        title_label = QLabel("SplashFOAM Pre-requisite List")
+        title_label = QLabel("Splash Pre-requisite List")
         title_label.setAlignment(Qt.AlignCenter)
         title_font = title_label.font()
         title_font.setBold(True)
@@ -525,14 +525,14 @@ class SplashFOAMInstaller(QDialog):
             self.log_terminal.append(f"\nInstallation completed with errors for packages: {failed_list}")
         else:
             total_time = self.worker.get_total_time()
-            msg = f"All selected packages were installed successfully in {total_time:.2f} seconds!\n\nWelcome to SplashFOAM!"
+            msg = f"All selected packages were installed successfully in {total_time:.2f} seconds!\n\nWelcome to Splash!"
             QMessageBox.information(self, "Installation Complete", msg)
             self.log_terminal.append(f"\nInstallation completed in {total_time:.2f} seconds!")
             self.accept()  # Close the GUI
 
 def main():
     app = QApplication(sys.argv)
-    installer = SplashFOAMInstaller()
+    installer = SplashInstaller()
     installer.exec()
     sys.exit(app.exec())
 

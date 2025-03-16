@@ -1,0 +1,8 @@
+Steps to build the installer for windows
+
+00- Make sure the README and LICENSE are up to date, otheriwse copy the latest from the root. 
+0- Check the logo path inside both "buildCaseCreator_WIN_v0.2.sh" and "installer.nsi".  
+1- copy the README.txt and LICENSE.txt files and the buildCaseCreator_WIN_v0.2.sh 
+to the location where you build the main code (/Source/CaseCreator). 
+2- launch the buildCaseCreator_WIN_v0.2.sh (./buildCaseCreator_WIN_v0.2.sh).
+3- start building the installer using nsis (makensis installer.nsi).

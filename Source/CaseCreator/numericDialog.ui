@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>526</width>
-    <height>275</height>
+    <width>542</width>
+    <height>323</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QPushButton" name="pushButtonOK">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>240</y>
+     <x>70</x>
+     <y>290</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -29,8 +29,8 @@
   <widget class="QPushButton" name="pushButtonCancel">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>240</y>
+     <x>150</x>
+     <y>290</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -42,8 +42,8 @@
   <widget class="QPushButton" name="pushButtonApply">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>240</y>
+     <x>230</x>
+     <y>290</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -55,8 +55,8 @@
   <widget class="QPushButton" name="pushButtonDefault">
    <property name="geometry">
     <rect>
-     <x>290</x>
-     <y>240</y>
+     <x>310</x>
+     <y>290</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -78,9 +78,9 @@
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>20</x>
      <y>10</y>
-     <width>131</width>
+     <width>111</width>
      <height>16</height>
     </rect>
    </property>
@@ -92,9 +92,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>40</y>
+     <y>70</y>
      <width>511</width>
-     <height>191</height>
+     <height>201</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -106,8 +106,8 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>60</y>
+      <x>20</x>
+      <y>80</y>
       <width>111</width>
       <height>20</height>
      </rect>
@@ -119,9 +119,9 @@
    <widget class="QComboBox" name="comboBoxDivScheme">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>60</y>
-      <width>371</width>
+      <x>140</x>
+      <y>80</y>
+      <width>361</width>
       <height>22</height>
      </rect>
     </property>
@@ -129,8 +129,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>30</y>
+      <x>30</x>
+      <y>50</y>
       <width>101</width>
       <height>16</height>
      </rect>
@@ -142,9 +142,9 @@
    <widget class="QComboBox" name="comboBoxLaplacian">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>120</y>
-      <width>371</width>
+      <x>140</x>
+      <y>140</y>
+      <width>361</width>
       <height>22</height>
      </rect>
     </property>
@@ -152,9 +152,9 @@
    <widget class="QComboBox" name="comboBoxGradScheme">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>30</y>
-      <width>371</width>
+      <x>140</x>
+      <y>50</y>
+      <width>361</width>
       <height>22</height>
      </rect>
     </property>
@@ -162,8 +162,8 @@
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>120</y>
+      <x>30</x>
+      <y>140</y>
       <width>101</width>
       <height>20</height>
      </rect>
@@ -175,9 +175,9 @@
    <widget class="QComboBox" name="comboBoxTemporal">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>150</y>
-      <width>371</width>
+      <x>140</x>
+      <y>170</y>
+      <width>361</width>
       <height>22</height>
      </rect>
     </property>
@@ -185,9 +185,9 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>150</y>
-      <width>111</width>
+      <x>30</x>
+      <y>170</y>
+      <width>101</width>
       <height>20</height>
      </rect>
     </property>
@@ -195,25 +195,12 @@
      <string>Temporal Schemes</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_6">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>91</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Advanced Mode</string>
-    </property>
-   </widget>
    <widget class="QComboBox" name="comboBoxDivTurb">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>90</y>
-      <width>371</width>
+      <x>140</x>
+      <y>110</y>
+      <width>361</width>
       <height>22</height>
      </rect>
     </property>
@@ -222,8 +209,8 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>90</y>
-      <width>141</width>
+      <y>110</y>
+      <width>131</width>
       <height>20</height>
      </rect>
     </property>
@@ -231,6 +218,42 @@
      <string>Divergence (Turbulence)</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>171</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600; color:#3584e4;&quot;&gt;Advanced Mode&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QComboBox" name="comboBoxTurbulenceModels">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>40</y>
+     <width>371</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_7">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>40</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Turbulence Model</string>
+   </property>
   </widget>
  </widget>
  <resources/>

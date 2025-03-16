@@ -1,24 +1,26 @@
 """
+/*--------------------------------*- C++ -*----------------------------------*\
 -------------------------------------------------------------------------------
-  ***    *     *  ******   *******  ******    *****     ***    *     *  ******   
- *   *   **   **  *     *  *        *     *  *     *   *   *   **    *  *     *  
-*     *  * * * *  *     *  *        *     *  *        *     *  * *   *  *     *  
-*******  *  *  *  ******   ****     ******    *****   *******  *  *  *  *     *  
-*     *  *     *  *        *        *   *          *  *     *  *   * *  *     *  
-*     *  *     *  *        *        *    *   *     *  *     *  *    **  *     *  
-*     *  *     *  *        *******  *     *   *****   *     *  *     *  ******   
+ *****   ******   *          ***     *****   *     *  
+*     *  *     *  *         *   *   *     *  *     *  
+*        *     *  *        *     *  *        *     *  
+ *****   ******   *        *******   *****   *******  
+      *  *        *        *     *        *  *     *  
+*     *  *        *        *     *  *     *  *     *  
+ *****   *        *******  *     *   *****   *     *  
 -------------------------------------------------------------------------------
- * AmpersandCFD is a minimalist streamlined OpenFOAM generation tool.
+ * SplashCaseCreator is part of Splash CFD automation tool.
  * Copyright (c) 2024 THAW TAR
+ * Copyright (c) 2025 Mohamed Aly Sayed and Thaw Tar
  * All rights reserved.
  *
- * This software is licensed under the GNU General Public License version 3 (GPL-3.0).
- * You may obtain a copy of the license at https://www.gnu.org/licenses/gpl-3.0.en.html
+ * This software is licensed under the GNU Lesser General Public License version 3 (LGPL-3.0).
+ * You may obtain a copy of the license at https://www.gnu.org/licenses/lgpl-3.0.en.html
  */
 """
 
 from constants import meshSettings
-from primitives import ampersandPrimitives
+from primitives import SplashCaseCreatorPrimitives
 def generate_snappyHexMeshDict(meshSettings):
     """
     Create a snappyHexMeshDict for OpenFOAM.
@@ -33,12 +35,12 @@ def generate_snappyHexMeshDict(meshSettings):
     """
     snappyHexMeshDict = f""
     trueFalse = {True: "true", False: "false"}
-    header = ampersandPrimitives.createFoamHeader(className="dictionary", objectName="snappyHexMeshDict")
+    header = SplashCaseCreatorPrimitives.createFoamHeader(className="dictionary", objectName="snappyHexMeshDict")
 
     steps = f"""
-castellatedMesh {meshSettings['snappyHexSteps']['castellatedMesh']};
-snap            {meshSettings['snappyHexSteps']['snap']};
-addLayers       {meshSettings['snappyHexSteps']['addLayers']};"""
+castellatedMesh {trueFalse[meshSettings['snappyHexSteps']['castellatedMesh']]};
+snap            {trueFalse[meshSettings['snappyHexSteps']['snap']]};
+addLayers       {trueFalse[meshSettings['snappyHexSteps']['addLayers']]};"""
 
     features = ""
     refinementSurfaces = ""
@@ -232,13 +234,13 @@ addLayers       {meshSettings['snappyHexSteps']['addLayers']};"""
     nSolveIter {meshSettings['snapControls']['nSolveIter']};
     nRelaxIter {meshSettings['snapControls']['nRelaxIter']};
     nFeatureSnapIter {meshSettings['snapControls']['nFeatureSnapIter']};
-    implicitFeatureSnap {meshSettings['snapControls']['implicitFeatureSnap']};
-    explicitFeatureSnap {meshSettings['snapControls']['explicitFeatureSnap']};
-    multiRegionFeatureSnap {meshSettings['snapControls']['multiRegionFeatureSnap']};
+    implicitFeatureSnap {trueFalse[meshSettings['snapControls']['implicitFeatureSnap']]};
+    explicitFeatureSnap {trueFalse[meshSettings['snapControls']['explicitFeatureSnap']]};
+    multiRegionFeatureSnap {trueFalse[meshSettings['snapControls']['multiRegionFeatureSnap']]};
 }}"""
     layerControls = f"""\naddLayersControls
 {{
-    relativeSizes {meshSettings['addLayersControls']['relativeSizes']};
+    relativeSizes {trueFalse[meshSettings['addLayersControls']['relativeSizes']]};
     layers
     {{"""
     for an_entry in meshSettings['geometry']:
@@ -288,6 +290,7 @@ addLayers       {meshSettings['snappyHexSteps']['addLayers']};"""
     minMedialAxisAngle {meshSettings['addLayersControls']['minMedianAxisAngle']};
     nBufferCellsNoExtrude {meshSettings['addLayersControls']['nBufferCellsNoExtrude']};
     nLayerIter {meshSettings['addLayersControls']['nLayerIter']};
+    nOuterIter {meshSettings['addLayersControls']['nOuterIter']};
 }}"""
     meshQualityControls = f"""\nmeshQualityControls
 {{
@@ -325,7 +328,7 @@ def write_snappyHexMeshDict(snappyHexMeshDict):
    
 # Example usage
 if __name__ == "__main__":
-    meshSettings = ampersandPrimitives.yaml_to_dict("meshSettings.yaml")
+    meshSettings = SplashCaseCreatorPrimitives.yaml_to_dict("meshSettings.yaml")
 
 
     snappy_hex_mesh_dict_content = generate_snappyHexMeshDict(meshSettings)
