@@ -151,7 +151,6 @@ SplashFOAM simplifies the setup of OpenFOAM cases by providing:
   - Solution reports to monitor progress and convergence.
   - Function objects for calculating derived quantities and other post-processing tasks.
 - **Initialization and Execution**: Directly initialize and run simulations from within the SplashFOAM environment. These set the simulation to its initial state and set up the necessary parameters to launch the case.
-Note: SplashFOAM does not allow changes to direct boundary condition (BC) files.
 
 ## Run Simulation
 SplashFOAM can launch a simulation locally or on a remote HPC cluster (Cloud HPC):
